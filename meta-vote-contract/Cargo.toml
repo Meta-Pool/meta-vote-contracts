@@ -1,0 +1,13 @@
+[package]
+name = "meta-vote-contract"
+version = "0.1.0"
+edition = "2021"
+authors = ["Narwallets.com <hello@narwallets.com>"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = "3.1.0"
+near-contract-standards = "3.2.0"
+uint = "0.9.3"
