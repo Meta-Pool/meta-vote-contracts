@@ -941,7 +941,20 @@ mod tests {
         );
 
         contract.unlock_position(index);
-        // WIP -----------------------------
+        let locking_period: Days = 38;
+        contract.relock_position(
+            index,
+            locking_period,
+            MetaJSON::from(keep_amount)
+        );
+
+        let voter = contract.internal_get_voter(&sender_id);
+        assert_eq!(voter.balance, 0, "Incorrect voter balance.");
+        assert_eq!(
+            voter.voting_power,
+            contract.calculate_voting_power(relock_amount + keep_amount, locking_period),
+            "Voting power of Voter is incorrect."
+        );
     }
 
     // fn test_relock_partial_position()
