@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "meta-vote-contract"
+    "meta-vote-contract",
+    "pipeline-contract"
 ]
 
 [profile.release]

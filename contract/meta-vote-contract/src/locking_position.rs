@@ -76,7 +76,7 @@ impl MetaVoteContract {
         locking_period: Days
     ) {
         let voting_power = self.calculate_voting_power(amount, locking_period);
-        let mut current_position = voter.get_locking_position(index);
+        let mut current_position = voter.get_position(index);
         current_position.amount += amount;
         current_position.voting_power += voting_power;
 
@@ -138,6 +138,9 @@ impl MetaVoteContract {
         locking_period: Days,
         voting_power: VotePower
     ) {
+        // TODO: you can split this function into increase and create unlocking position
+        // to avoid multiple unlocking positions. Or not, be careful with the rounding
+        // in the days.
         assert!(
             (voter.locking_positions.len() as u8) < self.max_locking_positions,
             "The max number of locking positions is {}",
