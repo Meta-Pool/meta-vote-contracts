@@ -11,3 +11,6 @@ To Lock funds into the Meta Vote contract, the user must define an amount in the
 Consider:
 
 To reclaim the META tokens you will have to wail the period selected in the locking.
+
+Implement **NEP264** for cross-contract calls: https://github.com/near/near-sdk-rs/issues/740
+Release notes for `near-sdk = "4.0.0"`: https://github.com/near/near-sdk-rs/discussions/797

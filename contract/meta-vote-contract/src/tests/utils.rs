@@ -19,39 +19,39 @@ pub const MAX_LOCKING_POSITIONS: u8 = 20;
 pub const MAX_VOTING_POSITIONS: u8 = 100;
 
 pub fn system_account() -> AccountId {
-    AccountId::new_unchecked("system".to_string())
+    AccountId::new_unchecked("system.metavote.near".to_string())
 }
 
 pub fn contract_account() -> AccountId {
-    AccountId::new_unchecked("contract".to_string())
+    AccountId::new_unchecked("contract.metavote.near".to_string())
 }
 
 pub fn treasury_account() -> AccountId {
-    AccountId::new_unchecked("treasury".to_string())
+    AccountId::new_unchecked("treasury.metavote.near".to_string())
 }
 
 pub fn owner_account() -> AccountId {
-    AccountId::new_unchecked("owner".to_string())
+    AccountId::new_unchecked("owner.metavote.near".to_string())
 }
 
 pub fn non_owner() -> AccountId {
-    AccountId::new_unchecked("non_owner".to_string())
+    AccountId::new_unchecked("non_owner.metavote.near".to_string())
 }
 
 pub fn developer_account() -> AccountId {
-    AccountId::new_unchecked("developer".to_string())
+    AccountId::new_unchecked("developer.metavote.near".to_string())
 }
 
 pub fn operator_account() -> AccountId {
-    AccountId::new_unchecked("operator".to_string())
+    AccountId::new_unchecked("operator.metavote.near".to_string())
 }
 
 pub fn meta_token_account() -> AccountId {
-    AccountId::new_unchecked("meta-token".to_string())
+    AccountId::new_unchecked("meta-token.metavote.near".to_string())
 }
 
 pub fn voter_account() -> AccountId {
-    AccountId::new_unchecked("voter".to_string())
+    AccountId::new_unchecked("voter.metavote.near".to_string())
 }
 
 

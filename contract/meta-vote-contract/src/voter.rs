@@ -23,6 +23,10 @@ impl Voter {
         }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.balance == 0 && self.locking_positions.is_empty()
+    }
+
     pub(crate) fn sum_locked(&self) -> Meta {
         let mut result = 0_u128;
         for locking_position in self.locking_positions.iter() {
@@ -73,7 +77,7 @@ impl Voter {
         None
     }
 
-    pub(crate) fn get_locking_position(&self, index: PositionIndex) -> LockingPosition {
+    pub(crate) fn get_position(&self, index: PositionIndex) -> LockingPosition {
         self.locking_positions.get(index).expect("Index out of range!")
     }
 
