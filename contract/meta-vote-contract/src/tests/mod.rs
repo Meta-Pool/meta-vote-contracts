@@ -89,8 +89,7 @@ fn test_multiple_deposit_same_locking_period() {
     );
     testing_env!(context.clone());
     assert_eq!(
-        VotePowerJSON::from(total_vote_power),
-        contract.get_available_voting_power(),
+        VotingPowerJSON::from(total_vote_power),
         "Incorrect voting power calculation!"
     );
 
@@ -147,7 +146,7 @@ fn test_multiple_deposit_diff_locking_period() {
     );
     testing_env!(context.clone());
     assert_eq!(
-        VotePowerJSON::from(total_vote_power),
+        VotingPowerJSON::from(total_vote_power),
         contract.get_available_voting_power(),
         "Incorrect voting power calculation!"
     );
@@ -707,7 +706,8 @@ fn test_clear_locking_position() {
 }
 
 #[test]
-fn test_unlock_position_voting_power() {
+#[should_panic(expected="Not enough free voting power to unlock!")]
+fn test_unlock_position_without_voting_power() {
     const LOCKING_PERIOD: u64 = 100;
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
     let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
@@ -737,9 +737,17 @@ fn test_unlock_position_voting_power() {
         .unwrap()
         .index
         .unwrap();
-    
-    // TODO: test here that after voting power deployment you cannot unlock.
+
+    let vote = contract.calculate_voting_power(
+        Meta::from(amount),
+        msg.parse::<Days>().unwrap()
+    );
+    contract.vote(
+        U128::from(vote),
+        votable_account(),
+        "0".to_owned()
+    );
+    let voter = contract.internal_get_voter(&sender_id);
+    assert_eq!(voter.voting_power, 0, "Incorrect Voting Power calculation.");
     contract.unlock_position(index);
 }
-// unlock_position
-// unlock_partial_position

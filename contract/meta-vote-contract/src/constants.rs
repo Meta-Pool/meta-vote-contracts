@@ -13,6 +13,7 @@ pub enum Keys {
     LockingPosition,
     VotePosition,
     Voter,
+	Votes,
 }
 
 impl Keys {
@@ -22,6 +23,7 @@ impl Keys {
 			Keys::LockingPosition => format!("{}{}", "LP", id),
 			Keys::VotePosition => format!("{}{}", "VP", id),
 			Keys::Voter => format!("{}{}", "V", id),
+			Keys::Votes => format!("{}{}", "Vs", id),
         }
     }
 }

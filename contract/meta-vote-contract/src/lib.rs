@@ -1,5 +1,6 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{UnorderedMap, Vector};
+use near_sdk::collections::Vector;
+use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault, require};
 
 mod constants;
@@ -8,7 +9,6 @@ mod internal;
 mod locking_position;
 mod types;
 mod utils;
-mod vote_position;
 mod voter;
 mod withdraw;
 pub mod interface;
@@ -17,13 +17,14 @@ use types::*;
 use utils::get_current_epoch_millis;
 use voter::Voter;
 use crate::utils::{days_to_millis, millis_to_days};
-use crate::{constants::*, vote_position::*, locking_position::*};
+use crate::{constants::*, locking_position::*};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct MetaVoteContract {
     pub owner_id: AccountId,
     pub voters: UnorderedMap<VoterId, Voter>,
+    pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>,
     pub min_locking_period: Days,
     pub max_locking_period: Days,
     pub min_deposit_amount: Meta,
@@ -49,6 +50,7 @@ impl MetaVoteContract {
         Self {
             owner_id,
             voters: UnorderedMap::new(Keys::Voter),
+            votes: UnorderedMap::new(Keys::Votes),
             min_locking_period,
             max_locking_period,
             min_deposit_amount,
@@ -343,6 +345,31 @@ impl MetaVoteContract {
         self.transfer_meta_to_voter(voter_id, total_to_withdraw);
     }
 
+    // **********
+    // * Voting *
+    // **********
+
+    pub fn vote(
+        &mut self,
+        voting_power: VotingPowerJSON,
+        contract_address: ContractAddress,
+        votable_object_id: VotableObjId
+    ) {
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter(&voter_id);
+        let voting_power = VotingPower::from(voting_power);
+        require!(voter.voting_power >= voting_power, "Not enough available Voting Power.");
+
+        let mut votes_for_address = voter.get_votes_for_address(&voter_id, &contract_address);
+        let mut votes = votes_for_address.get(&votable_object_id).unwrap_or(0_u128);
+
+        voter.voting_power -= voting_power;
+        votes += voting_power;
+        votes_for_address.insert(&votable_object_id, &votes);
+        voter.vote_positions.insert(&contract_address, &votes_for_address);
+        self.voters.insert(&voter_id, &voter);
+    }
+
     // ****************
     // * View Methods *
     // ****************
@@ -389,16 +416,16 @@ impl MetaVoteContract {
         BalanceJSON::from(voter.sum_unlocking())
     }
 
-    pub fn get_available_voting_power(&self) -> VotePowerJSON {
+    pub fn get_available_voting_power(&self) -> VotingPowerJSON {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter(&voter_id);
-        VotePowerJSON::from(voter.voting_power)
+        VotingPowerJSON::from(voter.voting_power)
     }
 
-    pub fn get_used_voting_power(&self) -> VotePowerJSON {
+    pub fn get_used_voting_power(&self) -> VotingPowerJSON {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter(&voter_id);
-        VotePowerJSON::from(voter.sum_used_votes())
+        VotingPowerJSON::from(voter.sum_used_votes())
     }
 }
 

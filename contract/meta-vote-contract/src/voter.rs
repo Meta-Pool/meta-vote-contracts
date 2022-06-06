@@ -5,8 +5,8 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 pub struct Voter {
     pub balance: Meta,
     pub locking_positions: Vector<LockingPosition>,
-    pub voting_power: VotePower,
-    pub vote_positions: Vector<VotePosition>,
+    pub voting_power: VotingPower,
+    pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>
 }
 
 impl Voter {
@@ -17,8 +17,8 @@ impl Voter {
                 Keys::LockingPosition.as_prefix(id.as_str()).as_bytes()
             ),
             voting_power: 0,
-            vote_positions: Vector::new(
-                Keys::VotePosition.as_prefix(id.as_str()).as_bytes()
+            vote_positions: UnorderedMap::new(
+                Keys::Votes.as_prefix(id.as_str()).as_bytes()
             ),
         }
     }
@@ -57,10 +57,10 @@ impl Voter {
         result
     }
 
-    pub(crate) fn sum_used_votes(&self) -> VotePower {
+    pub(crate) fn sum_used_votes(&self) -> VotingPower {
         let mut result = 0_u128;
-        for vote_position in self.vote_positions.iter() {
-            result += vote_position.amount;
+        for map in self.vote_positions.values() {
+            result += map.values().sum::<u128>();
         }
         result
     }
@@ -83,5 +83,19 @@ impl Voter {
 
     pub(crate) fn remove_position(&mut self, index: PositionIndex) {
         self.locking_positions.swap_remove(index);
+    }
+
+    pub(crate) fn get_votes_for_address(
+        &self,
+        voter_id: &VoterId,
+        contract_address: &ContractAddress
+    ) -> UnorderedMap<VotableObjId, VotingPower> {
+        self.vote_positions
+            .get(&contract_address)
+            .unwrap_or(
+                UnorderedMap::new(
+                    Keys::Votes.as_prefix(voter_id.as_str()).as_bytes()
+                )
+            )
     }
 }
