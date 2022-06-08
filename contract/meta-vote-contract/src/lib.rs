@@ -50,7 +50,7 @@ impl MetaVoteContract {
         Self {
             owner_id,
             voters: UnorderedMap::new(Keys::Voter),
-            votes: UnorderedMap::new(Keys::Votes),
+            votes: UnorderedMap::new(Keys::ContractVotes),
             min_locking_period,
             max_locking_period,
             min_deposit_amount,
@@ -368,6 +368,13 @@ impl MetaVoteContract {
         votes_for_address.insert(&votable_object_id, &votes);
         voter.vote_positions.insert(&contract_address, &votes_for_address);
         self.voters.insert(&voter_id, &voter);
+
+        // Update Meta Vote state.
+        self.internal_increase_total_votes(
+            voting_power,
+            &contract_address,
+            &votable_object_id
+        );
     }
 
     pub fn rebalance(
@@ -395,11 +402,21 @@ impl MetaVoteContract {
             require!(voter.voting_power >= additional_votes, "Not enough additional Voting Power.");        
             voter.voting_power -= additional_votes;
             votes += additional_votes;
+            self.internal_increase_total_votes(
+                additional_votes,
+                &contract_address,
+                &votable_object_id
+            );
         } else {
             // Decrease votes.
             let remove_votes = votes - voting_power;
             voter.voting_power += remove_votes;
             votes -= remove_votes;
+            self.internal_decrease_total_votes(
+                remove_votes,
+                &contract_address,
+                &votable_object_id
+            );
         }
         votes_for_address.insert(&votable_object_id, &votes);
         voter.vote_positions.insert(&contract_address, &votes_for_address);
@@ -411,7 +428,29 @@ impl MetaVoteContract {
         contract_address: ContractAddress,
         votable_object_id: VotableObjId
     ) {
-        unimplemented!();
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter(&voter_id);
+
+        let mut votes_for_address = voter.get_votes_for_address(&contract_address);
+        let votes = votes_for_address.get(&votable_object_id)
+            .expect("Cannot unvote a Votable Object without votes.");
+
+        voter.voting_power += votes;
+        votes_for_address.remove(&votable_object_id);
+
+        if votes_for_address.is_empty() {
+            voter.vote_positions.remove(&contract_address);
+        } else {
+            voter.vote_positions.insert(&contract_address, &votes_for_address);
+        }
+        self.voters.insert(&voter_id, &voter);
+
+        // Update Meta Vote state.
+        self.internal_decrease_total_votes(
+            votes,
+            &contract_address,
+            &votable_object_id
+        );
     }
 
     // ****************
