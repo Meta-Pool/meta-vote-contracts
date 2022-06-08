@@ -360,7 +360,7 @@ impl MetaVoteContract {
         let voting_power = VotingPower::from(voting_power);
         require!(voter.voting_power >= voting_power, "Not enough available Voting Power.");
 
-        let mut votes_for_address = voter.get_votes_for_address(&voter_id, &contract_address);
+        let mut votes_for_address = voter.get_votes_for_address(&contract_address);
         let mut votes = votes_for_address.get(&votable_object_id).unwrap_or(0_u128);
 
         voter.voting_power -= voting_power;
@@ -368,6 +368,50 @@ impl MetaVoteContract {
         votes_for_address.insert(&votable_object_id, &votes);
         voter.vote_positions.insert(&contract_address, &votes_for_address);
         self.voters.insert(&voter_id, &voter);
+    }
+
+    pub fn rebalance(
+        &mut self,
+        voting_power: VotingPowerJSON,
+        contract_address: ContractAddress,
+        votable_object_id: VotableObjId
+    ) {
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter(&voter_id);
+        let voting_power = VotingPower::from(voting_power);
+
+        let mut votes_for_address = voter.get_votes_for_address(&contract_address);
+        let mut votes = votes_for_address.get(&votable_object_id)
+            .expect("Rebalance not allowed for unexisting Votable Object.");
+
+        require!(votes != voting_power, "Cannot rebalance to same Voting Power.");
+        if voting_power == 0 {
+            return self.unvote(contract_address, votable_object_id);
+        }
+ 
+        if votes < voting_power {
+            // Increase votes.
+            let additional_votes = voting_power - votes;
+            require!(voter.voting_power >= additional_votes, "Not enough additional Voting Power.");        
+            voter.voting_power -= additional_votes;
+            votes += additional_votes;
+        } else {
+            // Decrease votes.
+            let remove_votes = votes - voting_power;
+            voter.voting_power += remove_votes;
+            votes -= remove_votes;
+        }
+        votes_for_address.insert(&votable_object_id, &votes);
+        voter.vote_positions.insert(&contract_address, &votes_for_address);
+        self.voters.insert(&voter_id, &voter);
+    }
+
+    pub fn unvote(
+        &mut self,
+        contract_address: ContractAddress,
+        votable_object_id: VotableObjId
+    ) {
+        unimplemented!();
     }
 
     // ****************

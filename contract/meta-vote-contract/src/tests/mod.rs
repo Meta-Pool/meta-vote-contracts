@@ -752,3 +752,73 @@ fn test_unlock_position_without_voting_power() {
     assert_eq!(voter.voting_power, 0, "Incorrect Voting Power calculation.");
     contract.unlock_position(index);
 }
+
+#[test]
+fn test_rebalance_increase_and_decrease() {
+    const LOCKING_PERIOD: u64 = 100;
+    let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
+    let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
+    let context = get_context(
+        meta_token_account(),
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        timestamp_0
+    );
+    let mut contract = get_contract_setup(context);
+
+    let sender_id: AccountId = voter_account();
+    let amount = U128::from(10 * YOCTO_UNITS);
+    let msg: String = LOCKING_PERIOD.to_string();
+    contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+
+    // New context: the voter is doing the call now!
+    let context = get_context(
+        sender_id.clone(),
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        timestamp_1
+    );
+    testing_env!(context.clone());
+
+    let vote = contract.calculate_voting_power(
+        Meta::from(amount),
+        msg.parse::<Days>().unwrap()
+    );
+    let contract_address = votable_account();
+    let votable_object_id = "0".to_owned();
+
+    contract.vote(
+        U128::from(vote),
+        contract_address.clone(),
+        votable_object_id.clone() 
+    );
+
+    // Decrease votes.
+    let delta_1 = 5 * YOCTO_UNITS;
+    let decreased_votes = U128::from(vote - delta_1);
+    contract.rebalance(
+        decreased_votes,
+        contract_address.clone(),
+        votable_object_id.clone()
+    );
+    let voter = contract.internal_get_voter(&sender_id);
+    assert_eq!(voter.voting_power, delta_1, "Incorrect Voting Power calculation.");
+
+    let votes_for_address = voter.get_votes_for_address(&contract_address);
+    let votes = votes_for_address.get(&votable_object_id).unwrap();
+
+    // Increase votes.
+    let delta_2 = 1 * YOCTO_UNITS;
+    let additional_votes = U128::from(votes + delta_2);
+    contract.rebalance(
+        additional_votes,
+        contract_address.clone(),
+        votable_object_id.clone()
+    );
+    let voter = contract.internal_get_voter(&sender_id);
+    assert_eq!(voter.voting_power, delta_1 - delta_2, "Incorrect Voting Power calculation.");
+
+    let votes_for_address = voter.get_votes_for_address(&contract_address);
+    let votes = votes_for_address.get(&votable_object_id).unwrap();
+    assert_eq!(votes, u128::from(additional_votes), "Incorrect Voting Power calculation.");
+}

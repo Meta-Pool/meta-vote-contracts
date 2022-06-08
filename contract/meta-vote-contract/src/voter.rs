@@ -87,14 +87,13 @@ impl Voter {
 
     pub(crate) fn get_votes_for_address(
         &self,
-        voter_id: &VoterId,
         contract_address: &ContractAddress
     ) -> UnorderedMap<VotableObjId, VotingPower> {
         self.vote_positions
             .get(&contract_address)
             .unwrap_or(
                 UnorderedMap::new(
-                    Keys::Votes.as_prefix(voter_id.as_str()).as_bytes()
+                    Keys::Votes.as_prefix(contract_address.as_str()).as_bytes()
                 )
             )
     }
