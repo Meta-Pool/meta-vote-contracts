@@ -89,6 +89,7 @@ fn test_multiple_deposit_same_locking_period() {
     );
     testing_env!(context.clone());
     assert_eq!(
+
         VotingPowerJSON::from(total_vote_power),
         contract.get_available_voting_power(),
         "Incorrect voting power calculation!"
@@ -147,6 +148,7 @@ fn test_multiple_deposit_diff_locking_period() {
     );
     testing_env!(context.clone());
     assert_eq!(
+
         VotingPowerJSON::from(total_vote_power),
         contract.get_available_voting_power(),
         "Incorrect voting power calculation!"
@@ -707,6 +709,7 @@ fn test_clear_locking_position() {
 }
 
 #[test]
+
 #[should_panic(expected="Not enough free voting power to unlock!")]
 fn test_unlock_position_without_voting_power() {
     const LOCKING_PERIOD: u64 = 100;
@@ -738,6 +741,7 @@ fn test_unlock_position_without_voting_power() {
         .unwrap()
         .index
         .unwrap();
+
 
     let vote = contract.calculate_voting_power(
         Meta::from(amount),

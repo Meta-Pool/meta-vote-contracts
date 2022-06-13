@@ -30,6 +30,11 @@ export const metaPoolMethods = {
   getAccountInfo: "get_account_info"
 };
 
+export const metaTokenMethods = {
+  getMetas: "ft_balance_of",
+  getAccountInfo: "ft_metadata"
+};
+
 export const projectTokenViewMethods = {
   storageBalanceOf: "storage_balance_of",
   metadata: "ft_metadata",

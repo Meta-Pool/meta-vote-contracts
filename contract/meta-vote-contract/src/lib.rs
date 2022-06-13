@@ -295,6 +295,7 @@ impl MetaVoteContract {
     // ******************
 
     pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>) {
+
         require!(position_index_list.len() > 0, "Index list is empty.");
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
@@ -311,6 +312,7 @@ impl MetaVoteContract {
         }
         self.voters.insert(&voter_id, &voter);
     }
+
 
     // ************
     // * Withdraw *

@@ -1,17 +1,19 @@
-# Metayield - Allow any project to bootstrap liquidity through staking on Meta Pool.
-This repository contains an implementation of the front-end and NEAR protocol interaction via RPC API.
-The smart contract implementation: [Katherine Fundraising Smart Contract](https://github.com/leomanza/trust-me).
+# Metavote - Allow any project to bootstrap liquidity through staking on Meta Pool.
+This prject contains an implementation of the front-end and NEAR protocol interaction via RPC API.
+
 
 **Prerequisites**
 In order to interact with the smart contract, we need it deployed. Once you have it, copy the smart contract account Id that we are going to use on the Dapp.
-Metayield needs to interact with Metapool smart contract to fetch specific data, eg stNEAR price.
+Metavote needs to interact with Metapool smart contract to fetch specific data, eg stNEAR price.
+
 
 ## Environment Setup
 
 ### Local Environment Setup
 1. clone this repo locally
 ```bash
-git clone https://github.com/Narwallets/meta-yield
+git clone https://github.com/Narwallets/meta-vote
+
 ```
 2. install dependencies
 ```bash
@@ -23,7 +25,6 @@ module.exports = {
   reactStrictMode: true,
   env: {
     CONTRACT_ID: 'dev-1647362531405-23502905659580',
-    METAPOOL_CONTRACT_ID: 'meta-v2.pool.testnet'
   }
 }
 ````
@@ -51,6 +52,8 @@ vercel
 ```bash
 vercel env add NEXT_PUBLIC_CONTRACT_ID 
 vercel env add NEXT_PUBLIC_METAPOOL_CONTRACT_ID
+vercel env add NEXT_PUBLIC_META_CONTRACT_ID
+
 ```
 
 ### DEV Production Setup

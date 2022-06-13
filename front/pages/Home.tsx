@@ -13,7 +13,7 @@ const Home = () => {
     <>
       <ErrorHandlerHash></ErrorHandlerHash>
       <Container maxW="container.xl">
-        hola mundo
+        Home page
       </Container>
     </>
   );

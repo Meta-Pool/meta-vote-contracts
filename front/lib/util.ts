@@ -1,6 +1,5 @@
 import moment from "moment";
 import { providers } from "near-api-js";
-import { KickstarterGoalProps } from "../types/project.types";
 import { getSupportedKickstarters } from "./near";
 
 const BN = require("bn.js");
