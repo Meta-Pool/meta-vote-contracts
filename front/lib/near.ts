@@ -37,6 +37,7 @@ import { ExecutionError } from "near-api-js/lib/providers/provider";
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
 export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
+
 export const gas = new BN("70000000000000");
 const env = process.env.NODE_ENV;
 console.log('@env', env)
@@ -415,3 +416,4 @@ const callViewMetaTokenMethod = async (
   const contract = await getMetaTokenContract(wallet);
   return (contract as any)[method](args);
 };
+

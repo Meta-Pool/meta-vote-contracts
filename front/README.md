@@ -6,12 +6,14 @@ This prject contains an implementation of the front-end and NEAR protocol intera
 In order to interact with the smart contract, we need it deployed. Once you have it, copy the smart contract account Id that we are going to use on the Dapp.
 Metavote needs to interact with Metapool smart contract to fetch specific data, eg stNEAR price.
 
+
 ## Environment Setup
 
 ### Local Environment Setup
 1. clone this repo locally
 ```bash
 git clone https://github.com/Narwallets/meta-vote
+
 ```
 2. install dependencies
 ```bash

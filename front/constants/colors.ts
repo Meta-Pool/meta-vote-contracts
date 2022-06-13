@@ -9,6 +9,7 @@ export const colors = {
   white: "#FFFFFF",
   primary: 'green',
 
+
   whiteAlpha: {
     50: "rgba(255, 255, 255, 0.04)",
     100: "rgba(255, 255, 255, 0.06)",
@@ -284,3 +285,4 @@ export const colors = {
 };
 
 export const primaryColor = colors[colors.primary];
+

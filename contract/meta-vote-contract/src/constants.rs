@@ -1,13 +1,20 @@
-use near_sdk::BorshStorageKey;
+use near_sdk::{BorshStorageKey, Gas};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 
 pub const YOCTO_UNITS: u128 = 1_000_000_000_000_000_000_000_000;
+
+/// Amount of gas for fungible token transfers.
+pub const TGAS: u64 = 1_000_000_000_000;
+pub const GAS_FOR_FT_TRANSFER: Gas = Gas(47 * TGAS);
+pub const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas(11 * TGAS);
 
 #[derive(BorshSerialize, BorshDeserialize, BorshStorageKey)]
 pub enum Keys {
     LockingPosition,
     VotePosition,
     Voter,
+	ContractVotes,
+	VoterVotes,
 }
 
 impl Keys {
@@ -17,6 +24,8 @@ impl Keys {
 			Keys::LockingPosition => format!("{}{}", "LP", id),
 			Keys::VotePosition => format!("{}{}", "VP", id),
 			Keys::Voter => format!("{}{}", "V", id),
+			Keys::ContractVotes => format!("{}{}", "CV", id),
+			Keys::VoterVotes => format!("{}{}", "VV", id),
         }
     }
 }

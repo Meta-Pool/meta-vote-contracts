@@ -182,7 +182,6 @@ const Header: React.FC<ButtonProps> = (props) => {
                       <MenuItem onClick={() => router.push("/#dashboard")}>
                         My Dashboard
                       </MenuItem>
-
                       <MenuItem onClick={() => router.push("/#faq")}>
                         FAQ
                       </MenuItem>

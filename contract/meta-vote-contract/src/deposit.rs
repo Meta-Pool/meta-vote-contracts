@@ -27,7 +27,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
             env::predecessor_account_id(),
             self.meta_token_contract_address,
             "This contract only works with $META from {}",
-            self.meta_token_contract_address
+            self.meta_token_contract_address.to_string()
         );
 
         self.assert_min_deposit_amount(amount);

@@ -5,7 +5,7 @@ use crate::{*, utils::*};
 pub struct LockingPosition {
     pub amount: Meta,
     pub locking_period: Days,
-    pub voting_power: VotePower,
+    pub voting_power: VotingPower,
     pub unlocking_started_at: Option<EpochMillis>,
 }
 
@@ -14,7 +14,7 @@ impl LockingPosition {
         days_to_millis(self.locking_period)
     }
 
-    pub fn new(amount: Meta, locking_period: Days, voting_power: VotePower) -> Self {
+    pub fn new(amount: Meta, locking_period: Days, voting_power: VotingPower) -> Self {
         LockingPosition {
             amount,
             locking_period,
@@ -59,7 +59,7 @@ impl LockingPosition {
 #[near_bindgen]
 impl MetaVoteContract {
     /// Voting power is given by f(x) = A + Bx. Where A=1, B=4 and x is the locking period proportion.
-    pub(crate) fn calculate_voting_power(&self, amount: Meta, locking_period: Days) -> VotePower {
+    pub(crate) fn calculate_voting_power(&self, amount: Meta, locking_period: Days) -> VotingPower {
         let multiplier = YOCTO_UNITS + proportional(
             4 * YOCTO_UNITS,
             (locking_period - self.min_locking_period) as u128,
@@ -136,7 +136,7 @@ impl MetaVoteContract {
         voter: &mut Voter,
         amount: Meta,
         locking_period: Days,
-        voting_power: VotePower
+        voting_power: VotingPower
     ) {
         // TODO: you can split this function into increase and create unlocking position
         // to avoid multiple unlocking positions. Or not, be careful with the rounding
