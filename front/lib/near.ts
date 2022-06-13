@@ -20,6 +20,7 @@ import {
   katherineViewMethods,
   katherineChangeMethods,
   metaPoolMethods,
+  metaTokenMethods,
   projectTokenViewMethods,
   projectTokenChangeMethods,
 } from "./methods";
@@ -35,6 +36,7 @@ import { ExecutionError } from "near-api-js/lib/providers/provider";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
+export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 export const gas = new BN("70000000000000");
 const env = process.env.NODE_ENV;
 console.log('@env', env)
@@ -77,6 +79,13 @@ export const getContract = async (wallet: WalletConnection) => {
 export const getMetapoolContract = async (wallet: WalletConnection) => {
   return new Contract(wallet.account(), METAPOOL_CONTRACT_ID!, {
     viewMethods: Object.values(metaPoolMethods),
+    changeMethods: ["ft_transfer_call"],
+  });
+};
+
+export const getMetaTokenContract = async (wallet: WalletConnection) => {
+  return new Contract(wallet.account(), META_CONTRACT_ID!, {
+    viewMethods: Object.values(metaTokenMethods),
     changeMethods: ["ft_transfer_call"],
   });
 };
@@ -174,10 +183,22 @@ export const getMetapoolAccountInfo = async (wallet: WalletConnection) => {
   });
 };
 
+export const getMetaTokenAccountInfo = async (wallet: WalletConnection) => {
+  return callViewMetaTokenMethod(wallet, metaTokenMethods.getMetas, {
+    account_id: wallet.getAccountId(),
+  });
+};
+
+export const getMetaBalance = async (wallet: WalletConnection): Promise<number> => {
+  const accountInfo = await getMetaTokenAccountInfo(wallet);
+  return yton(accountInfo);
+};
+
 export const getBalance = async (wallet: WalletConnection): Promise<number> => {
   const accountInfo = await getMetapoolAccountInfo(wallet);
   return yton(accountInfo.st_near);
 };
+
 
 export const getSupporterDetailedList = async (supporter_id: string) => {
   const st_near_price = await getStNearPrice();
@@ -383,5 +404,14 @@ const callViewMetapoolMethod = async (
   args: any
 ) => {
   const contract = await getMetapoolContract(wallet);
+  return (contract as any)[method](args);
+};
+
+const callViewMetaTokenMethod = async (
+  wallet: WalletConnection,
+  method: string,
+  args: any
+) => {
+  const contract = await getMetaTokenContract(wallet);
   return (contract as any)[method](args);
 };

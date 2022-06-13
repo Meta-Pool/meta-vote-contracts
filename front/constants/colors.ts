@@ -7,6 +7,7 @@ export const colors = {
   current: "currentColor",
   black: "#000000",
   white: "#FFFFFF",
+  primary: 'green',
 
   whiteAlpha: {
     50: "rgba(255, 255, 255, 0.04)",
@@ -281,3 +282,5 @@ export const colors = {
     900: "#003F5E",
   },
 };
+
+export const primaryColor = colors[colors.primary];

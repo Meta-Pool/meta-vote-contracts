@@ -1,6 +1,5 @@
 import moment from "moment";
 import { providers } from "near-api-js";
-import { KickstarterGoalProps } from "../types/project.types";
 import { getSupportedKickstarters } from "./near";
 
 const BN = require("bn.js");
@@ -127,23 +126,6 @@ export const getMyProjectsFounded = async (id: string, wallet: any) => {
     return null;
   }
   return projectsFounded.find((val: any) => val.kickstarter_id === id);
-};
-
-export const getCurrentFundingGoal = (goals: any, total_deposited: any) => {
-  const [currentFundingGoal] = goals.filter(
-    (g: KickstarterGoalProps) => parseInt(g.desired_amount) >= total_deposited
-  );
-  if (!currentFundingGoal) {
-    return goals[goals.length - 1];
-  }
-  return currentFundingGoal;
-};
-
-export const getWinnerGoal = (kickstarter: any) => {
-  if ( kickstarter.successful) {
-    return kickstarter.goals[kickstarter.winner_goal_id] ;
-  }
-  return null;
 };
 
 export const getTxFunctionCallMethod = (

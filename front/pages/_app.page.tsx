@@ -44,7 +44,7 @@ function App({ Component, pageProps }: AppProps) {
       <QueryClientProvider client={queryClient}>
         <NextHead>
           <meta charSet="UTF-8" />
-          <title>  Meta Yield - Allow any project to bootstrap liquidity through staking
+          <title>  Meta Vote - Allow any project to bootstrap liquidity through staking
             on Meta Pool.</title>
         </NextHead>
         <Header />

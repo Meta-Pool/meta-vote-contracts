@@ -29,10 +29,11 @@ import { ChevronDownIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
   getWallet,
   getBalance,
+  getMetaBalance,
   METAPOOL_CONTRACT_ID,
   getNearConfig,
 } from "../../lib/near";
-import { colors } from "../../constants/colors";
+import { colors, primaryColor } from "../../constants/colors";
 import { useStore as useWallet } from "../../stores/wallet";
 import { useStore as useBalance } from "../../stores/balance";
 import { useRouter } from "next/router";
@@ -89,7 +90,7 @@ const Header: React.FC<ButtonProps> = (props) => {
     setInterval(async () => {
       const tempWallet = await getWallet();
       if (tempWallet && tempWallet.getAccountId()) {
-        const balance = await getBalance(tempWallet);
+        const balance = await getMetaBalance(tempWallet);
         setBalance(balance);
       }
     }, 5000);
@@ -111,28 +112,23 @@ const Header: React.FC<ButtonProps> = (props) => {
             { isDesktop && (
                 <Show above="md">
                 <ButtonGroup variant="link" spacing="2" alignItems="flex-end">
-                  <Link href="/#projects">
+                  <Link href="/dashboard">
                     <Button
                       fontWeight={600}
                       fontSize={"md"}
-                      color={colors.indigo[500]}
+                      color={primaryColor[500]}
                       aria-current="page"
                       variant="nav"
                     >
                       {" "}
-                      Menu 1{" "}
+                      My Dashboard{" "}
                     </Button>
                   </Link>
-                  <Link href="/#how-it-works">
+
+                  <Link href="/faq">
                     <Button fontWeight={600} fontSize={"16px"} variant="nav">
                       {" "}
-                      Menu 2{" "}
-                    </Button>
-                  </Link>
-                  <Link href="/#faq">
-                    <Button fontWeight={600} fontSize={"16px"} variant="nav">
-                      {" "}
-                      Menu 3{" "}
+                      FAQ{" "}
                     </Button>
                   </Link>
                 </ButtonGroup>
@@ -153,9 +149,9 @@ const Header: React.FC<ButtonProps> = (props) => {
                   </Square>
                   <Text>{formatToLocaleNear(balance)}</Text>
 
-                  <Button colorScheme="indigo">
-                    <LinkOverlay href={nearConfig.metapoolUrl} isExternal>
-                      Get stNEAR
+                  <Button colorScheme={colors.primary}>
+                    <LinkOverlay href={nearConfig.refFinance} isExternal>
+                      Get $META
                     </LinkOverlay>
                   </Button>
                 </Show>
@@ -183,12 +179,10 @@ const Header: React.FC<ButtonProps> = (props) => {
                     <MenuItem onClick={() => logout()}>Disconnect</MenuItem>
                     <Show below="lg">
                       <MenuDivider />
-                      <MenuItem onClick={() => router.push("/#projects")}>
-                        Projects
+                      <MenuItem onClick={() => router.push("/#dashboard")}>
+                        My Dashboard
                       </MenuItem>
-                      <MenuItem onClick={() => router.push("/#how-it-works")}>
-                        How it works
-                      </MenuItem>
+
                       <MenuItem onClick={() => router.push("/#faq")}>
                         FAQ
                       </MenuItem>
