@@ -362,7 +362,10 @@ impl MetaVoteContract {
         let voting_power = VotingPower::from(voting_power);
         require!(voter.voting_power >= voting_power, "Not enough available Voting Power.");
 
-        let mut votes_for_address = voter.get_votes_for_address(&contract_address);
+        let mut votes_for_address = voter.get_votes_for_address(
+            &voter_id,
+            &contract_address
+        );
         let mut votes = votes_for_address.get(&votable_object_id).unwrap_or(0_u128);
 
         voter.voting_power -= voting_power;
@@ -370,6 +373,12 @@ impl MetaVoteContract {
         votes_for_address.insert(&votable_object_id, &votes);
         voter.vote_positions.insert(&contract_address, &votes_for_address);
         self.voters.insert(&voter_id, &voter);
+
+        log!(
+            "VOTE: {} gave {} votes for object {} at address {}.",
+            &voter_id, voting_power.to_string(),
+            &votable_object_id, contract_address.as_str()
+        );
 
         // Update Meta Vote state.
         self.internal_increase_total_votes(
@@ -389,7 +398,10 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter(&voter_id);
         let voting_power = VotingPower::from(voting_power);
 
-        let mut votes_for_address = voter.get_votes_for_address(&contract_address);
+        let mut votes_for_address = voter.get_votes_for_address(
+            &voter_id,
+            &contract_address
+        );
         let mut votes = votes_for_address.get(&votable_object_id)
             .expect("Rebalance not allowed for unexisting Votable Object.");
 
@@ -404,6 +416,13 @@ impl MetaVoteContract {
             require!(voter.voting_power >= additional_votes, "Not enough additional Voting Power.");        
             voter.voting_power -= additional_votes;
             votes += additional_votes;
+
+            log!(
+                "VOTE: {} increased to {} votes for object {} at address {}.",
+                &voter_id, voting_power.to_string(),
+                &votable_object_id, contract_address.as_str()
+            );
+
             self.internal_increase_total_votes(
                 additional_votes,
                 &contract_address,
@@ -414,6 +433,13 @@ impl MetaVoteContract {
             let remove_votes = votes - voting_power;
             voter.voting_power += remove_votes;
             votes -= remove_votes;
+
+            log!(
+                "VOTE: {} decreased to {} votes for object {} at address {}.",
+                &voter_id, voting_power.to_string(),
+                &votable_object_id, contract_address.as_str()
+            );
+
             self.internal_decrease_total_votes(
                 remove_votes,
                 &contract_address,
@@ -433,7 +459,10 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
 
-        let mut votes_for_address = voter.get_votes_for_address(&contract_address);
+        let mut votes_for_address = voter.get_votes_for_address(
+            &voter_id,
+            &contract_address
+        );
         let votes = votes_for_address.get(&votable_object_id)
             .expect("Cannot unvote a Votable Object without votes.");
 
@@ -446,6 +475,12 @@ impl MetaVoteContract {
             voter.vote_positions.insert(&contract_address, &votes_for_address);
         }
         self.voters.insert(&voter_id, &voter);
+
+        log!(
+            "UNVOTE: {} unvoted object {} at address {}.",
+            &voter_id,
+            &votable_object_id, contract_address.as_str()
+        );
 
         // Update Meta Vote state.
         self.internal_decrease_total_votes(
@@ -511,6 +546,18 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter(&voter_id);
         VotingPowerJSON::from(voter.sum_used_votes())
+    }
+
+    pub fn get_total_votes(
+        &self,
+        contract_address: ContractAddress,
+        votable_object_id: VotableObjId
+    ) -> VotingPowerJSON {
+        let votes = self.votes.get(&contract_address)
+            .expect("Contract Address does not exist in Meta Vote.")
+            .get(&votable_object_id)
+            .expect("Votable Object does not exist for Contract Address");
+        VotingPowerJSON::from(votes)
     }
 }
 
