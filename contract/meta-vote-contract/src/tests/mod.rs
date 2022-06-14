@@ -10,7 +10,7 @@ fn new_contract() -> MetaVoteContract {
         owner_account(),
         MIN_LOCKING_PERIOD,
         MAX_LOCKING_PERIOD,
-        MIN_DEPOSIT_AMOUNT,
+        U128::from(MIN_DEPOSIT_AMOUNT),
         MAX_LOCKING_POSITIONS,
         MAX_VOTING_POSITIONS,
         meta_token_account(),

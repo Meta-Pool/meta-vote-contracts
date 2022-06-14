@@ -2,7 +2,13 @@
 name = "pipeline-contract"
 version = "0.1.0"
 edition = "2021"
+authors = ["Narwallets.com <hello@narwallets.com>"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+near-sdk = "4.0.0"
+near-contract-standards = "4.0.0"
+uint = "0.9.3"
+geo-types = "0.7.5"
