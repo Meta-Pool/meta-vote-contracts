@@ -16,7 +16,6 @@ import {
   Square,
   Image,
   useToast,
-  Stack,
   Show,
   Menu,
   MenuButton,
@@ -28,7 +27,6 @@ import {
 import { ChevronDownIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
   getWallet,
-  getBalance,
   getMetaBalance,
   METAPOOL_CONTRACT_ID,
   getNearConfig,
@@ -45,7 +43,6 @@ const Header: React.FC<ButtonProps> = (props) => {
   const [signInAccountId, setSignInAccountId] = useState(null);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const router = useRouter();
-  const toast = useToast();
   const nearConfig = getNearConfig();
   const onConnect = async () => {
     try {
@@ -78,7 +75,7 @@ const Header: React.FC<ButtonProps> = (props) => {
         }
         if (tempWallet && tempWallet.getAccountId()) {
           setSignInAccountId(tempWallet.getAccountId());
-          setBalance(await getBalance(tempWallet!));
+          setBalance(await getMetaBalance(tempWallet!));
         }
 
         setLogin(tempWallet && tempWallet.getAccountId() ? true : false);
@@ -112,19 +109,23 @@ const Header: React.FC<ButtonProps> = (props) => {
             { isDesktop && (
                 <Show above="md">
                 <ButtonGroup variant="link" spacing="2" alignItems="flex-end">
-                  <Link href="/dashboard">
-                    <Button
-                      fontWeight={600}
-                      fontSize={"md"}
-                      color={primaryColor[500]}
-                      aria-current="page"
-                      variant="nav"
-                    >
-                      {" "}
-                      My Dashboard{" "}
-                    </Button>
-                  </Link>
-
+                  {
+                    isLogin && (
+                      <Link href="/dashboard">
+                        <Button
+                          fontWeight={600}
+                          fontSize={"md"}
+                          color={primaryColor[500]}
+                          aria-current="page"
+                          variant="nav"
+                        >
+                          {" "}
+                          My Dashboard{" "}
+                        </Button>
+                      </Link>
+                    )
+                  }
+                  
                   <Link href="/faq">
                     <Button fontWeight={600} fontSize={"16px"} variant="nav">
                       {" "}
@@ -143,7 +144,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                     <Image
                       boxSize="20px"
                       objectFit="cover"
-                      src="/stNEARorig.svg"
+                      src="/meta.svg"
                       alt="stnear"
                     />
                   </Square>
@@ -168,24 +169,27 @@ const Header: React.FC<ButtonProps> = (props) => {
                     />
                   )}
                   <MenuList>
-                    <MenuItem
-                      as={"a"}
-                      href={`${nearConfig.explorerUrl}/accounts/${signInAccountId}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      My dashboard
-                    </MenuItem>
-                    <MenuItem onClick={() => logout()}>Disconnect</MenuItem>
-                    <Show below="lg">
-                      <MenuDivider />
-                      <MenuItem onClick={() => router.push("/#dashboard")}>
-                        My Dashboard
-                      </MenuItem>
                       <MenuItem onClick={() => router.push("/#faq")}>
                         FAQ
                       </MenuItem>
-                    </Show>
+                    {
+                      isLogin && ( 
+                        <>
+                          <MenuItem
+                              as={"a"}
+                              href={`${nearConfig.explorerUrl}/accounts/${signInAccountId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              My Wallet
+                          </MenuItem>
+                          <MenuItem onClick={() => router.push("/#dashboard")}>
+                            My Dashboard
+                          </MenuItem>
+                          <MenuItem onClick={() => logout()}>Disconnect</MenuItem>
+                        </>
+                      )
+                    }
                   </MenuList>
                 </Menu>
               </>
