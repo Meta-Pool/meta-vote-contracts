@@ -11,4 +11,3 @@ crate-type = ["cdylib", "rlib"]
 near-sdk = "4.0.0"
 near-contract-standards = "4.0.0"
 uint = "0.9.3"
-geo-types = "0.7.5"

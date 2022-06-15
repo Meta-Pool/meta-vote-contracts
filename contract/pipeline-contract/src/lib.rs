@@ -4,11 +4,11 @@ use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault, require};
 
 // mod constants;
-// mod deposit;
+mod deposit;
 // mod internal;
 // mod locking_position;
 mod types;
-// mod utils;
+mod utils;
 mod event;
 mod votable_object;
 // mod withdraw;
@@ -30,4 +30,7 @@ pub struct PipelineContract {
     pub balance: Balance,
     pub votable_objects: Vector<VotableObject>,
     pub events: Vector<Event>,
+
+    // Base fee in Meta to create a votable object.
+    pub base_fee: Meta,
 }
