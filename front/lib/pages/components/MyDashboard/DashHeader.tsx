@@ -29,7 +29,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAvailableVotingPower2 } from '../../../lib/near';
+import { getAvailableVotingPower } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 
 type Props = {
@@ -40,18 +40,16 @@ const DashboardHeader = (props: Props) => {
   const { wallet, isLogin} = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [ sliderValue, setSliderValue] = useState(15);
-  const [ votingPower, setVotingPower] = useState(10);
-  const [ vPowerInUse, setVPowerInUse] = useState(10);
+  const [ votingPower, setVotingPower] = useState(0);
+  const [ vPowerInUse, setVPowerInUse] = useState(0);
 
 
   useEffect(  () =>{
     (async ()=> {
-      if (isLogin) {
-        const vPower = await getAvailableVotingPower2(wallet);
-        setVotingPower(vPower);
-      }
+      const vPower = await getAvailableVotingPower();
+      setVotingPower(vPower);
     })();
-  },[wallet, isLogin])
+  },[])
 
 
   return (

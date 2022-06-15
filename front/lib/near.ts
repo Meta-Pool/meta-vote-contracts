@@ -206,3 +206,16 @@ const callViewMetaTokenMethod = async (
   return (contract as any)[method](args);
 };
 
+
+
+export const getAvailableVotingPower = async () => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {});
+};
+
+
+export const getAvailableVotingPower2 = async (wallet: any) => {
+  const contract = await getContract(wallet);
+  const args = {};
+  const response = (contract as any)[metavoteViewMethods.getAvailableVotingPower]();
+  return response;
+};
