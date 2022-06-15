@@ -1,7 +1,5 @@
-import { AddIcon, MinusIcon } from '@chakra-ui/icons';
-import {  Container} from '@chakra-ui/react';
 import React from 'react';
-import DashboardHeader from './header';
+import DashboardHeader from './DashHeader';
 
 type Props = {
   shortVersion?: boolean

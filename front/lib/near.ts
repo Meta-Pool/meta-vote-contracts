@@ -17,8 +17,8 @@ const BN = require("bn.js");
 import { getConfig } from "../config";
 import { TransactionStatusResult } from "../types/transactions.types";
 import {
-  katherineViewMethods,
-  katherineChangeMethods,
+  metavoteViewMethods,
+  metavoteChangeMethods,
   metaPoolMethods,
   metaTokenMethods,
   projectTokenViewMethods,
@@ -72,8 +72,8 @@ export const signOutWallet = async () => {
 
 export const getContract = async (wallet: WalletConnection) => {
   return new Contract(wallet.account(), CONTRACT_ID!, {
-    viewMethods: Object.values(katherineViewMethods),
-    changeMethods: Object.values(katherineChangeMethods),
+    viewMethods: Object.values(metavoteViewMethods),
+    changeMethods: Object.values(metavoteChangeMethods),
   });
 };
 
@@ -91,88 +91,8 @@ export const getMetaTokenContract = async (wallet: WalletConnection) => {
   });
 };
 
-export const getTotalKickstarters = async () => {
-  return callPublicKatherineMethod(
-    katherineViewMethods.getTotalKickstarters,
-    {}
-  );
-};
 
-export const getSupportedKickstarters = async (supporter_id: any) => {
-  const st_near_price = await getStNearPrice();
-  return callPublicKatherineMethod(
-    katherineViewMethods.getSupportedDetailedList,
-    {
-      supporter_id: supporter_id,
-      st_near_price: st_near_price,
-      from_index: 0,
-      limit: 10,
-    }
-  );
-};
 
-export const getSupporterTotalDepositInKickstarter = async (
-  supporter_id: string,
-  kickstarter_id: number
-) => {
-  const st_near_price = await getStNearPrice();
-  return callPublicKatherineMethod(
-    katherineViewMethods.getSupporterTotalDepositInKickstarter,
-    {
-      supporter_id: supporter_id,
-      kickstarter_id: kickstarter_id,
-      st_near_price: st_near_price,
-    }
-  );
-};
-
-export const getSupporterEstimatedStNear = async (
-  wallet: WalletConnection,
-  kickstarter_id: number,
-  price: string
-) => {
-  return callPublicKatherineMethod(
-    katherineViewMethods.getSupporterEstimatedStNear,
-    {
-      supporter_id: wallet.getAccountId(),
-      kickstarter_id,
-      st_near_price: price,
-    }
-  );
-};
-
-export const getKickstarters = async () => {
-  return callPublicKatherineMethod(katherineViewMethods.getKickstarters, {
-    from_index: 0,
-    limit: 10,
-  });
-};
-
-export const getKickstarter = async (projectId: number) => {
-  return callPublicKatherineMethod(katherineViewMethods.getKickstarter, {
-    kickstarter_id: projectId,
-  });
-};
-
-export const getProjectDetails = async (projectId: number) => {
-  return callPublicKatherineMethod(katherineViewMethods.getProjectDetails, {
-    kickstarter_id: projectId,
-  });
-};
-
-export const getKickstarterIdFromSlug = async (slug: string) => {
-  return callPublicKatherineMethod(
-    katherineViewMethods.getKickstarterIdFromSlug,
-    { slug: slug }
-  );
-};
-
-export const getActiveProjects = async () => {
-  return callPublicKatherineMethod(katherineViewMethods.getActiveProjects, {
-    from_index: 0,
-    limit: 10,
-  });
-};
 
 export const getStNearPrice = async () => {
   return callPublicMetapoolMethod(metaPoolMethods.getStNearPrice, {});
@@ -200,42 +120,6 @@ export const getBalance = async (wallet: WalletConnection): Promise<number> => {
   return yton(accountInfo.st_near);
 };
 
-
-export const getSupporterDetailedList = async (supporter_id: string) => {
-  const st_near_price = await getStNearPrice();
-  return callPublicKatherineMethod(
-    katherineViewMethods.getSupportedDetailedList,
-    {
-      supporter_id: supporter_id,
-      st_near_price: st_near_price,
-      from_index: 0,
-      limit: 10,
-    }
-  );
-};
-
-export const fundToKickstarter = async (
-  wallet: WalletConnection,
-  kickstarter_id: number,
-  amountOnStNear: number
-) => {
-  const contract = await getMetapoolContract(wallet);
-  const args = {
-    receiver_id: CONTRACT_ID,
-    amount: ntoy(amountOnStNear),
-    msg: kickstarter_id.toString(),
-  };
-  const response = await wallet
-    .account()
-    .functionCall(
-      METAPOOL_CONTRACT_ID!,
-      "ft_transfer_call",
-      args,
-      "200000000000000",
-      "1"
-    );
-  return providers.getTransactionLastResult(response);
-};
 
 export const getTxStatus = async (
   txHash: string,
@@ -267,63 +151,6 @@ export const getTxStatus = async (
     transactionExplorerUrl: txUrl,
   };
 };
-export const withdrawAll = async (
-  wallet: WalletConnection,
-  kickstarter_id: number
-) => {
-  const contract = await getContract(wallet);
-  const args = {
-    kickstarter_id: kickstarter_id,
-  };
-  const response = (contract as any)["withdraw_all"](args, "200000000000000");
-  return response;
-};
-
-export const withdraw = async (
-  wallet: WalletConnection,
-  kickstarter_id: number,
-  amount: string
-) => {
-  const contract = await getContract(wallet);
-  const args = {
-    kickstarter_id: kickstarter_id,
-    amount,
-  };
-  const response = (contract as any)["withdraw"](args, "200000000000000");
-  return response;
-};
-
-export const claimAll = async (
-  wallet: WalletConnection,
-  kickstarter_id: number
-) => {
-  const contract = await getContract(wallet);
-  const args = {
-    kickstarter_id: kickstarter_id,
-  };
-  const response = (contract as any)["claim_all_kickstarter_tokens"](
-    args,
-    "200000000000000"
-  );
-  return response;
-};
-
-export const claimPartial = async (
-  wallet: WalletConnection,
-  kickstarter_id: number,
-  amount: string
-) => {
-  const contract = await getContract(wallet);
-  const args = {
-    kickstarter_id: kickstarter_id,
-    amount,
-  };
-  const response = (contract as any)["claim_all_kickstarter_tokens"](
-    args,
-    "200000000000000"
-  );
-  return response;
-};
 
 export const getContractMetadata = async (contract: string) => {
   const response: any = await provider.query({
@@ -336,46 +163,8 @@ export const getContractMetadata = async (contract: string) => {
   return decodeJsonRpcData(response.result);
 };
 
-export const getBalanceOfTokenForSupporter = async (wallet: WalletConnection, tokenContractAddress: string) => {
-  const response: any = await provider.query({
-    request_type: "call_function",
-    finality: "final",
-    account_id: tokenContractAddress,
-    method_name: projectTokenViewMethods.storageBalanceOf,
-    args_base64: encodeJsonRpcData({account_id: wallet.getAccountId()}),
-  });
-  return decodeJsonRpcData(response.result);
 
-}
-
-export const storageDepositOfTokenForSupporter = async (wallet: WalletConnection, tokenContractAddress: string) => {
-  const bounds: any = await getStorageBalanceBounds(tokenContractAddress)
-  const response = await wallet
-    .account()
-    .functionCall(
-      tokenContractAddress!,
-      projectTokenChangeMethods.storageDeposit,
-      {},
-      "200000000000000",
-      bounds.min
-    );
-  return providers.getTransactionLastResult(response);
-
-
-}
-
-const getStorageBalanceBounds = async (contract: string) => {
- const response: any = await provider.query({
-    request_type: "call_function",
-    finality: "final",
-    account_id: contract,
-    method_name: projectTokenViewMethods.storageBalanceBounds,
-    args_base64: encodeJsonRpcData({}),
-  });
-  return decodeJsonRpcData(response.result);
-}
-
-const callPublicKatherineMethod = async (method: string, args: any) => {
+const callPublicMetavoteMethod = async (method: string, args: any) => {
   const response: any = await provider.query({
     request_type: "call_function",
     finality: "final",
