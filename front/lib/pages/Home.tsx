@@ -1,7 +1,7 @@
 
 import {  Container } from "@chakra-ui/react";
 import * as React from "react";
-import { useExample } from "../hooks/example";
+import { useExample } from "./../hooks/example";
 import ErrorHandlerHash from "./components/ErrorHandlerHash";
 import PageLoading from "./components/PageLoading";
 
