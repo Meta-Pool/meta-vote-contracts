@@ -30,6 +30,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useState } from 'react';
 import { colors } from '../../../constants/colors';
+import { voteProject } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 
 type Props = {
@@ -37,13 +38,12 @@ type Props = {
 }
 
 const ProjectList = (props: Props) => {
-  const { wallet, isLogin} = useWallet();
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const [sliderValue, setSliderValue] = useState(15)
-
-  const vote = (voteId: any) => {
-    
+  const { wallet }= useWallet();
+  const vote = (id: string)=> {
+    const contract = 'metayield-proyect';
+    voteProject(id, contract, '1', wallet);
   }
+
 
   return (
     <section>
@@ -57,25 +57,25 @@ const ProjectList = (props: Props) => {
             <Text fontSize={'lg'} color={colors.primary} mt={5}>
                 Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but occasionally circumstances occur in which toil and pain can procure him some great pleasure
             </Text>
-            <Button mt={10} w={300} colorScheme={colors.primary}>
+            <Button mt={10} w={300} colorScheme={colors.primary} onClick={()=> vote('1')}>
               Vote
             </Button>
           </Box>
           <Box w={'30%'} border={'1px'} borderColor={colors.primary} p={10}>
-            <Text fontSize={'2xl'}>Project Demo 1 - <Badge>Votes: 0</Badge></Text>
+            <Text fontSize={'2xl'}>Project Demo 2 - <Badge>Votes: 0</Badge></Text>
             <Text fontSize={'lg'} color={colors.primary} mt={5}>
                 Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but occasionally circumstances occur in which toil and pain can procure him some great pleasure
             </Text>
-            <Button mt={10} w={300} colorScheme={colors.primary}>
+            <Button mt={10} w={300} colorScheme={colors.primary} onClick={()=> vote('2')}>
               Vote
             </Button>
           </Box>
           <Box w={'30%'} border={'1px'} borderColor={colors.primary} p={10}>
-            <Text fontSize={'2xl'}>Project Demo 1 - <Badge>Votes: 0</Badge></Text>
+            <Text fontSize={'2xl'}>Project Demo 3 - <Badge>Votes: 0</Badge></Text>
             <Text fontSize={'lg'} color={colors.primary} mt={5}>
                 Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but occasionally circumstances occur in which toil and pain can procure him some great pleasure
             </Text>
-            <Button mt={10} w={300} colorScheme={colors.primary}>
+            <Button mt={10} w={300} colorScheme={colors.primary} onClick={()=> vote('3')}>
               Vote
             </Button>
           </Box>
