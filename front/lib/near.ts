@@ -248,6 +248,13 @@ export const getUnlockingBalance = async () => {
   return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {});
 };
 
+export const getVotes = async (id: string, contract: string) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getTotalVotes, {
+    contract_address: contract,
+    votable_object_id: id
+  });
+};
+
 /*********** METAVOTE CHANGE METHODS *************/
 
 
