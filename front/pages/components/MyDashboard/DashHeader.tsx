@@ -22,13 +22,17 @@ import {
   SliderFilledTrack,
   SliderThumb,
   VStack,
-  StackDivider
+  StackDivider,
+  toast
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
+import { useFormik } from 'formik';
+import lockValidation from '../../../validation/lockValidation';
+import { yton } from '../../../lib/util';
 
 type Props = {
   shortVersion?: boolean
@@ -42,18 +46,42 @@ const DashboardHeader = (props: Props) => {
 
   const initMyData = async ()=> {
     const newVoterData = voterData;
-    newVoterData.votingPower = await getAvailableVotingPower();
-    newVoterData.inUseVPower = await getInUseVotingPower();
-    newVoterData.metaLocked = await getLockedBalance();
-    newVoterData.metaUnlocking = await getUnlockingBalance();
-    newVoterData.projectsVoted = await getBalanceMetaVote();
+    newVoterData.votingPower = await getAvailableVotingPower(wallet);
+    // newVoterData.inUseVPower = await getInUseVotingPower(wallet);
+    newVoterData.metaLocked = await getLockedBalance(wallet);
+    newVoterData.metaUnlocking = await getUnlockingBalance(wallet);
+    newVoterData.projectsVoted = await getBalanceMetaVote(wallet); 
     setVoterData(newVoterData);
+  }
+
+  const initialValuesDeposit: any = {
+    amount_lock: 0
+  };
+
+  const formikDeposit = useFormik({
+    initialValues: initialValuesDeposit,
+    validationSchema: lockValidation,
+    validateOnMount: true,
+    enableReinitialize: true,
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: async (values: any) => {
+      if (values.amount_deposit < 1) {
+        // show toast error
+      } else {
+        lockMetas(values);
+      }
+    },
+  });
+  
+  const lockMetas = (values: any)=> {
+
   }
 
   useEffect(  () =>{
     (async ()=> {
-      if (isLogin) {
-        // initMyData()
+      if (isLogin && wallet) {
+        initMyData()
       }
     })();
   },[wallet, isLogin])
@@ -71,11 +99,11 @@ const DashboardHeader = (props: Props) => {
         <Flex mt={20} wrap={'wrap'} justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }}>
           <Box>
             <Text fontSize={'2xl'}>My Voting Power</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{voterData.votingPower}</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{yton(voterData.votingPower)}</Text>
           </Box>
           <Box>
             <Text fontSize={'2xl'}>In use</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{voterData.inUseVPower}</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{yton(voterData.inUseVPower)}</Text>
           </Box>
           <Box p={10} border='2px' borderColor={colors.primary} >
             <Text fontSize={'xl'}>Projects Finished</Text>
@@ -89,15 +117,15 @@ const DashboardHeader = (props: Props) => {
         <Flex mt={20} wrap={'wrap'} justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }}>
           <Box>
             <Text fontSize={'2xl'}>$META Locked</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{voterData.metaLocked}</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{yton(voterData.metaLocked)}</Text>
           </Box>
           <Box>
             <Text fontSize={'2xl'}>$META Unlocking</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{voterData.metaUnlocking}</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{yton(voterData.metaUnlocking)}</Text>
           </Box>
           <Box>
             <Text fontSize={'xl'}>$META to Withdraw</Text>
-            <Text fontSize={'4xl'}>{voterData.metaToWithdraw}</Text>
+            <Text fontSize={'4xl'}>{yton(voterData.metaToWithdraw)}</Text>
             <Button  w={300} onClick={()=> initMyData()} colorScheme={colors.primary}>
               Withdraw
             </Button>
@@ -114,7 +142,14 @@ const DashboardHeader = (props: Props) => {
               <Text fontSize={'xs'}>$META Amount {sliderValue}</Text>
               <InputGroup colorScheme={colors.primary} size='sm'>
                 <InputLeftAddon> $META</InputLeftAddon>
-                <Input colorScheme={colors.primary} placeholder='0' />
+                <Input
+                    id="amount_deposit"
+                    name="amount_deposit"
+                    colorScheme={colors.primary} 
+                    placeholder='0'
+                    value={formikDeposit.values.amount_deposit}
+                    onPaste={formikDeposit.handleChange}
+                    onBlur={formikDeposit.handleBlur}></Input>
                 <InputRightAddon>
                   <Button h='1.75rem' size='sm'>
                     Max

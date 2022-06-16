@@ -32,10 +32,10 @@ const ProjectList = (props: Props) => {
     if( isLogin) {
       const myVotes1 = await getVotes("1", "metayield-proyect")
       setVotes1(myVotes1);
-      const myVotes2 = await getVotes("2", "metayield-proyect")
+      /* const myVotes2 = await getVotes("2", "metayield-proyect")
       setVotes1(myVotes2);
       const myVotes3 = await getVotes("3", "metayield-proyect")
-      setVotes1(myVotes3);
+      setVotes1(myVotes3); */
     }
   } )()
   },[isLogin])

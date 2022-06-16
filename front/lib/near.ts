@@ -33,6 +33,7 @@ import {
   yton,
 } from "./util";
 import { ExecutionError } from "near-api-js/lib/providers/provider";
+import { Wallet } from "phosphor-react";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
@@ -224,28 +225,28 @@ const callChangeMetaTokenMethod = async (
 
 /*********** METAVOTE VIEW METHODS *************/
 
-export const getAvailableVotingPower = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {});
+export const getAvailableVotingPower = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {voter_id: wallet.getAccountId()});
 };
 
-export const getInUseVotingPower = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getUsedVotingPower, {});
+export const getInUseVotingPower = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getUsedVotingPower, {voter_id: wallet.getAccountId()});
 };
 
-export const getAllLockingPositions = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getAllLockingPositions, {});
+export const getAllLockingPositions = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getAllLockingPositions, {voter_id: wallet.getAccountId()});
 };
 
-export const getBalanceMetaVote = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getBalance, {});
+export const getBalanceMetaVote = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getBalance, {voter_id: wallet.getAccountId()});
 };
 
-export const getLockedBalance = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getLockedBalance, {});
+export const getLockedBalance = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getLockedBalance, {voter_id: wallet.getAccountId()});
 };
 
-export const getUnlockingBalance = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {});
+export const getUnlockingBalance = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {voter_id: wallet.getAccountId()});
 };
 
 export const getVotes = async (id: string, contract: string) => {
