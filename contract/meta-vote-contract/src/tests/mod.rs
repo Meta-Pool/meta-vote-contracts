@@ -10,7 +10,7 @@ fn new_contract() -> MetaVoteContract {
         owner_account(),
         MIN_LOCKING_PERIOD,
         MAX_LOCKING_PERIOD,
-        MIN_DEPOSIT_AMOUNT,
+        U128::from(MIN_DEPOSIT_AMOUNT),
         MAX_LOCKING_POSITIONS,
         MAX_VOTING_POSITIONS,
         meta_token_account(),
@@ -808,7 +808,7 @@ fn test_rebalance_increase_and_decrease() {
     let voter = contract.internal_get_voter(&sender_id);
     assert_eq!(voter.voting_power, delta_1, "Incorrect Voting Power calculation.");
 
-    let votes_for_address = voter.get_votes_for_address(&contract_address);
+    let votes_for_address = voter.get_votes_for_address(&sender_id, &contract_address);
     let votes = votes_for_address.get(&votable_object_id).unwrap();
 
     // Increase votes.
@@ -822,7 +822,143 @@ fn test_rebalance_increase_and_decrease() {
     let voter = contract.internal_get_voter(&sender_id);
     assert_eq!(voter.voting_power, delta_1 - delta_2, "Incorrect Voting Power calculation.");
 
-    let votes_for_address = voter.get_votes_for_address(&contract_address);
+    let votes_for_address = voter.get_votes_for_address(&sender_id, &contract_address);
     let votes = votes_for_address.get(&votable_object_id).unwrap();
     assert_eq!(votes, u128::from(additional_votes), "Incorrect Voting Power calculation.");
+}
+
+#[test]
+fn test_multi_voter_contract() {
+    struct User {
+        id: String,
+        votes: VotingPower,
+        locking_period: Days,
+        contract_address: ContractAddress,
+        votable_object_id: VotableObjId
+    }
+    let users = vec![
+        User{id: "1".to_owned(), votes: 10 * YOCTO_UNITS, locking_period: 30,
+                contract_address: multi_voter_account("v1.near".to_owned()),
+                votable_object_id: "1".to_string()},
+        User{id: "2".to_owned(), votes: 1 * YOCTO_UNITS, locking_period: 45,
+                contract_address: multi_voter_account("v1.near".to_owned()),
+                votable_object_id: "1".to_string()},
+        User{id: "3".to_owned(), votes: 24 * YOCTO_UNITS, locking_period: 200,
+                contract_address: multi_voter_account("v1.near".to_owned()),
+                votable_object_id: "2".to_string()},
+        User{id: "4".to_owned(), votes: 8 * YOCTO_UNITS, locking_period: 300,
+                contract_address: multi_voter_account("v2.near".to_owned()),
+                votable_object_id: "1".to_string()},
+    ];
+
+    let mut votes_1_1 = 0_u128;
+    let mut votes_1_2 = 0_u128;
+    let mut votes_2_1 = 0_u128;
+    let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
+    let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
+
+    let context = get_context(
+        meta_token_account(),
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        timestamp_0
+    );
+    let mut contract = get_contract_setup(context);
+
+    for user in users.iter() {
+        let context = get_context(
+            meta_token_account(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_0
+        );
+        testing_env!(context.clone());
+
+        let sender_id: AccountId = multi_voter_account(user.id.clone());
+        let amount = U128::from(user.votes);
+        let msg: String = user.locking_period.to_string();
+        contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.clone(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_1
+        );
+        testing_env!(context.clone());
+
+        let voting_power = contract.calculate_voting_power(
+            u128::from(amount),
+            user.locking_period.clone()
+        );
+        assert_eq!(
+            u128::from(contract.get_available_voting_power()),
+            voting_power,
+            "Incorrect voting power for user."
+        );
+        let votes_to_use = user.votes;
+        let remaining = voting_power - votes_to_use;
+        contract.vote(
+            U128::from(votes_to_use),
+            user.contract_address.clone(),
+            user.votable_object_id.clone()
+        );
+
+        if user.id.clone() == "1".to_string() || user.id.clone() == "2".to_string() {
+            votes_1_1 += votes_to_use;
+        } else if user.id.clone() == "3".to_string() {
+            votes_1_2 += votes_to_use;
+        } else if user.id.clone() == "4".to_string() {
+            votes_2_1 += votes_to_use;
+        }
+
+        assert_eq!(
+            VotingPowerJSON::from(votes_to_use),
+            contract.get_used_voting_power(),
+            "Incorrect used voting power."
+        );
+        assert_eq!(
+            VotingPowerJSON::from(remaining),
+            contract.get_available_voting_power(),
+            "Incorrect remaining voting power."
+        );
+    }
+
+    // Unvote and vote again to test contract total voting consistency.
+    let user = users.get(3).unwrap();
+    let sender_id: AccountId = multi_voter_account(user.id.clone());
+    let context = get_context(
+        sender_id.clone(),
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        timestamp_1
+    );
+    testing_env!(context.clone());
+    contract.unvote(
+        user.contract_address.clone(),
+        user.votable_object_id.clone()
+    );
+    contract.vote(
+        U128::from(user.votes.clone()),
+        user.contract_address.clone(),
+        user.votable_object_id.clone()
+    );
+
+    assert_eq!(
+        contract.get_total_votes(multi_voter_account("v1.near".to_owned()), "1".to_string()),
+        VotingPowerJSON::from(votes_1_1),
+        "Incorrect vote count for project 1, object 1."
+    );
+    assert_eq!(
+        contract.get_total_votes(multi_voter_account("v1.near".to_owned()), "2".to_string()),
+        VotingPowerJSON::from(votes_1_2),
+        "Incorrect vote count for project 1, object 2."
+    );
+    assert_eq!(
+        contract.get_total_votes(multi_voter_account("v2.near".to_owned()), "1".to_string()),
+        VotingPowerJSON::from(votes_2_1),
+        "Incorrect vote count for project 2, object 1."
+    );
+
 }

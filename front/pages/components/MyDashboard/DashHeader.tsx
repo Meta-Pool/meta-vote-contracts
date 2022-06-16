@@ -4,7 +4,6 @@ import {
   Container, 
   Flex, 
   Heading, 
-  LinkOverlay, 
   Text, 
   useDisclosure, 
   Modal,
@@ -22,15 +21,14 @@ import {
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
-  Divider,
-  Spacer,
   VStack,
   StackDivider
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAvailableVotingPower2 } from '../../../lib/near';
+import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
+import { useStore as useVoter } from "../../../stores/voter";
 
 type Props = {
   shortVersion?: boolean
@@ -40,15 +38,22 @@ const DashboardHeader = (props: Props) => {
   const { wallet, isLogin} = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [ sliderValue, setSliderValue] = useState(15);
-  const [ votingPower, setVotingPower] = useState(10);
-  const [ vPowerInUse, setVPowerInUse] = useState(10);
+  const { voterData, setVoterData } = useVoter();
 
+  const initMyData = async ()=> {
+    const newVoterData = voterData;
+    newVoterData.votingPower = await getAvailableVotingPower();
+    newVoterData.inUseVPower = await getInUseVotingPower();
+    newVoterData.metaLocked = await getLockedBalance();
+    newVoterData.metaUnlocking = await getUnlockingBalance();
+    newVoterData.projectsVoted = await getBalanceMetaVote();
+    setVoterData(newVoterData);
+  }
 
   useEffect(  () =>{
     (async ()=> {
       if (isLogin) {
-        const vPower = await getAvailableVotingPower2(wallet);
-        setVotingPower(vPower);
+        // initMyData()
       }
     })();
   },[wallet, isLogin])
@@ -66,34 +71,34 @@ const DashboardHeader = (props: Props) => {
         <Flex mt={20} wrap={'wrap'} justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }}>
           <Box>
             <Text fontSize={'2xl'}>My Voting Power</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{votingPower}</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{voterData.votingPower}</Text>
           </Box>
           <Box>
             <Text fontSize={'2xl'}>In use</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{vPowerInUse}</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{voterData.inUseVPower}</Text>
           </Box>
           <Box p={10} border='2px' borderColor={colors.primary} >
             <Text fontSize={'xl'}>Projects Finished</Text>
-            <Text fontSize={'4xl'}>0</Text>
+            <Text fontSize={'4xl'}>{voterData.projectsFinished}</Text>
           </Box>
           <Box p={10} border='2px' borderColor={colors.primary}>
             <Text fontSize={'xl'}>Projects you voted</Text>
-            <Text fontSize={'4xl'}>0</Text>
+            <Text fontSize={'4xl'}>{voterData.projectsVoted}</Text>
           </Box>
         </Flex>
         <Flex mt={20} wrap={'wrap'} justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }}>
           <Box>
             <Text fontSize={'2xl'}>$META Locked</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>0</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{voterData.metaLocked}</Text>
           </Box>
           <Box>
             <Text fontSize={'2xl'}>$META Unlocking</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>0</Text>
+            <Text fontSize={'6xl'} color={colors.primary}>{voterData.metaUnlocking}</Text>
           </Box>
           <Box>
             <Text fontSize={'xl'}>$META to Withdraw</Text>
-            <Text fontSize={'4xl'}>0</Text>
-            <Button  w={300} colorScheme={colors.primary}>
+            <Text fontSize={'4xl'}>{voterData.metaToWithdraw}</Text>
+            <Button  w={300} onClick={()=> initMyData()} colorScheme={colors.primary}>
               Withdraw
             </Button>
           </Box>

@@ -6,7 +6,9 @@ export const metavoteViewMethods = {
   getLockedBalance: "get_locked_balance",
   getUnlockingBalance: "get_unlocking_balance",
   getAvailableVotingPower: "get_available_voting_power",
-  getUsedVotingPower: "get_used_voting_power"
+  getUsedVotingPower: "get_used_voting_power",
+  getTotalVotes: "get_total_votes"
+
 };
 
 // katherine gas methods (change methods)

@@ -176,11 +176,17 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
+const callChangeMetavoteMethod = async (wallet: any, args: any, method: string) => {
+  const contract = await getContract(wallet);
+  const response = (contract as any)[method](args, "200000000000000");
+  return response;
+};
+
 const callPublicMetapoolMethod = async (method: string, args: any) => {
   const response: any = await provider.query({
     request_type: "call_function",
     finality: "final",
-    account_id: METAPOOL_CONTRACT_ID,
+    account_id: META_CONTRACT_ID,
     method_name: method,
     args_base64: encodeJsonRpcData(args),
   });
@@ -206,16 +212,66 @@ const callViewMetaTokenMethod = async (
   return (contract as any)[method](args);
 };
 
+const callChangeMetaTokenMethod = async (
+  wallet: WalletConnection,
+  method: string,
+  args: any
+) => {
+  const contract = await getMetaTokenContract(wallet);
+  return (contract as any)[method](args, "300000000000000", // attached GAS (optional)
+  "1000000000000000000000000");
+};
 
+/*********** METAVOTE VIEW METHODS *************/
 
 export const getAvailableVotingPower = async () => {
   return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {});
 };
 
+export const getInUseVotingPower = async () => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getUsedVotingPower, {});
+};
 
-export const getAvailableVotingPower2 = async (wallet: any) => {
-  const contract = await getContract(wallet);
-  const args = {};
-  const response = (contract as any)[metavoteViewMethods.getAvailableVotingPower]();
-  return response;
+export const getAllLockingPositions = async () => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getAllLockingPositions, {});
+};
+
+export const getBalanceMetaVote = async () => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getBalance, {});
+};
+
+export const getLockedBalance = async () => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getLockedBalance, {});
+};
+
+export const getUnlockingBalance = async () => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {});
+};
+
+export const getVotes = async (id: string, contract: string) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getTotalVotes, {
+    contract_address: contract,
+    votable_object_id: id
+  });
+};
+
+/*********** METAVOTE CHANGE METHODS *************/
+
+
+export const voteProject = async (id: string, contractName: string, votingPower: string, wallet: any ) => {
+  const args = {
+    voting_power: votingPower,
+    contract_address: contractName,
+    votable_object_id: id
+  }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.vote);
+};
+
+export const lock = async (id: string, contractName: string, votingPower: string, wallet: any ) => {
+  const args = {
+    receiver_id: votingPower,
+    amount: contractName,
+    votable_object_id: id
+  }
+  return  callChangeMetaTokenMethod(wallet,  "ft_transfer_call", args);
 };
