@@ -32,7 +32,7 @@ impl VotableObject {
             .expect("Votable object not in correct format [i.e. id@contract_address]");
         let id: VotableObjId = id.to_string();
         require!(!id.is_empty(), "Votable object is not correct.");
-        let votable_contract = ContractAddress::from(votable_contract);
+        let votable_contract = ContractAddress::new_unchecked(votable_contract.to_string());
         (id, votable_contract)
     }
 }

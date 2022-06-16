@@ -3,6 +3,13 @@ use near_sdk::{near_bindgen};
 
 #[near_bindgen]
 impl MetaVoteContract {
+    pub(crate) fn assert_only_owner(&self) {
+        require!(
+            self.owner_id == env::predecessor_account_id(),
+            "Only the owner can call this function."
+        );
+    }
+
     /// Inner method to get or create a Voter.
     pub(crate) fn internal_get_voter(&self, voter_id: &VoterId) -> Voter {
         self.voters.get(voter_id).unwrap_or(Voter::new(voter_id))

@@ -4,6 +4,7 @@ use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::json_types::U128;
 
 pub type VoterId = AccountId;
+pub type VoterIdJSON = String;
 pub type VotingPower = u128;
 pub type Days = u16;
 pub type Meta = Balance;
@@ -15,6 +16,7 @@ pub type PositionIndex = u64;
 pub type BalanceJSON = U128;
 pub type MetaJSON = U128;
 pub type VotingPowerJSON = U128;
+pub type ContractAddressJSON = String;
 
 construct_uint! {
     /// 256-bit unsigned integer.
@@ -29,4 +31,12 @@ pub struct LockingPositionJSON {
     pub locking_period: Days,
     pub voting_power: VotingPowerJSON,
     pub unlocking_started_at: Option<EpochMillis>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct VotableObjectJSON {
+    pub votable_contract: ContractAddressJSON,
+    pub id: VotableObjId,
+    pub current_votes: VotingPowerJSON
 }

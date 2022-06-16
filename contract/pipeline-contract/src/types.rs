@@ -23,10 +23,8 @@ construct_uint! {
 
 // #[derive(Serialize, Deserialize)]
 // #[serde(crate = "near_sdk::serde")]
-// pub struct LockingPositionJSON {
-//     pub index: Option<PositionIndex>,
-//     pub amount: MetaJSON,
-//     pub locking_period: Days,
-//     pub voting_power: VotingPowerJSON,
-//     pub unlocking_started_at: Option<EpochMillis>,
+// pub struct VotableObjectJSON {
+//     pub votable_contract: ContractAddressJSON,
+//     pub id: VotableObjId,
+//     pub current_votes: VotingPowerJSON
 // }

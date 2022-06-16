@@ -42,17 +42,6 @@ impl FungibleTokenReceiver for PipelineContract {
     //     self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
 
     //     // Return unused amount
-    //     PromiseOrValue::Value(U128::from(0))
-    }
-}
-
-#[near_bindgen]
-impl MetaVoteContract {
-    fn assert_min_deposit_amount(&self, amount: Balance) {
-        assert!(
-            amount >= self.min_deposit_amount,
-            "Minimum deposit amount is {} $META.",
-            self.min_deposit_amount
-        );
+        PromiseOrValue::Value(U128::from(0))
     }
 }

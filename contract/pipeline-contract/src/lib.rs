@@ -1,9 +1,9 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::Vector;
 use near_sdk::collections::unordered_map::UnorderedMap;
-use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault, require};
+use near_sdk::{env, near_bindgen, AccountId, Balance, PanicOnDefault, require};
 
-// mod constants;
+mod constants;
 mod deposit;
 // mod internal;
 // mod locking_position;
@@ -19,7 +19,7 @@ use types::*;
 use event::Event;
 use votable_object::VotableObject;
 // use crate::utils::{days_to_millis, millis_to_days};
-// use crate::{constants::*, locking_position::*};
+use crate::constants::*;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -33,4 +33,26 @@ pub struct PipelineContract {
 
     // Base fee in Meta to create a votable object.
     pub base_fee: Meta,
+}
+
+#[near_bindgen]
+impl PipelineContract {
+    #[init]
+    pub fn new(
+        owner_id: AccountId,
+        base_fee: MetaJSON,
+    ) -> Self {
+        // require!(!env::state_exists(), "The contract is already initialized");
+        Self {
+            owner_id,
+            balance: 0,
+            votable_objects: Vector::new(Keys::VotableObjList),
+            events: Vector::new(Keys::VotableObjList),
+            base_fee: Meta::from(base_fee),
+        }
+    }
+
+    // *************
+    // * Unlocking *
+    // *************
 }
