@@ -555,8 +555,8 @@ impl MetaVoteContract {
         VotingPowerJSON::from(voter.voting_power)
     }
 
-    pub fn get_used_voting_power(&self) -> VotingPowerJSON {
-        let voter_id = env::predecessor_account_id();
+    pub fn get_used_voting_power(&self, voter_id: VoterIdJSON) -> VotingPowerJSON {
+        let voter_id: VoterId = voter_id.try_into().unwrap();
         let voter = self.internal_get_voter(&voter_id);
         VotingPowerJSON::from(voter.sum_used_votes())
     }

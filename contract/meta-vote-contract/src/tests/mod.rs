@@ -959,7 +959,7 @@ fn test_multi_voter_contract() {
 
         assert_eq!(
             VotingPowerJSON::from(votes_to_use),
-            contract.get_used_voting_power(),
+            contract.get_used_voting_power(sender_id.to_string()),
             "Incorrect used voting power."
         );
         assert_eq!(
