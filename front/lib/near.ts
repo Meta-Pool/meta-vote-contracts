@@ -219,8 +219,7 @@ const callChangeMetaTokenMethod = async (
   args: any
 ) => {
   const contract = await getMetaTokenContract(wallet);
-  return (contract as any)[method](args, "300000000000000", // attached GAS (optional)
-  "1000000000000000000000000");
+  return (contract as any)[method](args, "300000000000000", "1");
 };
 
 /*********** METAVOTE VIEW METHODS *************/
@@ -268,11 +267,11 @@ export const voteProject = async (id: string, contractName: string, votingPower:
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.vote);
 };
 
-export const lock = async (id: string, contractName: string, votingPower: string, wallet: any ) => {
+export const lock = async (days: string, amount: string, wallet: any ) => {
   const args = {
-    receiver_id: votingPower,
-    amount: contractName,
-    votable_object_id: id
+    receiver_id: CONTRACT_ID,
+    amount: amount,
+    msg: days
   }
   return  callChangeMetaTokenMethod(wallet,  "ft_transfer_call", args);
 };
