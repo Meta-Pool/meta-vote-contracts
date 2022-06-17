@@ -49,6 +49,7 @@ const DashboardHeader = (props: Props) => {
     newVoterData.votingPower = await getAvailableVotingPower(wallet);
     newVoterData.inUseVPower = await getInUseVotingPower(wallet);
     newVoterData.metaLocked = await getLockedBalance(wallet);
+    newVoterData.metaToWithdraw = await getBalanceMetaVote(wallet);
     newVoterData.metaUnlocking = await getUnlockingBalance(wallet);
     newVoterData.projectsVoted = await getBalanceMetaVote(wallet); 
     setVoterData(newVoterData);
@@ -75,34 +76,30 @@ const DashboardHeader = (props: Props) => {
         <Flex mt={20} wrap={'wrap'} justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }}>
           <Box>
             <Text fontSize={'2xl'}>My Voting Power</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{yton(voterData.votingPower)}</Text>
+            <Text fontSize={'4xl'} color={colors.primary}>{yton(voterData.votingPower)}</Text>
           </Box>
           <Box>
             <Text fontSize={'2xl'}>In use</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{voterData.inUseVPower}</Text>
+            <Text fontSize={'4xl'} color={colors.primary}>{voterData.inUseVPower}</Text>
           </Box>
-          <Box p={10} border='2px' borderColor={colors.primary} >
-            <Text fontSize={'xl'}>Projects Finished</Text>
-            <Text fontSize={'4xl'}>{voterData.projectsFinished}</Text>
-          </Box>
-          <Box p={10} border='2px' borderColor={colors.primary}>
-            <Text fontSize={'xl'}>Projects you voted</Text>
-            <Text fontSize={'4xl'}>{voterData.projectsVoted}</Text>
+          <Box >
+            <Text fontSize={'2xl'}>Projects you voted</Text>
+            <Text fontSize={'4xl'} color={colors.primary}>{voterData.votingResults.length}</Text>
           </Box>
         </Flex>
         <Flex mt={10} wrap={'wrap'} justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }}>
           <Box>
             <Text fontSize={'2xl'}>$META Locked</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{yton(voterData.metaLocked)}</Text>
+            <Text fontSize={'4xl'} color={colors.primary}>{yton(voterData.metaLocked)}</Text>
           </Box>
           <Box>
             <Text fontSize={'2xl'}>$META Unlocking</Text>
-            <Text fontSize={'6xl'} color={colors.primary}>{yton(voterData.metaUnlocking)}</Text>
+            <Text fontSize={'4xl'} color={colors.primary}>{yton(voterData.metaUnlocking)}</Text>
           </Box>
           <Box>
             <Text fontSize={'xl'}>$META to Withdraw</Text>
             <Text fontSize={'4xl'}>{yton(voterData.metaToWithdraw)}</Text>
-            <Button  w={300} onClick={()=> initMyData()} colorScheme={colors.primary}>
+            <Button  disabled={ parseInt(voterData.metaToWithdraw)<=0} w={300} onClick={()=> initMyData()} colorScheme={colors.primary}>
               Withdraw
             </Button>
           </Box>
