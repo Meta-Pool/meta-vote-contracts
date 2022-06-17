@@ -23,7 +23,15 @@ import {
   SliderThumb,
   VStack,
   StackDivider,
-  toast
+  toast,
+  TableContainer,
+  Table,
+  TableCaption,
+  Thead,
+  Tr,
+  Th,
+  Tbody,
+  Td
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -54,7 +62,7 @@ const LockingPosition = (props: Props) => {
   useEffect(  () =>{
     (async ()=> {
       if (isLogin && wallet) {
-        // getVotingPositions()
+        getVotingPositions()
       }
     })();
   },[wallet, isLogin])
@@ -62,20 +70,38 @@ const LockingPosition = (props: Props) => {
 
   return (
     <section>
-      <Container id="dashboard-header">
+      <Container mt={100} id="dashboard-header">
         <Flex justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }} >
-          <Heading lineHeight={'133%'} textAlign={{ base: 'center', md: 'start' }} fontWeight={700} color="gray.900" fontSize={'3xl'}> Locking Positions</Heading>
-          <Button onClick={onOpen} w={300} colorScheme={colors.primary}>
+          <Heading lineHeight={'133%'} textAlign={{ base: 'center', md: 'start' }} fontWeight={700} color="gray.900" fontSize={'2xl'}> Locking Positions</Heading>
+          {/*<Button onClick={onOpen} w={300} colorScheme={colors.primary}>
             Lock $META to get Voting Power
-          </Button>
+            </Button>*/}
         </Flex>
-        <Flex mt={20} wrap={'wrap'} justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }}>
-          {  voterData.lockingPositions.map((position: AnyNaptrRecord, index: number)=> {
-              return (
-                <Text key={index}>Position</Text>
-              )
-          })}
-        </Flex>
+        <TableContainer>
+          <Table  >
+            <Thead>
+              <Tr>
+                <Th>Position</Th>
+                <Th>Period</Th>
+                <Th isNumeric>Votinpower</Th>
+                <Th isNumeric>Amount</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {  voterData.lockingPositions.map((position: any, index: number)=> {
+                  return (
+                    <Tr key={index}>
+                      <Td>{position.index} </Td>
+                      <Td>{position.locking_period} Days</Td>
+                      <Td isNumeric>{yton(position.voting_power)}</Td>
+                      <Td isNumeric>{yton(position.amount)} $META</Td>
+                    </Tr>
+                  )
+              })}
+            </Tbody>
+          </Table>
+        </TableContainer>
+
       </Container>
       <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
 
