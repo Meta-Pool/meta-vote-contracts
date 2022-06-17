@@ -175,3 +175,23 @@ export const formatJSONErr = (obj: any) => {
 
   return text;
 };
+
+export enum POSITION_STATUS {
+  LOCKED,
+  UNLOCKED,
+  UNLOKING,
+}
+
+export const getLockinPositionStatus = (position :any) : POSITION_STATUS => {
+  
+  if (position.is_locked) {
+    return POSITION_STATUS.LOCKED;
+  }
+  if (position.is_unlocked) {
+    return POSITION_STATUS.UNLOCKED;
+  }
+  if (position.is_unlocking) {
+    return POSITION_STATUS.UNLOKING;
+  }
+  return POSITION_STATUS.LOCKED;
+}

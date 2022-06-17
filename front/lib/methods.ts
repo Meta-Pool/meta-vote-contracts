@@ -7,7 +7,8 @@ export const metavoteViewMethods = {
   getUnlockingBalance: "get_unlocking_balance",
   getAvailableVotingPower: "get_available_voting_power",
   getUsedVotingPower: "get_used_voting_power",
-  getTotalVotes: "get_total_votes"
+  getTotalVotes: "get_total_votes",
+  getVotesByAddress: "get_voting_results"
 
 };
 

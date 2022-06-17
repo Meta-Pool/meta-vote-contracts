@@ -255,6 +255,12 @@ export const getVotes = async (id: string, contract: string) => {
   });
 };
 
+export const getVotesByAddress = async (contract: string) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getVotesByAddress, {
+    contract_address: contract,
+  });
+};
+
 /*********** METAVOTE CHANGE METHODS *************/
 
 
@@ -267,6 +273,14 @@ export const voteProject = async (id: string, contractName: string, votingPower:
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.vote);
 };
 
+export const unvoteProject = async (id: string, contractNameId: string, wallet: any ) => {
+  const args = {
+    contract_address: contractNameId,
+    votable_object_id: id
+  }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unvote);
+};
+
 export const lock = async (days: string, amount: string, wallet: any ) => {
   const args = {
     receiver_id: CONTRACT_ID,
@@ -274,4 +288,11 @@ export const lock = async (days: string, amount: string, wallet: any ) => {
     msg: days
   }
   return  callChangeMetaTokenMethod(wallet,  "ft_transfer_call", args);
+};
+
+export const unlock = async (positionId: string , wallet: any) => {
+  const args = {
+    index: positionId
+  }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unlockPosition);
 };

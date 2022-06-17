@@ -43,7 +43,7 @@ const ProjectList = (props: Props) => {
 
   return (
     <section>
-      <Container mt={'150px'} id="project-list">
+      <Container mt={100} id="project-list">
         <Flex justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'row', md: 'row' }} >
           <Heading lineHeight={'133%'} textAlign={{ base: 'center', md: 'start' }} fontWeight={700} color="gray.900" fontSize={'2xl'}> Project List </Heading>
         </Flex>
