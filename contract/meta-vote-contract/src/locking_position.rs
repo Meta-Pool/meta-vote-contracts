@@ -52,6 +52,9 @@ impl LockingPosition {
             locking_period: self.locking_period,
             voting_power: BalanceJSON::from(self.voting_power),
             unlocking_started_at: self.unlocking_started_at,
+            is_unlocked: self.is_unlocked(),
+            is_unlocking: self.is_unlocking(),
+            is_locked: self.is_locked(),
         }
     }
 }

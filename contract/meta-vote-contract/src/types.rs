@@ -31,6 +31,9 @@ pub struct LockingPositionJSON {
     pub locking_period: Days,
     pub voting_power: VotingPowerJSON,
     pub unlocking_started_at: Option<EpochMillis>,
+    pub is_unlocked: bool,
+    pub is_unlocking: bool,
+    pub is_locked: bool,
 }
 
 #[derive(Serialize, Deserialize)]
