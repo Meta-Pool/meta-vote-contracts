@@ -18,7 +18,7 @@ impl Voter {
             ),
             voting_power: 0,
             vote_positions: UnorderedMap::new(
-                Keys::Votes.as_prefix(id.as_str()).as_bytes()
+                Keys::VoterVotes.as_prefix(id.as_str()).as_bytes()
             ),
         }
     }
@@ -90,11 +90,12 @@ impl Voter {
         voter_id: &VoterId,
         contract_address: &ContractAddress
     ) -> UnorderedMap<VotableObjId, VotingPower> {
+        let id = format!("{}-{}", voter_id.to_string(), contract_address.as_str());
         self.vote_positions
             .get(&contract_address)
             .unwrap_or(
                 UnorderedMap::new(
-                    Keys::Votes.as_prefix(voter_id.as_str()).as_bytes()
+                    Keys::VoterVotes.as_prefix(&id).as_bytes()
                 )
             )
     }

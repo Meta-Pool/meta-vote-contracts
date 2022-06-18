@@ -7,7 +7,6 @@ const nextConfig = {
       "3621490034-files.gitbook.io",
       "twitter.com",
       "pbs.twimg.com",
-      "pembrock.finance",
       "res.cloudinary.com"
     ],
   },

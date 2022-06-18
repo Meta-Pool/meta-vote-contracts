@@ -54,6 +54,10 @@ pub fn voter_account() -> AccountId {
     AccountId::new_unchecked("voter.metavote.near".to_string())
 }
 
+pub fn multi_voter_account(id: String) -> AccountId {
+    AccountId::new_unchecked(format!("voter_{}.metavote.near", id))
+}
+
 pub fn votable_account() -> AccountId {
     AccountId::new_unchecked("votable.metavote.near".to_string())
 }

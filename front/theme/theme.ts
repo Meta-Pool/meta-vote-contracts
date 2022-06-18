@@ -35,7 +35,7 @@ const customTheme = extendTheme(
   {
     initialColorMode: "light",
     useSystemColorMode: false,
-    colors: { ...colors, brand: colors.indigo },
+    colors: { ...colors, brand: colors.green },
     sizes,
   },
   proTheme

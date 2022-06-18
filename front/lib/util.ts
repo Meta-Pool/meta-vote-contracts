@@ -1,7 +1,5 @@
 import moment from "moment";
 import { providers } from "near-api-js";
-import { KickstarterGoalProps } from "../types/project.types";
-import { getSupportedKickstarters } from "./near";
 
 const BN = require("bn.js");
 export const decodeJsonRpcData = (data: any) => {
@@ -68,7 +66,8 @@ export const yoctoToDollarStr = (
 export const formatToLocaleNear = (value: number, decimals: number = 4) => {
   return value.toLocaleString(undefined, { maximumFractionDigits: decimals, minimumFractionDigits: 0 })
 }
-export const timeLeftToFund = (time: any) => {
+
+export const timeLeftTo = (time: any) => {
   if (!time || moment(time).diff(moment.utc()) < 0) {
     return "";
   }
@@ -82,69 +81,6 @@ export const timeLeftToFund = (time: any) => {
     : `${timeMoment.diff(now, "minutes")} minutes`;
 };
 
-export const isOpenPeriod = (kickstarter: any) => {
-  return getPeriod(kickstarter) === PERIOD.OPEN;
-}
-
-export enum PERIOD {
-  NOT_OPEN,
-  OPEN,
-  CLOSE
-}
-
-export const getPeriod = (kickstarter: any) => {
-  const nowDate = Date.now();
-  if (!kickstarter) {
-    return null;
-  }
-  if (nowDate < kickstarter.open_timestamp) {
-    return PERIOD.NOT_OPEN;
-  }
-
-  if ( kickstarter.open_timestamp <= nowDate && nowDate <= kickstarter.close_timestamp) {
-    return PERIOD.OPEN;
-  }
-
-  if ( nowDate > kickstarter.close_timestamp) {
-    return PERIOD.CLOSE;
-  }
-
-  /* if (moment.utc().diff(moment(kickstarter.open_timestamp)) < 0) {
-    return PERIOD.NOT_OPEN;
-  }
-
-  if ( moment.utc().isBetween(moment(kickstarter.open_timestamp), moment(kickstarter.close_timestamp))) {
-    return PERIOD.OPEN;
-  }
-  return PERIOD.CLOSE; */
-}
-
-export const getMyProjectsFounded = async (id: string, wallet: any) => {
-  const projectsFounded: any[] = await getSupportedKickstarters(
-    wallet.getAccountId()
-  );
-  if (!projectsFounded) {
-    return null;
-  }
-  return projectsFounded.find((val: any) => val.kickstarter_id === id);
-};
-
-export const getCurrentFundingGoal = (goals: any, total_deposited: any) => {
-  const [currentFundingGoal] = goals.filter(
-    (g: KickstarterGoalProps) => parseInt(g.desired_amount) >= total_deposited
-  );
-  if (!currentFundingGoal) {
-    return goals[goals.length - 1];
-  }
-  return currentFundingGoal;
-};
-
-export const getWinnerGoal = (kickstarter: any) => {
-  if ( kickstarter.successful) {
-    return kickstarter.goals[kickstarter.winner_goal_id] ;
-  }
-  return null;
-};
 
 export const getTxFunctionCallMethod = (
   finalExecOutcome: providers.FinalExecutionOutcome
@@ -239,3 +175,23 @@ export const formatJSONErr = (obj: any) => {
 
   return text;
 };
+
+export enum POSITION_STATUS {
+  LOCKED,
+  UNLOCKED,
+  UNLOKING,
+}
+
+export const getLockinPositionStatus = (position :any) : POSITION_STATUS => {
+  
+  if (position.is_locked) {
+    return POSITION_STATUS.LOCKED;
+  }
+  if (position.is_unlocked) {
+    return POSITION_STATUS.UNLOCKED;
+  }
+  if (position.is_unlocking) {
+    return POSITION_STATUS.UNLOKING;
+  }
+  return POSITION_STATUS.LOCKED;
+}
