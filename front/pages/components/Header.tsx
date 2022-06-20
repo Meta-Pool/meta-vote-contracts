@@ -48,7 +48,7 @@ const Header: React.FC<ButtonProps> = (props) => {
     try {
       wallet!.requestSignIn(METAPOOL_CONTRACT_ID, "Metapool contract");
     } catch (e) {
-      console.log("error", e);
+      console.error("error", e);
     }
   };
 
@@ -63,7 +63,7 @@ const Header: React.FC<ButtonProps> = (props) => {
       if (wallet) {
       }
     })();
-  }, [setLogin, wallet]);
+  }, [ wallet]);
 
   useEffect(() => {
     (async () => {
@@ -76,10 +76,8 @@ const Header: React.FC<ButtonProps> = (props) => {
           setSignInAccountId(tempWallet.getAccountId());
           setBalance(await getMetaBalance(tempWallet!));
         }
-
-        setLogin(tempWallet && tempWallet.getAccountId() ? true : false);
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     })();
 

@@ -35,26 +35,24 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAllLockingPositions, getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, getVotesByAddress, unlock, unvoteProject } from '../../../lib/near';
+import { getVotesByVoter, unvoteProject } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import { getLockinPositionStatus, POSITION_STATUS, yton } from '../../../lib/util';
 import LockModal from './LockModal';
-import { AnyNaptrRecord } from 'dns';
+import { yton } from '../../../lib/util';
 
 type Props = {
 }
 
 const ListingVotes = (props: Props) => {
   const { wallet} = useWallet();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen,  onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
 
 
   const getVotes = async ()=> {
     const newVoterData = voterData;
-    const contract = 'metayield-proyect';
-    newVoterData.votingResults = await getVotesByAddress(contract);
+    newVoterData.votingResults = await getVotesByVoter(wallet);
     setVoterData(newVoterData);
   }
 
@@ -101,7 +99,7 @@ const ListingVotes = (props: Props) => {
                   return (
                     <Tr key={index}>
                       <Td>{position.id} </Td>
-                      <Td>{position.current_votes}</Td>
+                      <Td>{yton(position.current_votes)}</Td>
                       <Td >{position.votable_contract}</Td>
                       <Td>
                           <Button colorScheme={colors.primary} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>

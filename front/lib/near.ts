@@ -41,7 +41,6 @@ export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 
 export const gas = new BN("70000000000000");
 const env = process.env.NODE_ENV;
-console.log('@env', env)
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 
@@ -255,14 +254,20 @@ export const getVotes = async (id: string, contract: string) => {
   });
 };
 
-export const getVotesByAddress = async (contract: string) => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getVotesByAddress, {
+export const getVotesByContract = async (contract: string) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getVotesByContract, {
     contract_address: contract,
   });
 };
 
-/*********** METAVOTE CHANGE METHODS *************/
+export const getVotesByVoter = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getVotesByVoter, {
+    voter_id: wallet.getAccountId(),
+  });
+};
 
+
+/*********** METAVOTE CHANGE METHODS *************/
 
 export const voteProject = async (id: string, contractName: string, votingPower: string, wallet: any ) => {
   const args = {

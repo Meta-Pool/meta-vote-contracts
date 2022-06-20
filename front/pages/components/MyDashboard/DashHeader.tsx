@@ -6,32 +6,12 @@ import {
   Heading, 
   Text, 
   useDisclosure, 
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton, 
-  InputGroup,
-  InputLeftAddon,
-  Input,
-  InputRightAddon,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-  VStack,
-  StackDivider,
-  toast
 } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { colors } from '../../../constants/colors';
 import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import { useFormik } from 'formik';
-import lockValidation from '../../../validation/lockValidation';
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
 
@@ -80,7 +60,7 @@ const DashboardHeader = (props: Props) => {
           </Box>
           <Box>
             <Text fontSize={'2xl'}>In use</Text>
-            <Text fontSize={'4xl'} color={colors.primary}>{voterData.inUseVPower}</Text>
+            <Text fontSize={'4xl'} color={colors.primary}>{yton(voterData.inUseVPower)}</Text>
           </Box>
           <Box >
             <Text fontSize={'2xl'}>Projects you voted</Text>
