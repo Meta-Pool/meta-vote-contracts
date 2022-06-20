@@ -31,7 +31,8 @@ import {
   Tr,
   Th,
   Tbody,
-  Td
+  Td,
+  Tag
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -62,7 +63,6 @@ const LockingPosition = (props: Props) => {
   }
 
   const unlockClicked = (idPosition: string)=> {
-      console.log("id", idPosition)
       try {
         unlock(idPosition, wallet);
       } catch (error) {
@@ -109,7 +109,25 @@ const LockingPosition = (props: Props) => {
                       <Td>{position.locking_period} Days</Td>
                       <Td isNumeric>{yton(position.voting_power)}</Td>
                       <Td isNumeric>{yton(position.amount)} $META</Td>
-                      <Td>{STATUS[getLockinPositionStatus(position)]}</Td>
+                      <Td> 
+                        {
+                           getLockinPositionStatus(position) === POSITION_STATUS.LOCKED && (
+                            <Tag colorScheme={'red'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> 
+
+                           )
+                        }
+                        {
+                           getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED && (
+                            <Tag colorScheme={'green'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag>
+
+                           )
+                        }
+                        {
+                           getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING && (
+                            <Tag colorScheme={'yellow'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag>
+                           )
+                        }
+                      </Td>
                       <Td>
                         {
                            getLockinPositionStatus(position) === POSITION_STATUS.LOCKED && (
@@ -119,6 +137,11 @@ const LockingPosition = (props: Props) => {
                         {
                            getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED && (
                               <Button colorScheme={colors.primary}>Withdraw</Button>
+                           )
+                        }
+                        {
+                           getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING && (
+                              <Button disabled={true} colorScheme={colors.primary}>Withdraw</Button>
                            )
                         }
                       </Td>

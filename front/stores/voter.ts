@@ -10,6 +10,8 @@ export interface VoterContractData {
   metaToWithdraw: string,
   lockingPositions: Array<any>,
   votingResults: Array<any>,
+  projects: Array<any>,
+
 }
 
 export interface VoterData {
@@ -26,7 +28,8 @@ const initVoterData: VoterContractData = {
   metaUnlocking: '0',
   metaToWithdraw: '0',
   lockingPositions: [],
-  votingResults: []
+  votingResults: [],
+  projects: []
 }
 
 export const useStore = create<VoterData>((set) => ({

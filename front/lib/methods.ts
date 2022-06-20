@@ -8,7 +8,8 @@ export const metavoteViewMethods = {
   getAvailableVotingPower: "get_available_voting_power",
   getUsedVotingPower: "get_used_voting_power",
   getTotalVotes: "get_total_votes",
-  getVotesByAddress: "get_voting_results"
+  getVotesByContract: "get_votes_by_contract",
+  getVotesByVoter: "get_votes_by_voter"
 
 };
 
