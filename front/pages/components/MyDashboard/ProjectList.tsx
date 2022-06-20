@@ -18,7 +18,7 @@ type Props = {
 }
 
 const ProjectList = (props: Props) => {
-  const { wallet, isLogin }= useWallet();
+  const { wallet }= useWallet();
   const vote = (id: string)=> {
     const contract = 'metayield-proyect';
     voteProject(id, contract, '1', wallet);
@@ -29,7 +29,7 @@ const ProjectList = (props: Props) => {
   const [votes3, setVotes3] = useState()
 
   useEffect( ()=>{ ( async()=>{
-    if( isLogin) {
+    if(wallet && wallet?.isSignedIn()) {
       const myVotes1 = await getVotes("1", "metayield-proyect")
       setVotes1(myVotes1);
       const myVotes2 = await getVotes("2", "metayield-proyect")
@@ -38,7 +38,7 @@ const ProjectList = (props: Props) => {
       setVotes3(myVotes3); 
     }
   } )()
-  },[isLogin])
+  },[wallet])
 
 
   return (

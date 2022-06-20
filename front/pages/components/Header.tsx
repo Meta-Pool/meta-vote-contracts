@@ -38,7 +38,7 @@ import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
 
 const Header: React.FC<ButtonProps> = (props) => {
-  const { wallet, isLogin, setWallet, setLogin } = useWallet();
+  const { wallet, setWallet } = useWallet();
   const { balance, setBalance } = useBalance();
   const [signInAccountId, setSignInAccountId] = useState(null);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -54,7 +54,6 @@ const Header: React.FC<ButtonProps> = (props) => {
 
   const logout = async () => {
     await wallet!.signOut();
-    setLogin(wallet && wallet.getAccountId() ? true : false);
     const tempWallet = await getWallet();
     setWallet(tempWallet);
   };
@@ -64,7 +63,7 @@ const Header: React.FC<ButtonProps> = (props) => {
       if (wallet) {
       }
     })();
-  }, [setLogin, wallet, isLogin]);
+  }, [setLogin, wallet]);
 
   useEffect(() => {
     (async () => {
@@ -110,7 +109,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                 <Show above="md">
                 <ButtonGroup variant="link" spacing="2" alignItems="flex-end">
                   {
-                    isLogin && (
+                    wallet?.isSignedIn() && (
                       <Link href="/dashboard">
                         <Button
                           fontWeight={600}
@@ -137,7 +136,7 @@ const Header: React.FC<ButtonProps> = (props) => {
             )}
             
             <Spacer />
-            {isLogin ? (
+            {wallet?.isSignedIn() ? (
               <>
                 <Show above="lg">
                   <Square minW="30px">
@@ -173,7 +172,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                         FAQ
                       </MenuItem>
                     {
-                      isLogin && ( 
+                      wallet?.isSignedIn() && ( 
                         <>
                           <MenuItem
                               as={"a"}

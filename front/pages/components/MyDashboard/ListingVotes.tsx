@@ -46,7 +46,7 @@ type Props = {
 }
 
 const ListingVotes = (props: Props) => {
-  const { wallet, isLogin} = useWallet();
+  const { wallet} = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
 
@@ -69,11 +69,11 @@ const ListingVotes = (props: Props) => {
 
   useEffect(  () =>{
     (async ()=> {
-      if (isLogin && wallet) {
+      if (wallet && wallet.isSignedIn()) {
         getVotes()
       }
     })();
-  },[wallet, isLogin])
+  },[wallet])
 
 
   return (

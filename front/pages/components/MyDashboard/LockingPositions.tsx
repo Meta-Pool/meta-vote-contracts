@@ -49,7 +49,7 @@ type Props = {
 }
 
 const LockingPosition = (props: Props) => {
-  const { wallet, isLogin} = useWallet();
+  const { wallet} = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
 
@@ -72,11 +72,11 @@ const LockingPosition = (props: Props) => {
 
   useEffect(  () =>{
     (async ()=> {
-      if (isLogin && wallet) {
+      if (wallet && wallet.isSignedIn()) {
         getVotingPositions()
       }
     })();
-  },[wallet, isLogin])
+  },[wallet])
 
 
   return (

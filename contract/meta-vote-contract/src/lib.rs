@@ -567,18 +567,18 @@ impl MetaVoteContract {
         votable_object_id: VotableObjId
     ) -> VotingPowerJSON {
         let votes = self.votes.get(&contract_address)
-            .expect("Contract Address does not exist in Meta Vote.")
+            .expect("Contract Address not in Meta Vote.")
             .get(&votable_object_id)
-            .expect("Votable Object does not exist for Contract Address");
+            .expect("Votable Object not in Contract Address");
         VotingPowerJSON::from(votes)
     }
 
-    pub fn get_voting_results(
+    pub fn get_votes_by_contract(
         &self,
         contract_address: ContractAddress
     ) -> Vec<VotableObjectJSON> {
         let objects = self.votes.get(&contract_address)
-            .expect("Contract Address does not exist in Meta Vote.");
+            .expect("Contract Address not in Meta Vote.");
         let mut results: Vec<VotableObjectJSON> = Vec::new();
         for (id, voting_power) in objects.iter() {
             results.push(
@@ -588,6 +588,29 @@ impl MetaVoteContract {
                     current_votes: VotingPowerJSON::from(voting_power)
                 }
             )
+        }
+        results.sort_by_key(|v| v.current_votes.0);
+        results
+    }
+
+    pub fn get_votes_by_voter(
+        &self,
+        voter_id: VoterIdJSON
+    ) -> Vec<VotableObjectJSON> {
+        let mut results: Vec<VotableObjectJSON> = Vec::new();
+        let voter_id: VoterId = voter_id.try_into().unwrap();
+        let voter = self.internal_get_voter(&voter_id);
+        for contract_address in voter.vote_positions.keys_as_vector().iter() {
+            let votes_for_address = voter.vote_positions.get(&contract_address).unwrap();
+            for (id, voting_power) in votes_for_address.iter() {
+                results.push(
+                    VotableObjectJSON {
+                        votable_contract: contract_address.to_string(),
+                        id,
+                        current_votes: VotingPowerJSON::from(voting_power)
+                    }
+                )
+            }
         }
         results.sort_by_key(|v| v.current_votes.0);
         results

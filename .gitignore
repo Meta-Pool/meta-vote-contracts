@@ -17,7 +17,7 @@ Cargo.lock
 .*.sw?
 .vscode
 *.bak
-res/*.wasm
+contract/res/*.wasm
 
 # Mac
 .DS_Store
