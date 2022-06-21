@@ -32,7 +32,17 @@ import {
   Th,
   Tbody,
   Td,
-  Tag
+  Tag,
+  Square,
+  Image,
+  HStack,
+  Show,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Circle
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -41,7 +51,7 @@ import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
 import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
-import { getLockinPositionStatus, POSITION_STATUS, yton } from '../../../lib/util';
+import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import { AnyNaptrRecord } from 'dns';
 
@@ -54,7 +64,7 @@ const LockingPosition = (props: Props) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
 
-  const STATUS = ['Locked', 'Unlocked', 'Unloking']
+  const STATUS = ['Locked', 'Unlocked', 'Unloking...']
 
   const getVotingPositions = async ()=> {
     const newVoterData = voterData;
@@ -70,6 +80,48 @@ const LockingPosition = (props: Props) => {
       }
   }
 
+  const getStatusTag = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return ( <Tag colorScheme={'red'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> )
+
+      case POSITION_STATUS.UNLOCKED:
+        return ( <Tag colorScheme={'green'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag>)
+
+      case POSITION_STATUS.UNLOKING:
+        return ( <Tag colorScheme={'yellow'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> ) 
+    }
+  }
+
+  const getStatusCircle = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return ( <><Circle mr={5} size={3} bg={'green'}/>{STATUS[getLockinPositionStatus(position)]}</> )
+
+      case POSITION_STATUS.UNLOCKED:
+        return ( <><Circle mr={5} size={3} bg={'red'}/>{STATUS[getLockinPositionStatus(position)]}</>)
+
+      case POSITION_STATUS.UNLOKING:
+        return (<><Circle mr={5} size={3} bg={'orange'}/>{STATUS[getLockinPositionStatus(position)]}</> ) 
+    }
+  }
+
+  const getButtonbyStatus = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return ( <Button colorScheme={colors.primary}  w={'100%'} onClick={()=> unlockClicked(position.index)}>Start unlock</Button> )
+
+      case POSITION_STATUS.UNLOCKED:
+        return ( <Button colorScheme={colors.primary} w={'100%'}>Withdraw</Button>)
+
+      case POSITION_STATUS.UNLOKING:
+        return ( <Button colorScheme={colors.primary} w={'100%'}>Relock</Button> ) 
+    }
+  }
+
   useEffect(  () =>{
     (async ()=> {
       if (wallet && wallet.isSignedIn()) {
@@ -78,10 +130,8 @@ const LockingPosition = (props: Props) => {
     })();
   },[wallet])
 
-
   return (
     <section>
-      <Container id="dashboard-header">
         <Flex justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }} >
           
           {/*<Heading lineHeight={'133%'} textAlign={{ base: 'center', md: 'start' }} fontWeight={700} color="gray.900" fontSize={'2xl'}> Locking Positions</Heading>
@@ -89,69 +139,94 @@ const LockingPosition = (props: Props) => {
             Lock $META to get Voting Power
             </Button>*/}
         </Flex>
-        <TableContainer mt={30}>
-          <Table  >
-            <Thead>
-              <Tr>
-                <Th fontSize={'xl'}>Position</Th>
-                <Th fontSize={'xl'}>Period</Th>
-                <Th fontSize={'xl'} isNumeric>Votinpower</Th>
-                <Th fontSize={'xl'} isNumeric>Amount</Th>
-                <Th fontSize={'xl'}>Status</Th>
-                <Th fontSize={'xl'}>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {  voterData.lockingPositions.map((position: any, index: number)=> {
-                  return (
-                    <Tr key={index}>
-                      <Td>{position.index} </Td>
-                      <Td>{position.locking_period} Days</Td>
-                      <Td isNumeric>{yton(position.voting_power)}</Td>
-                      <Td isNumeric>{yton(position.amount)} $META</Td>
-                      <Td> 
-                        {
-                           getLockinPositionStatus(position) === POSITION_STATUS.LOCKED && (
-                            <Tag colorScheme={'red'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> 
+        <Show above={'md'}>
+          <TableContainer mt={30}>
+            <Table  >
+              <Thead>
+                <Tr>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Votin Power</Th>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'}isNumeric >$META amount</Th>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Autolock days</Th>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Status</Th>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Action</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {  voterData.lockingPositions.map((position: any, index: number)=> {
+                    return (
+                      <Tr key={index}>
+                        <Td  fontSize={'2xl'} isNumeric>{yton(position.voting_power).toFixed(4)}</Td>
+                        <Td  fontSize={'2xl'} isNumeric> 
+                          <HStack justify={'end'}>
+                            <Text>{yton(position.amount).toFixed(4)}</Text> 
+                            <Square minW="30px">
+                              <Image
+                                boxSize="20px"
+                                objectFit="cover"
+                                src="/meta.svg"
+                                alt="stnear"
+                              />
+                            </Square>
+                          </HStack>
+                        </Td>
+                        <Td fontSize={'2xl'} isNumeric >{position.locking_period} days</Td>
+                        <Td fontSize={'2xl'} > 
+                          <HStack>{ getStatusCircle(position) } </HStack>
+                        </Td>
+                        <Td>
+                          { getButtonbyStatus(position)}
+                        </Td>
+                      </Tr>
+                    )
+                })}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Show>
+        <Show below='md'>
 
-                           )
-                        }
-                        {
-                           getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED && (
-                            <Tag colorScheme={'green'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag>
+        {  voterData.lockingPositions.map((position: any, index: number)=> {
+                    return (
+                        <Accordion  key={index} allowMultiple>
+                          <AccordionItem m={2} >
+                            <AccordionButton  _expanded={{bg:'white'}}  bg={{base: 'white'}}>
+                              <HStack w={'100%'} justify={'space-between'} textAlign="left">
+                                <HStack><Circle size={3} bg={'red'}></Circle>
+                                <Text fontSize={'xl'}>{position.locking_period} days </Text></HStack>
+                                <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.voting_power).toFixed(4)} </Text>
+                              </HStack>
+                              <AccordionIcon ml={5} fontSize={'2xl'} />
+                            </AccordionButton>
+                            <AccordionPanel pb={4}>
+                              <VStack >
+                                <HStack w={'100%'} justify={'space-between'}> 
+                                  <Text fontSize={'xl'}>$META amount:</Text>
+                                  <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {yton(position.amount).toFixed(4)}</Text>
+                                </HStack>
+                                <HStack w={'100%'} justify={'space-between'}> 
+                                  <Text fontSize={'xl'}>Voting Power:</Text>
+                                  <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {yton(position.voting_power).toFixed(4)}</Text>
+                                </HStack>
+                                <HStack w={'100%'} justify={'space-between'}> 
+                                  <Text fontSize={'xl'}>Autolock days</Text>
+                                  <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {position.locking_period} Days</Text>
+                                </HStack>
+                                <HStack  w={'100%'} justify={'space-between'}> 
+                                  <Text fontSize={'xl'}>Status:</Text>
+                                  <Text p={2} fontSize={'xl'}> {getStatusTag(position)}</Text>
+                                </HStack>
+                                { getButtonbyStatus(position)}
 
-                           )
-                        }
-                        {
-                           getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING && (
-                            <Tag colorScheme={'yellow'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag>
-                           )
-                        }
-                      </Td>
-                      <Td>
-                        {
-                           getLockinPositionStatus(position) === POSITION_STATUS.LOCKED && (
-                              <Button colorScheme={colors.primary}  onClick={()=> unlockClicked(position.index)}>Start unlock</Button>
-                           )
-                        }
-                        {
-                           getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED && (
-                              <Button colorScheme={colors.primary}>Withdraw</Button>
-                           )
-                        }
-                        {
-                           getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING && (
-                              <Button disabled={true} colorScheme={colors.primary}>Withdraw</Button>
-                           )
-                        }
-                      </Td>
-                    </Tr>
-                  )
-              })}
-            </Tbody>
-          </Table>
-        </TableContainer>
-      </Container>
+                              </VStack>
+                            </AccordionPanel>
+                          </AccordionItem>
+                        </Accordion>
+                    );
+                })
+          }
+          
+        </Show>
+        
       <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
     </section>
   );
