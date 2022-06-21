@@ -14,6 +14,7 @@ import NextHead from "next/head";
 import "../styles/nprogress.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import Fonts from "./components/Fonts";
 
 const isProduction = process.env.NODE_ENV === "production";
 function App({ Component, pageProps }: AppProps) {
@@ -41,6 +42,7 @@ function App({ Component, pageProps }: AppProps) {
 
   return (
     <ChakraProvider theme={theme}>
+      <Fonts />
       <QueryClientProvider client={queryClient}>
         <NextHead>
           <meta charSet="UTF-8" />
@@ -49,7 +51,7 @@ function App({ Component, pageProps }: AppProps) {
         </NextHead>
         <Header />
         <Component {...pageProps} />
-        <Footer />
+        {/* <Footer /> */}
         {/* enable analytics script only for production */}
         { /*isProduction && (
           <>

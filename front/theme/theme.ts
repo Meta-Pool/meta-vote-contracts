@@ -35,8 +35,19 @@ const customTheme = extendTheme(
   {
     initialColorMode: "light",
     useSystemColorMode: false,
-    colors: { ...colors, brand: colors.green },
+    colors: { ...colors, brand: colors.indigo },
     sizes,
+    styles: {
+      global: () => ({
+        body: {
+          bg: "#F6F2E8",
+        }
+      })
+    },
+    fonts: {
+      heading: "Meta Space",
+      body: "Meta Space",
+    },
   },
   proTheme
 );
