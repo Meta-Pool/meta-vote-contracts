@@ -1,14 +1,11 @@
 import {
   keyStores,
-  Near,
   connect,
   WalletConnection,
-  utils,
   Contract,
   providers,
   ConnectConfig,
 } from "near-api-js";
-import { parseRpcError } from "near-api-js/lib/utils/rpc_errors";
 import {
   FinalExecutionStatus,
   getTransactionLastResult,
@@ -22,25 +19,21 @@ import {
   metaPoolMethods,
   metaTokenMethods,
   projectTokenViewMethods,
-  projectTokenChangeMethods,
 } from "./methods";
 import {
   decodeJsonRpcData,
   encodeJsonRpcData,
   getPanicError,
   getTxFunctionCallMethod,
-  ntoy,
   yton,
 } from "./util";
-import { ExecutionError } from "near-api-js/lib/providers/provider";
-import { Wallet } from "phosphor-react";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
 export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 
 export const gas = new BN("70000000000000");
-const env = process.env.NODE_ENV;
+const env = 'development';
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 
