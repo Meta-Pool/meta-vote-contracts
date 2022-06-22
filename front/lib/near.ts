@@ -298,10 +298,19 @@ export const unlock = async (positionId: string , wallet: any) => {
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unlockPosition);
 };
 
-export const withdraw = async (positionId: string , wallet: any, amount: string) => {
+export const withdraw = async (wallet: any, amount: string, positionId?: string ) => {
   const args = {
-    position_index_list: positionId, 
+    position_index_list: positionId ? positionId : '', 
     amount_from_balance: amount
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
+};
+
+export const relock = async (positionIndex: string, period: string, amount: string, wallet: any ) => {
+  const args = {
+    index: positionIndex,
+    locking_period: period,
+    amount_from_balance: amount
+  }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.relock);
 };

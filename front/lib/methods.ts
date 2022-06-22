@@ -25,7 +25,8 @@ export const metavoteChangeMethods = {
   vote: "vote",
   rebalance: "rebalance",
   unvote: "unvote",
-  newLocking: "new"
+  newLocking: "new",
+  relock: "relock_position"
 };
 
 export const metaPoolMethods = {

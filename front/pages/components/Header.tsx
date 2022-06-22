@@ -94,6 +94,7 @@ const Header: React.FC<ButtonProps> = (props) => {
       <Box as="nav" alignContent="flex-end">
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
+          {wallet?.isSignedIn() && (
             <HStack
               onClick={() => router.push(`/`)}
               cursor="pointer"
@@ -101,8 +102,8 @@ const Header: React.FC<ButtonProps> = (props) => {
             >
               <Text>Hi</Text>
               <Text fontWeight={500} p={"10px 16px"} backgroundColor={colors.secundary+".900"}>{signInAccountId}</Text>
-
             </HStack>
+          ) }
             <Spacer />
             {wallet?.isSignedIn() ? (
               <HStack spacing={10}>
