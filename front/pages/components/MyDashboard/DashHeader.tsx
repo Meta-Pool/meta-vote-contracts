@@ -9,7 +9,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance } from '../../../lib/near';
+import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, withdraw } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
@@ -36,8 +36,8 @@ const DashboardHeader = (props: Props) => {
     setVoterData(newVoterData);
   }
 
-  const withdraw = async ()=> {
-      /* withdraw(voterData.metaToWithdraw, wallet); */
+  const withdrawClicked = async (amount: string)=> {
+       withdraw(wallet, amount); 
   }
 
   useEffect(  () =>{
@@ -88,7 +88,7 @@ const DashboardHeader = (props: Props) => {
               <Text fontSize={'xl'}>$META to withdraw</Text>
               <HStack>
                 <Text fontSize={'5xl'} mr={'32px'}>{yton(voterData.metaToWithdraw)}</Text>
-                <Button  fontSize={'xl'} disabled={ parseInt(voterData.metaToWithdraw)<=0} h={'80px'} onClick={()=> withdraw()} colorScheme={colors.primary}>
+                <Button  fontSize={'xl'} disabled={ parseInt(voterData.metaToWithdraw)<=0} h={'80px'} onClick={()=> withdrawClicked(voterData.metaToWithdraw)} colorScheme={colors.primary}>
                   Withdraw
                 </Button>
               </HStack>

@@ -1,32 +1,11 @@
 import {
-  Box, 
   Button, 
-  Container, 
   Flex, 
-  Heading, 
   Text, 
   useDisclosure, 
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton, 
-  InputGroup,
-  InputLeftAddon,
-  Input,
-  InputRightAddon,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
   VStack,
-  StackDivider,
-  toast,
   TableContainer,
   Table,
-  TableCaption,
   Thead,
   Tr,
   Th,
@@ -44,24 +23,20 @@ import {
   AccordionIcon,
   Circle
 } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAllLockingPositions, getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, unlock } from '../../../lib/near';
+import { getAllLockingPositions, relock, unlock, withdraw } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import { useFormik } from 'formik';
-import lockValidation from '../../../validation/lockValidation';
-import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, yton } from '../../../lib/util';
+import { getLockinPositionStatus, POSITION_STATUS, yton } from '../../../lib/util';
 import LockModal from './LockModal';
-import { AnyNaptrRecord } from 'dns';
 
 type Props = {
-  shortVersion?: boolean
 }
 
 const LockingPosition = (props: Props) => {
   const { wallet} = useWallet();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
 
   const STATUS = ['Locked', 'Unlocked', 'Unloking...']
@@ -78,6 +53,22 @@ const LockingPosition = (props: Props) => {
       } catch (error) {
         console.error(error);
       }
+  }
+
+  const withdrawClicked = async (amount: string, positionId: string)=> {
+    try {
+      withdraw(wallet, amount, positionId); 
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const relockClicked = async (positionIndex: string, period: string, amount: string)=>{
+    try {
+      relock(positionIndex, period, amount, wallet);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   const getStatusTag = (position: any)=> {
@@ -115,10 +106,10 @@ const LockingPosition = (props: Props) => {
         return ( <Button colorScheme={colors.primary}  w={'100%'} onClick={()=> unlockClicked(position.index)}>Start unlock</Button> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Button colorScheme={colors.primary} w={'100%'}>Withdraw</Button>)
+        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> withdrawClicked(position.amount ,position.index)}>Withdraw</Button>)
 
       case POSITION_STATUS.UNLOKING:
-        return ( <Button colorScheme={colors.primary} w={'100%'}>Relock</Button> ) 
+        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> relockClicked(position.index, position.locking_period, position.amount)}>Relock</Button> ) 
     }
   }
 
