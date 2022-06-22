@@ -311,7 +311,6 @@ impl MetaVoteContract {
     // ******************
 
     pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>) {
-
         require!(position_index_list.len() > 0, "Index list is empty.");
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
@@ -352,6 +351,29 @@ impl MetaVoteContract {
         let total_to_withdraw = voter.balance - remaining_balance;
         require!(total_to_withdraw > 0, "Nothing to withdraw.");
         voter.balance -= total_to_withdraw;
+
+        if voter.is_empty() {
+            self.voters.remove(&voter_id);
+            log!("GODSPEED: {} is no longer part of Meta Vote!", &voter_id);
+        } else {
+            self.voters.insert(&voter_id, &voter);
+        }
+        self.transfer_meta_to_voter(voter_id, total_to_withdraw);
+    }
+
+    pub fn withdraw_all(&mut self) {
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter(&voter_id);
+
+        let position_index_list = voter.get_unlocked_position_index();
+        // Clear locking positions could increase the voter balance.
+        if position_index_list.len() > 0 {
+            self.clear_locking_position(position_index_list);
+        }
+
+        let total_to_withdraw = voter.balance;
+        require!(total_to_withdraw > 0, "Nothing to withdraw.");
+        voter.balance = 0;
 
         if voter.is_empty() {
             self.voters.remove(&voter_id);
@@ -582,7 +604,7 @@ impl MetaVoteContract {
         let votes = self.votes.get(&contract_address)
             .expect("Contract Address not in Meta Vote.")
             .get(&votable_object_id)
-            .expect("Votable Object not in Contract Address");
+            .unwrap_or(0_u128);
         VotingPowerJSON::from(votes)
     }
 

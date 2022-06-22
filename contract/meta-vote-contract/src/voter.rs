@@ -99,4 +99,16 @@ impl Voter {
                 )
             )
     }
+
+    pub(crate) fn get_unlocked_position_index(&self) -> Vec<PositionIndex> {
+        let mut result = Vec::new();
+        for index in 0..self.locking_positions.len() {
+            let locking_position = self.locking_positions.get(index)
+                .expect("Locking position not found!");
+            if locking_position.is_unlocked() {
+                result.push(index);
+            }
+        }
+        result
+    }
 }
