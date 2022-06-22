@@ -11,7 +11,8 @@ const nextConfig = {
     ],
   },
   env: {
-    MINIMUM_AMOUNT_DEPOSIT: 1
+    MINIMUM_AMOUNT_DEPOSIT: 1,
+    NODE_ENV:"development"
   },
   pageExtensions: ["page.tsx", "ts", "tsx"],
 };
