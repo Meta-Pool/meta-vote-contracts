@@ -38,17 +38,16 @@ import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
 
 const Header: React.FC<ButtonProps> = (props) => {
-  const { wallet, setWallet, setLogin } = useWallet();
+  const { wallet, setWallet } = useWallet();
   const { balance, setBalance } = useBalance();
   const [signInAccountId, setSignInAccountId] = useState(null);
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const router = useRouter();
   const nearConfig = getNearConfig();
   const onConnect = async () => {
     try {
       wallet!.requestSignIn(METAPOOL_CONTRACT_ID, "Metapool contract");
     } catch (e) {
-      console.log("error", e);
+      console.error("error", e);
     }
   };
 
@@ -63,7 +62,7 @@ const Header: React.FC<ButtonProps> = (props) => {
       if (wallet) {
       }
     })();
-  }, [setLogin, wallet]);
+  }, [ wallet]);
 
   useEffect(() => {
     (async () => {
@@ -76,10 +75,8 @@ const Header: React.FC<ButtonProps> = (props) => {
           setSignInAccountId(tempWallet.getAccountId());
           setBalance(await getMetaBalance(tempWallet!));
         }
-
-        setLogin(tempWallet && tempWallet.getAccountId() ? true : false);
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     })();
 
@@ -93,52 +90,24 @@ const Header: React.FC<ButtonProps> = (props) => {
   }, []);
 
   return (
-    <Box as="section" pb={{ base: "12", md: "24" }}>
+    <Box as="section" pb={{ base: "12", md: "12" }}>
       <Box as="nav" alignContent="flex-end">
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
-            <Flex
+          {wallet?.isSignedIn() && (
+            <HStack
               onClick={() => router.push(`/`)}
               cursor="pointer"
               alignItems="center"
             >
-              <Image objectFit="cover" src="/logo.svg" alt="logo" />
-            </Flex>
-            <Spacer />
-            { isDesktop && (
-                <Show above="md">
-                <ButtonGroup variant="link" spacing="2" alignItems="flex-end">
-                  {
-                    wallet?.isSignedIn() && (
-                      <Link href="/dashboard">
-                        <Button
-                          fontWeight={600}
-                          fontSize={"md"}
-                          color={primaryColor[500]}
-                          aria-current="page"
-                          variant="nav"
-                        >
-                          {" "}
-                          My Dashboard{" "}
-                        </Button>
-                      </Link>
-                    )
-                  }
-                  
-                  <Link href="/faq">
-                    <Button fontWeight={600} fontSize={"16px"} variant="nav">
-                      {" "}
-                      FAQ{" "}
-                    </Button>
-                  </Link>
-                </ButtonGroup>
-              </Show>
-            )}
-            
+              <Text>Hi</Text>
+              <Text fontWeight={500} p={"10px 16px"} backgroundColor={colors.secundary+".900"}>{signInAccountId}</Text>
+            </HStack>
+          ) }
             <Spacer />
             {wallet?.isSignedIn() ? (
-              <>
-                <Show above="lg">
+              <HStack spacing={10}>
+                <HStack>
                   <Square minW="30px">
                     <Image
                       boxSize="20px"
@@ -148,33 +117,27 @@ const Header: React.FC<ButtonProps> = (props) => {
                     />
                   </Square>
                   <Text>{formatToLocaleNear(balance)}</Text>
-
-                  <Button colorScheme={colors.primary}>
-                    <LinkOverlay href={nearConfig.refFinance} isExternal>
-                      Get $META
-                    </LinkOverlay>
-                  </Button>
+                </HStack>
+                
+                <Show above="md">
+                  <Link href={nearConfig.refFinance} isExternal>
+                    Get more $META
+                  </Link>
                 </Show>
                 <Menu>
-                  {isDesktop ? (
-                    <MenuButton px={4} py={2}>
-                      {signInAccountId} <ChevronDownIcon />
-                    </MenuButton>
-                  ) : (
-                    <MenuButton
-                      as={IconButton}
-                      icon={<HamburgerIcon h="22px" />}
-                      variant="none"
+                  <MenuButton
+                    as={IconButton}
+                    icon={<HamburgerIcon h="22px" />}
+                    variant="none"
                     />
-                  )}
                   <MenuList>
-                      <MenuItem onClick={() => router.push("/#faq")}>
+                      <MenuItem  fontSize={'xl'}onClick={() => router.push("/#faq")}>
                         FAQ
                       </MenuItem>
                     {
                       wallet?.isSignedIn() && ( 
                         <>
-                          <MenuItem
+                          <MenuItem fontSize={'xl'}
                               as={"a"}
                               href={`${nearConfig.explorerUrl}/accounts/${signInAccountId}`}
                               target="_blank"
@@ -182,16 +145,16 @@ const Header: React.FC<ButtonProps> = (props) => {
                             >
                               My Wallet
                           </MenuItem>
-                          <MenuItem onClick={() => router.push("/#dashboard")}>
+                          <MenuItem  fontSize={'xl'}onClick={() => router.push("/dashboard")}>
                             My Dashboard
                           </MenuItem>
-                          <MenuItem onClick={() => logout()}>Disconnect</MenuItem>
+                          <MenuItem  fontSize={'xl'}onClick={() => logout()}>Disconnect</MenuItem>
                         </>
                       )
                     }
                   </MenuList>
                 </Menu>
-              </>
+              </HStack>
             ) : (
               <Button
                 color="blue"

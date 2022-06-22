@@ -37,7 +37,7 @@ type Props = {
   vPower: string
 }
 
-const LockModal = (props: Props) => {
+const StatusTag = (props: Props) => {
   const {wallet, isOpen, onClose, vPower} = props;
   const [ sliderValue, setSliderValue] = useState(30);
 
@@ -130,4 +130,4 @@ const LockModal = (props: Props) => {
   );
 };
 
-export default LockModal;
+export default StatusTag;

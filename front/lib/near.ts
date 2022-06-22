@@ -41,7 +41,6 @@ export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 
 export const gas = new BN("70000000000000");
 const env = process.env.NODE_ENV;
-console.log('@env', env)
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 
@@ -56,7 +55,7 @@ export const getWallet = async () => {
     keyStore: new keyStores.BrowserLocalStorageKeyStore(),
   };
   const near = await connect(connectConfig);
-  const wallet = new WalletConnection(near, "katherine");
+  const wallet = new WalletConnection(near, "metavote");
   return wallet;
 };
 
@@ -93,8 +92,6 @@ export const getMetaTokenContract = async (wallet: WalletConnection) => {
 };
 
 
-
-
 export const getStNearPrice = async () => {
   return callPublicMetapoolMethod(metaPoolMethods.getStNearPrice, {});
 };
@@ -120,7 +117,6 @@ export const getBalance = async (wallet: WalletConnection): Promise<number> => {
   const accountInfo = await getMetapoolAccountInfo(wallet);
   return yton(accountInfo.st_near);
 };
-
 
 export const getTxStatus = async (
   txHash: string,
@@ -222,6 +218,7 @@ const callChangeMetaTokenMethod = async (
   return (contract as any)[method](args, "300000000000000", "1");
 };
 
+
 /*********** METAVOTE VIEW METHODS *************/
 
 export const getAvailableVotingPower = async (wallet: any) => {
@@ -255,15 +252,19 @@ export const getVotes = async (id: string, contract: string) => {
   });
 };
 
-export const getVotesByAddress = async (contract: string) => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getVotesByAddress, {
+export const getVotesByContract = async (contract: string) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getVotesByContract, {
     contract_address: contract,
   });
 };
 
+export const getVotesByVoter = async (wallet: any) => {
+  return callPublicMetavoteMethod(metavoteViewMethods.getVotesByVoter, {
+    voter_id: wallet.getAccountId(),
+  });
+};
+
 /*********** METAVOTE CHANGE METHODS *************/
-
-
 export const voteProject = async (id: string, contractName: string, votingPower: string, wallet: any ) => {
   const args = {
     voting_power: votingPower,
@@ -295,4 +296,21 @@ export const unlock = async (positionId: string , wallet: any) => {
     index: positionId
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unlockPosition);
+};
+
+export const withdraw = async (wallet: any, amount: string, positionId?: string ) => {
+  const args = {
+    position_index_list: positionId ? positionId : '', 
+    amount_from_balance: amount
+  }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
+};
+
+export const relock = async (positionIndex: string, period: string, amount: string, wallet: any ) => {
+  const args = {
+    index: positionIndex,
+    locking_period: period,
+    amount_from_balance: amount
+  }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.relock);
 };

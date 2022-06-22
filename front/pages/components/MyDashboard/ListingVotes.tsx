@@ -1,60 +1,46 @@
 import {
-  Box, 
   Button, 
   Container, 
   Flex, 
-  Heading, 
-  Text, 
   useDisclosure, 
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton, 
-  InputGroup,
-  InputLeftAddon,
-  Input,
-  InputRightAddon,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-  VStack,
-  StackDivider,
-  toast,
   TableContainer,
   Table,
-  TableCaption,
   Thead,
   Tr,
   Th,
   Tbody,
-  Td
+  Td,
+  Show,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  HStack,
+  Circle,
+  VStack,
+  AccordionIcon,
+  AccordionPanel,
+  Text
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAllLockingPositions, getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, getVotesByAddress, unlock, unvoteProject } from '../../../lib/near';
+import { getVotesByVoter, unvoteProject } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import { getLockinPositionStatus, POSITION_STATUS, yton } from '../../../lib/util';
 import LockModal from './LockModal';
-import { AnyNaptrRecord } from 'dns';
+import { yton } from '../../../lib/util';
 
 type Props = {
 }
 
 const ListingVotes = (props: Props) => {
   const { wallet} = useWallet();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen,  onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
 
 
   const getVotes = async ()=> {
     const newVoterData = voterData;
-    const contract = 'metayield-proyect';
-    newVoterData.votingResults = await getVotesByAddress(contract);
+    newVoterData.votingResults = await getVotesByVoter(wallet);
     setVoterData(newVoterData);
   }
 
@@ -78,7 +64,6 @@ const ListingVotes = (props: Props) => {
 
   return (
     <section>
-      <Container id="dashboard-header">
         <Flex justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }} >
           
           {/*<Heading lineHeight={'133%'} textAlign={{ base: 'center', md: 'start' }} fontWeight={700} color="gray.900" fontSize={'2xl'}> Votes List</Heading> 
@@ -86,37 +71,71 @@ const ListingVotes = (props: Props) => {
             Lock $META to get Voting Power
             </Button>*/}
         </Flex>
-        <TableContainer mt={30}>
-          <Table  >
-            <Thead>
-              <Tr>
-                <Th fontSize={'xl'}>ID</Th>
-                <Th fontSize={'xl'}>Current Votes</Th>
-                <Th fontSize={'xl'} >Contract</Th>
-                <Th fontSize={'xl'}>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {  voterData.votingResults.map((position: any, index: number)=> {
+        
+        <Show above='md'>
+          <TableContainer mt={30}>
+            <Table  >
+              <Thead>
+                <Tr>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'} >Platform</Th>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Project</Th>
+                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {  voterData.votingResults.map((position: any, index: number)=> {
+                    return (
+                      <Tr key={index}>
+                        <Td fontSize={'2xl'} isNumeric>{yton(position.current_votes).toFixed(4)}</Td>
+                        <Td fontSize={'2xl'} >{position.votable_contract}</Td>
+                        <Td fontSize={'2xl'}>{position.id} </Td>
+                        <Td fontSize={'2xl'}>
+                            <Button colorScheme={colors.primary} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>
+                        </Td>
+                      </Tr>
+                    )
+                })}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Show>
+        <Show below={'md'}>
+            {  voterData.votingResults.map((position: any, index: number)=> {
                   return (
-                    <Tr key={index}>
-                      <Td>{position.id} </Td>
-                      <Td>{position.current_votes}</Td>
-                      <Td >{position.votable_contract}</Td>
-                      <Td>
-                          <Button colorScheme={colors.primary} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>
-                      </Td>
-
-                    </Tr>
+                    <Accordion  key={index} allowMultiple>
+                      <AccordionItem>
+                        <AccordionButton _expanded={{bg:'white'}} bg={{base: 'white'}}>
+                          <HStack w={'100%'} justify={'space-between'} textAlign="left">
+                            <HStack><Circle size={3} bg={'red'}></Circle>
+                            <Text fontSize={'xl'}> {position.id}</Text></HStack>
+                            <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.current_votes).toFixed(4)} </Text>
+                          </HStack>
+                          <AccordionIcon ml={5} fontSize={'2xl'} />
+                        </AccordionButton>
+                        <AccordionPanel pb={4}>
+                          <VStack >
+                            <HStack w={'100%'} justify={'space-between'}> 
+                              <Text fontSize={'xl'}>Voting Power:</Text>
+                              <Text bg={colors.secundary+".50"} fontSize={'xl'}> {yton(position.current_votes).toFixed(4)}</Text>
+                            </HStack>
+                            <HStack w={'100%'} justify={'space-between'}> 
+                              <Text fontSize={'xl'}>Platform:</Text>
+                              <Text fontSize={'xl'}> {position.votable_contract}</Text>
+                            </HStack>
+                            <HStack w={'100%'} justify={'space-between'}> 
+                              <Text fontSize={'xl'}>Project:</Text>
+                              <Text fontSize={'xl'}> {position.id}</Text>
+                            </HStack>
+                            <Button w={'100%'} colorScheme={colors.primary} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>
+                          </VStack>
+                        </AccordionPanel>
+                      </AccordionItem>
+                    </Accordion>
                   )
               })}
-            </Tbody>
-          </Table>
-        </TableContainer>
-
-      </Container>
+        </Show>
       <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
-
     </section>
   );
 };

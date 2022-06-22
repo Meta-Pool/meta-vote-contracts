@@ -62,9 +62,18 @@ impl MetaVoteContract {
         }
     }
 
+    // *******************
+    // * Testing Methods *
+    // *******************
+
     pub fn update_token_contract(&mut self, new_contract: ContractAddress) {
         self.assert_only_owner();
         self.meta_token_contract_address = new_contract;
+    }
+
+    pub fn update_min_locking_period(&mut self, new_period: Days) {
+        self.assert_only_owner();
+        self.min_locking_period = new_period;
     }
 
     // *************
@@ -367,6 +376,10 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter(&voter_id);
         let voting_power = VotingPower::from(voting_power);
         require!(voter.voting_power >= voting_power, "Not enough available Voting Power.");
+        assert!(
+            voter.vote_positions.len() <= self.max_voting_positions as u64,
+            "Cannot exceed {} voting positions.", self.max_voting_positions
+        );
 
         let mut votes_for_address = voter.get_votes_for_address(
             &voter_id,

@@ -7,7 +7,8 @@ export const colors = {
   current: "currentColor",
   black: "#000000",
   white: "#FFFFFF",
-  primary: 'green',
+  primary: 'indigo',
+  secundary: 'cyan',
 
 
   whiteAlpha: {
@@ -121,16 +122,16 @@ export const colors = {
     900: "#134e4a",
   },
   cyan: {
-    50: "#ecfeff",
+    50: "#bdf7e6",
     100: "#cffafe",
     200: "#a5f3fc",
     300: "#67e8f9",
-    400: "#22d3ee",
+    400: "#32E7B1",
     500: "#06b6d4",
     600: "#0891b2",
     700: "#0e7490",
     800: "#155e75",
-    900: "#164e63",
+    900: "#32E7B1",
   },
   lightBlue: {
     50: "#f0f9ff",
@@ -166,7 +167,7 @@ export const colors = {
     600: "#4f46e5",
     700: "#4338ca",
     800: "#3730a3",
-    900: "#312e81",
+    900: "#735DE9",
   },
   purple: {
     50: "#faf5ff",
@@ -178,7 +179,7 @@ export const colors = {
     600: "#9333ea",
     700: "#7e22ce",
     800: "#6b21a8",
-    900: "#581c87",
+    900: "#120E28",
   },
   pink: {
     50: "#fdf2f8",
