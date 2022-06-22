@@ -120,7 +120,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                 
                 <Show above="md">
                   <Link href={nearConfig.refFinance} isExternal>
-                    Get more $Meta
+                    Get more $META
                   </Link>
                 </Show>
                 <Menu>
@@ -144,7 +144,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                             >
                               My Wallet
                           </MenuItem>
-                          <MenuItem  fontSize={'xl'}onClick={() => router.push("/#dashboard")}>
+                          <MenuItem  fontSize={'xl'}onClick={() => router.push("/dashboard")}>
                             My Dashboard
                           </MenuItem>
                           <MenuItem  fontSize={'xl'}onClick={() => logout()}>Disconnect</MenuItem>
