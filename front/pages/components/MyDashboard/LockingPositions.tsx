@@ -108,7 +108,7 @@ const LockingPosition = (props: Props) => {
         return ( <Button colorScheme={colors.primary}  w={'100%'} onClick={()=> unlockClicked(position.index)}>Start unlock</Button> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> withdrawClicked(position.amount ,position.index)}>Withdraw</Button>)
+        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> withdrawClicked(position.index)}>Withdraw</Button>)
 
       case POSITION_STATUS.UNLOKING:
         return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> relockClicked(position.index, position.locking_period, position.amount)}>Relock</Button> ) 
