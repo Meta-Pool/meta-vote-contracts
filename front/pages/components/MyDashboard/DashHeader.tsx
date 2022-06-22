@@ -1,9 +1,5 @@
 import {
-  Box, 
   Button, 
-  Container, 
-  Flex, 
-  Heading, 
   HStack, 
   Spacer, 
   Stack, 
@@ -38,6 +34,10 @@ const DashboardHeader = (props: Props) => {
     newVoterData.metaUnlocking = await getUnlockingBalance(wallet);
     newVoterData.projectsVoted = await getBalanceMetaVote(wallet); 
     setVoterData(newVoterData);
+  }
+
+  const withdraw = async ()=> {
+      /* withdraw(voterData.metaToWithdraw, wallet); */
   }
 
   useEffect(  () =>{
@@ -88,7 +88,7 @@ const DashboardHeader = (props: Props) => {
               <Text fontSize={'xl'}>$META to withdraw</Text>
               <HStack>
                 <Text fontSize={'5xl'} mr={'32px'}>{yton(voterData.metaToWithdraw)}</Text>
-                <Button  fontSize={'xl'} disabled={ parseInt(voterData.metaToWithdraw)<=0} h={'80px'} onClick={()=> initMyData()} colorScheme={colors.primary}>
+                <Button  fontSize={'xl'} disabled={ parseInt(voterData.metaToWithdraw)<=0} h={'80px'} onClick={()=> withdraw()} colorScheme={colors.primary}>
                   Withdraw
                 </Button>
               </HStack>

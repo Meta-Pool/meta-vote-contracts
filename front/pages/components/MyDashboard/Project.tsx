@@ -36,6 +36,10 @@ const Project = (props: Props) => {
   } )()
   },[wallet, project])
 
+  if (!project) {
+    return (<></>);
+  }
+
   return (
         <Box key={project.id} w={'30%'} border={'1px'} borderColor={colors.primary} p={10}>
           <Text fontSize={'2xl'}>{project.title} - <Badge>Votes: {yton(votes)}</Badge></Text>
@@ -47,7 +51,6 @@ const Project = (props: Props) => {
           </Button>
           <VoteModal id={project.id} isOpen={isOpen} onClose={onClose} wallet={wallet} contractAdress={project.contract}></VoteModal>
         </Box>
-
   );
 };
 

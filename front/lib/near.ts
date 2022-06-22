@@ -55,7 +55,7 @@ export const getWallet = async () => {
     keyStore: new keyStores.BrowserLocalStorageKeyStore(),
   };
   const near = await connect(connectConfig);
-  const wallet = new WalletConnection(near, "katherine");
+  const wallet = new WalletConnection(near, "metavote");
   return wallet;
 };
 
@@ -92,8 +92,6 @@ export const getMetaTokenContract = async (wallet: WalletConnection) => {
 };
 
 
-
-
 export const getStNearPrice = async () => {
   return callPublicMetapoolMethod(metaPoolMethods.getStNearPrice, {});
 };
@@ -119,7 +117,6 @@ export const getBalance = async (wallet: WalletConnection): Promise<number> => {
   const accountInfo = await getMetapoolAccountInfo(wallet);
   return yton(accountInfo.st_near);
 };
-
 
 export const getTxStatus = async (
   txHash: string,
@@ -221,6 +218,7 @@ const callChangeMetaTokenMethod = async (
   return (contract as any)[method](args, "300000000000000", "1");
 };
 
+
 /*********** METAVOTE VIEW METHODS *************/
 
 export const getAvailableVotingPower = async (wallet: any) => {
@@ -266,9 +264,7 @@ export const getVotesByVoter = async (wallet: any) => {
   });
 };
 
-
 /*********** METAVOTE CHANGE METHODS *************/
-
 export const voteProject = async (id: string, contractName: string, votingPower: string, wallet: any ) => {
   const args = {
     voting_power: votingPower,
@@ -300,4 +296,12 @@ export const unlock = async (positionId: string , wallet: any) => {
     index: positionId
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unlockPosition);
+};
+
+export const withdraw = async (positionId: string , wallet: any, amount: string) => {
+  const args = {
+    position_index_list: positionId, 
+    amount_from_balance: amount
+  }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
 };

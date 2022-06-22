@@ -130,4 +130,4 @@ const StatusTag = (props: Props) => {
   );
 };
 
-export default LockModal;
+export default StatusTag;
