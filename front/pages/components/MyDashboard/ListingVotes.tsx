@@ -1,6 +1,5 @@
 import {
   Button, 
-  Container, 
   Flex, 
   useDisclosure, 
   TableContainer,
@@ -10,7 +9,6 @@ import {
   Th,
   Tbody,
   Td,
-  Show,
   Accordion,
   AccordionItem,
   AccordionButton,
@@ -19,7 +17,8 @@ import {
   VStack,
   AccordionIcon,
   AccordionPanel,
-  Text
+  Text,
+  useBreakpointValue
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -36,7 +35,7 @@ const ListingVotes = (props: Props) => {
   const { wallet} = useWallet();
   const { isOpen,  onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
-
+  const isDesktop = useBreakpointValue({ base: false, md: true });
 
   const getVotes = async ()=> {
     const newVoterData = voterData;
@@ -56,7 +55,7 @@ const ListingVotes = (props: Props) => {
   useEffect(  () =>{
     (async ()=> {
       if (wallet && wallet.isSignedIn()) {
-        getVotes()
+        getVotes();
       }
     })();
   },[wallet])
@@ -71,8 +70,9 @@ const ListingVotes = (props: Props) => {
             Lock $META to get Voting Power
             </Button>*/}
         </Flex>
-        
-        <Show above='md'>
+
+        { /* *********** DESKTOP UI ***************** */
+          isDesktop && (
           <TableContainer mt={30}>
             <Table  >
               <Thead>
@@ -91,7 +91,7 @@ const ListingVotes = (props: Props) => {
                         <Td fontSize={'2xl'} >{position.votable_contract}</Td>
                         <Td fontSize={'2xl'}>{position.id} </Td>
                         <Td fontSize={'2xl'}>
-                            <Button colorScheme={colors.primary} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>
+                            <Button colorScheme={colors.primary} w={'100%'} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>
                         </Td>
                       </Tr>
                     )
@@ -99,12 +99,16 @@ const ListingVotes = (props: Props) => {
               </Tbody>
             </Table>
           </TableContainer>
-        </Show>
-        <Show below={'md'}>
+          )
+        }
+
+        { /* *********** MOBILE UI ***************** */
+          !isDesktop && (
+          <>
             {  voterData.votingResults.map((position: any, index: number)=> {
                   return (
                     <Accordion  key={index} allowMultiple>
-                      <AccordionItem>
+                      <AccordionItem m={2}>
                         <AccordionButton _expanded={{bg:'white'}} bg={{base: 'white'}}>
                           <HStack w={'100%'} justify={'space-between'} textAlign="left">
                             <HStack><Circle size={3} bg={'red'}></Circle>
@@ -133,8 +137,12 @@ const ListingVotes = (props: Props) => {
                       </AccordionItem>
                     </Accordion>
                   )
-              })}
-        </Show>
+              })
+            }
+          </>
+          )
+        }
+     
       <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
     </section>
   );

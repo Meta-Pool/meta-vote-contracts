@@ -109,7 +109,7 @@ const LockModal = (props: Props) => {
               </HStack>
               
               <StackDivider></StackDivider >
-              <Slider defaultValue={30} min={0} max={120} step={15} onChange={(val) => setSliderValue(val)}>
+              <Slider defaultValue={30} min={0} max={120} step={1} onChange={(val) => setSliderValue(val)}>
                 <SliderTrack bg={colors.primary + '.200'}>
                   <Box position='relative' right={10} />
                   <SliderFilledTrack bg={colors.primary +'.500'} />

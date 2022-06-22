@@ -7,7 +7,6 @@ import {
   ConnectConfig,
 } from "near-api-js";
 import {
-  FinalExecutionStatus,
   getTransactionLastResult,
 } from "near-api-js/lib/providers";
 const BN = require("bn.js");
@@ -291,11 +290,16 @@ export const unlock = async (positionId: string , wallet: any) => {
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unlockPosition);
 };
 
-export const withdraw = async (wallet: any, amount: string, positionId?: string ) => {
+export const withdrawAllPosition = async (positionId: string, wallet: any ) => {
   const args = {
     position_index_list: positionId ? positionId : '', 
-    amount_from_balance: amount
+    amount_from_balance: '0'
   }
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
+};
+
+export const withdrawAll = async (wallet: any) => {
+  const args = {}
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
 };
 

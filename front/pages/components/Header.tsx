@@ -5,42 +5,38 @@ import {
   Text,
   ButtonProps,
   Box,
-  Flex,
   HStack,
   Link,
-  LinkOverlay,
   Container,
-  useBreakpointValue,
-  ButtonGroup,
   Spacer,
   Square,
   Image,
-  useToast,
-  Show,
   Menu,
   MenuButton,
-  MenuDivider,
   MenuItem,
   MenuList,
   IconButton,
 } from "@chakra-ui/react";
-import { ChevronDownIcon, HamburgerIcon } from "@chakra-ui/icons";
+import {  HamburgerIcon } from "@chakra-ui/icons";
 import {
   getWallet,
   getMetaBalance,
   METAPOOL_CONTRACT_ID,
   getNearConfig,
 } from "../../lib/near";
-import { colors, primaryColor } from "../../constants/colors";
+import { colors } from "../../constants/colors";
 import { useStore as useWallet } from "../../stores/wallet";
 import { useStore as useBalance } from "../../stores/balance";
 import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
+import { useStore as useVoter } from "../../stores/voter";
 
 const Header: React.FC<ButtonProps> = (props) => {
   const { wallet, setWallet } = useWallet();
   const { balance, setBalance } = useBalance();
+  const {  clearVoterData } = useVoter();
   const [signInAccountId, setSignInAccountId] = useState(null);
+  
   const router = useRouter();
   const nearConfig = getNearConfig();
   const onConnect = async () => {
@@ -52,6 +48,7 @@ const Header: React.FC<ButtonProps> = (props) => {
   };
 
   const logout = async () => {
+    clearVoterData();
     await wallet!.signOut();
     const tempWallet = await getWallet();
     setWallet(tempWallet);
@@ -60,6 +57,7 @@ const Header: React.FC<ButtonProps> = (props) => {
   useEffect(() => {
     (async () => {
       if (wallet) {
+        
       }
     })();
   }, [ wallet]);
@@ -119,11 +117,9 @@ const Header: React.FC<ButtonProps> = (props) => {
                   <Text>{formatToLocaleNear(balance)}</Text>
                 </HStack>
                 
-                <Show above="md">
                   <Link href={nearConfig.refFinance} isExternal>
                     Get more $META
                   </Link>
-                </Show>
                 <Menu>
                   <MenuButton
                     as={IconButton}

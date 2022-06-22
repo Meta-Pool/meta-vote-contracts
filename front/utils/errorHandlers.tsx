@@ -29,7 +29,9 @@ export const ErrorHashHandler = async (router: any, toast: any, wallet: any) => 
             }
         }
     }
-    removeQueryString();
+    setTimeout(()=>{
+        removeQueryString();
+    },1000) 
 }
 
 export const removeQueryString = () => {

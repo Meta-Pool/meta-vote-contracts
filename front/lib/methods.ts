@@ -22,6 +22,7 @@ export const metavoteChangeMethods = {
   relockFromBalance: "relock_from_balance",
   clear_locking_position: "clear_locking_position",
   withdraw: "withdraw",
+  withdrawAll: "withdraw_all",
   vote: "vote",
   rebalance: "rebalance",
   unvote: "unvote",
