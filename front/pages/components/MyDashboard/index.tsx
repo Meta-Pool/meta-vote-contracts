@@ -1,10 +1,8 @@
 import React from 'react';
 import DashboardHeader from './DashHeader';
-import ProjectList from './ProjectList';
 import LockingPosition from './LockingPositions';
 import ListingVotes from './ListingVotes';
-import { Container, Show, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
-import { colors } from '../../../constants/colors';
+import { Container, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
 
 type Props = {
   shortVersion?: boolean

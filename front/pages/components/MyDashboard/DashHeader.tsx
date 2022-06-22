@@ -9,7 +9,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, withdraw } from '../../../lib/near';
+import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, withdraw, withdrawAll } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
@@ -37,7 +37,7 @@ const DashboardHeader = (props: Props) => {
   }
 
   const withdrawClicked = async (amount: string)=> {
-       withdraw(wallet, amount); 
+       withdrawAll(wallet); 
   }
 
   useEffect(  () =>{
