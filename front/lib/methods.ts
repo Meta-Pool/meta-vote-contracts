@@ -17,7 +17,6 @@ export const metavoteViewMethods = {
 export const metavoteChangeMethods = {
   unlockPosition: "unlock_position",
   unlockPartialPosition: "unlock_partial_position",
-  relockPosition: "relock_position",
   relockPartialPosition: "relock_partial_position",
   relockFromBalance: "relock_from_balance",
   clear_locking_position: "clear_locking_position",
