@@ -338,7 +338,7 @@ impl MetaVoteContract {
         amount_from_balance: MetaJSON
     ) {
         let voter_id = env::predecessor_account_id();
-        let mut voter = self.internal_get_voter(&voter_id);
+        let voter = self.internal_get_voter(&voter_id);
         let amount_from_balance = Meta::from(amount_from_balance);
         require!(voter.balance >= amount_from_balance, "Not enough balance.");
         let remaining_balance = voter.balance - amount_from_balance;
@@ -348,6 +348,7 @@ impl MetaVoteContract {
             self.clear_locking_position(position_index_list);
         }
 
+        let mut voter = self.internal_get_voter(&voter_id);
         let total_to_withdraw = voter.balance - remaining_balance;
         require!(total_to_withdraw > 0, "Nothing to withdraw.");
         voter.balance -= total_to_withdraw;
@@ -363,7 +364,7 @@ impl MetaVoteContract {
 
     pub fn withdraw_all(&mut self) {
         let voter_id = env::predecessor_account_id();
-        let mut voter = self.internal_get_voter(&voter_id);
+        let voter = self.internal_get_voter(&voter_id);
 
         let position_index_list = voter.get_unlocked_position_index();
         // Clear locking positions could increase the voter balance.
@@ -371,6 +372,7 @@ impl MetaVoteContract {
             self.clear_locking_position(position_index_list);
         }
 
+        let mut voter = self.internal_get_voter(&voter_id);
         let total_to_withdraw = voter.balance;
         require!(total_to_withdraw > 0, "Nothing to withdraw.");
         voter.balance = 0;
