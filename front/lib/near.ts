@@ -165,9 +165,14 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
-const callChangeMetavoteMethod = async (wallet: any, args: any, method: string) => {
-  const contract = await getContract(wallet);
-  const response = (contract as any)[method](args, "200000000000000");
+const callChangeMetavoteMethod = async (wallet: any, args: any, method: string, deposit?: string) => {
+  const contract = await getContract(wallet); 
+  let response;
+  if (deposit) {
+    response = (contract as any)[method](args, "200000000000000", deposit);
+  } else {
+    response = (contract as any)[method](args, "200000000000000");
+  }
   return response;
 };
 
@@ -295,19 +300,19 @@ export const withdrawAPosition = async (positionId: string, wallet: any ) => {
     position_index_list: positionId ? [positionId] : [], 
     amount_from_balance: '0'
   }
-  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw, "1");
 };
 
 export const withdrawAll = async (wallet: any) => {
   const args = {}
-  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdrawAll);
 };
 
 export const relock = async (positionIndex: string, period: string, amount: string, wallet: any ) => {
   const args = {
     index: positionIndex,
     locking_period: period,
-    amount_from_balance: amount
+    amount_from_balance: '0'
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.relock);
 };
