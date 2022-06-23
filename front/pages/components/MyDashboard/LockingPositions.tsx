@@ -117,27 +117,27 @@ const LockingPosition = (props: Props) => {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <Tag colorScheme={'red'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> )
+        return ( <Tag colorScheme={'red'} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Tag colorScheme={'green'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag>)
+        return ( <Tag colorScheme={'green'} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag>)
 
       case POSITION_STATUS.UNLOKING:
-        return ( <Tag colorScheme={'yellow'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> ) 
+        return ( <Tag colorScheme={'yellow'} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag> ) 
     }
   }
 
-  const getStatusCircle = (position: any)=> {
+  const getStatusCircle = (position: any, hideText?: boolean)=> {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <><Circle mr={5} size={3} bg={'green'}/>{STATUS[getLockinPositionStatus(position)]}</> )
+        return ( <><Circle mr={5} size={3} bg={'green'}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <><Circle mr={5} size={3} bg={'red'}/>{STATUS[getLockinPositionStatus(position)]}</>)
+        return ( <><Circle mr={5} size={3} bg={'red'}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</>)
 
       case POSITION_STATUS.UNLOKING:
-        return (<><Circle mr={5} size={3} bg={'orange'}/>{STATUS[getLockinPositionStatus(position)]}</> ) 
+        return (<><Circle mr={5} size={3} bg={'orange'}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</> ) 
     }
   }
 
@@ -224,7 +224,7 @@ const LockingPosition = (props: Props) => {
                       <AccordionItem m={2} >
                         <AccordionButton  _expanded={{bg:'white'}}  bg={{base: 'white'}}>
                           <HStack w={'100%'} justify={'space-between'} textAlign="left">
-                            <HStack><Circle size={3} bg={'red'}></Circle>
+                            <HStack>{ getStatusCircle(position, true)}
                             <Text fontSize={'xl'}>{position.locking_period} days </Text></HStack>
                             <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.voting_power).toFixed(4)} </Text>
                           </HStack>
@@ -250,7 +250,7 @@ const LockingPosition = (props: Props) => {
                             </HStack>
                             <HStack  w={'100%'} justify={'space-between'}> 
                               <Text fontSize={'xl'}>Status:</Text>
-                              <Text p={2} fontSize={'xl'}> {getStatusTag(position)}</Text>
+                              <Text p={2} fontSize={'xl'}> <HStack>{getStatusCircle(position)}</HStack></Text>
                             </HStack>
                             { getButtonbyStatus(position)}
 

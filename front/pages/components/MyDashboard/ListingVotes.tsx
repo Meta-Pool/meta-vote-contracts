@@ -110,8 +110,7 @@ const ListingVotes = () => {
                       <AccordionItem m={2}>
                         <AccordionButton _expanded={{bg:'white'}} bg={{base: 'white'}}>
                           <HStack w={'100%'} justify={'space-between'} textAlign="left">
-                            <HStack><Circle size={3} bg={'red'}></Circle>
-                            <Text fontSize={'xl'}> {position.id}</Text></HStack>
+                            <Text fontSize={'xl'}> {position.id}</Text>
                             <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.current_votes).toFixed(4)} </Text>
                           </HStack>
                           <AccordionIcon ml={5} fontSize={'2xl'} />
