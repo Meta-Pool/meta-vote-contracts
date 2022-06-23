@@ -43,9 +43,9 @@ const InfoModal = (props: Props) => {
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Flex  w={'100%'} justifyContent={'space-evenly'}>
-              <Button colorScheme={colors.secundary} onClick={onSubmit}>Yep</Button>
-              <Button variant='outline' color={'white'} bg={'purple.900'} _hover={{ bg: 'grey' }} mr={3} onClick={onClose}>
+            <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'center'}>
+              <Button colorScheme={colors.secundary} onClick={onSubmit}  m={1}>Yep</Button>
+              <Button variant='outline' color={'white'} bg={'purple.900'} _hover={{ bg: 'grey' }} m={1} onClick={onClose}>
                 Cancel
               </Button>
             </Flex>

@@ -16,6 +16,7 @@ import {
   MenuItem,
   MenuList,
   IconButton,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import {  HamburgerIcon } from "@chakra-ui/icons";
 import {
@@ -36,7 +37,8 @@ const Header: React.FC<ButtonProps> = (props) => {
   const { balance, setBalance } = useBalance();
   const {  clearVoterData } = useVoter();
   const [signInAccountId, setSignInAccountId] = useState(null);
-  
+  const isDesktop = useBreakpointValue({ base: false, md: true });
+
   const router = useRouter();
   const nearConfig = getNearConfig();
   const onConnect = async () => {
@@ -116,10 +118,14 @@ const Header: React.FC<ButtonProps> = (props) => {
                   </Square>
                   <Text>{formatToLocaleNear(balance)}</Text>
                 </HStack>
-                
+                 {
+                  isDesktop && (
                   <Link href={nearConfig.refFinance} isExternal>
                     Get more $META
                   </Link>
+                  )
+                 }
+                  
                 <Menu>
                   <MenuButton
                     as={IconButton}

@@ -28,11 +28,12 @@ import { colors } from '../../../constants/colors';
 import { getAllLockingPositions, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import { getLockinPositionStatus, POSITION_STATUS, timeRemain, yton } from '../../../lib/util';
+import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, timeRemain, yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal, { InfoContent } from './InfoModal';
 import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
 import { STATUS_CODES } from 'http';
+import moment from 'moment';
 
 type Props = {
 }
@@ -58,7 +59,12 @@ const LockingPosition = (props: Props) => {
     setVoterData(newVoterData);
   }
   const getTimeRemaining = (position: any): string => {
-    return getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING ? timeRemain(position.unlocking_started_at) : getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED ? '0 days' : '-'
+    const timeUnlockingStartAt = moment(position.unlocking_started_at);
+    const unlockingFinishedTime = timeUnlockingStartAt.add(position.locking_period, 'day');
+
+
+
+    return getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING ? timeLeftTo(unlockingFinishedTime) : getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED ? '0 days' : '-'
   }
 
   const unlockPosition = (idPosition: string) => {
@@ -168,7 +174,7 @@ const LockingPosition = (props: Props) => {
                     <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}isNumeric >$META amount</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Autolock days</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Remainig days</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Remainig time</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}>Status</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}>Action</Th>
                   </Tr>
@@ -239,7 +245,7 @@ const LockingPosition = (props: Props) => {
                               <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {position.locking_period} Days</Text>
                             </HStack>
                             <HStack w={'100%'} justify={'space-between'}> 
-                              <Text fontSize={'xl'}>Remaining days</Text>
+                              <Text fontSize={'xl'}>Remaining time</Text>
                               <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {getTimeRemaining(position)} Days</Text>
                             </HStack>
                             <HStack  w={'100%'} justify={'space-between'}> 
