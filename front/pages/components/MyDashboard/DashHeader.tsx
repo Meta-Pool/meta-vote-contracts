@@ -14,6 +14,8 @@ import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
+import InfoModal from './InfoModal';
+import { MODAL_TEXT } from '../../../constants';
 
 type Props = {
   shortVersion?: boolean
@@ -23,6 +25,8 @@ const DashboardHeader = (props: Props) => {
   const { wallet} = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
+  const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
+
   const padding = '24px';
 
   const initMyData = async ()=> {
@@ -32,11 +36,10 @@ const DashboardHeader = (props: Props) => {
     newVoterData.metaLocked = await getLockedBalance(wallet);
     newVoterData.metaToWithdraw = await getBalanceMetaVote(wallet);
     newVoterData.metaUnlocking = await getUnlockingBalance(wallet);
-    newVoterData.projectsVoted = await getBalanceMetaVote(wallet); 
     setVoterData(newVoterData);
   }
 
-  const withdrawClicked = async (amount: string)=> {
+  const withdrawClicked = async ()=> {
        withdrawAll(wallet); 
   }
 
@@ -48,7 +51,6 @@ const DashboardHeader = (props: Props) => {
     })();
   },[wallet])
 
-
   return (
         <Stack w={'100%'} flexDirection={{ base: 'column', md: 'row' }} spacing={'10px'} justify={'space-between'}>
           <Stack w={{ base: '100%', md: '48%' }} backgroundColor={'white'}  spacing={10} p={padding} direction={'column'}>
@@ -59,7 +61,6 @@ const DashboardHeader = (props: Props) => {
               </VStack>
               <Button position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
             </HStack>
-            
             <HStack justify={'space-between'}>
               <Text fontSize={'xl'}>In use</Text>
               <Text fontSize={'xl'} color={colors.primary}>{yton(voterData.inUseVPower)}</Text>
@@ -78,23 +79,22 @@ const DashboardHeader = (props: Props) => {
               <Text fontSize={'xl'}>$META locked</Text>
               <Text fontSize={'5xl'} color={colors.primary}>{yton(voterData.metaLocked)}</Text>
             </HStack>
-            
             <HStack  justify={'space-between'} backgroundColor={'white'} p={padding}>
               <Text fontSize={'xl'}>$META unlocking</Text>
               <Text fontSize={'5xl'} color={colors.primary}>{yton(voterData.metaUnlocking)}</Text>
             </HStack>
-           
             <HStack justify={'space-between'} backgroundColor={'white'} p={padding}>
               <Text fontSize={'xl'}>$META to withdraw</Text>
               <HStack>
                 <Text fontSize={'5xl'} mr={'32px'}>{yton(voterData.metaToWithdraw)}</Text>
-                <Button  fontSize={'xl'} disabled={ parseInt(voterData.metaToWithdraw)<=0} h={'80px'} onClick={()=> withdrawClicked(voterData.metaToWithdraw)} colorScheme={colors.primary}>
+                <Button  fontSize={'xl'} disabled={ parseInt(voterData.metaToWithdraw)<=0} h={'80px'} onClick={()=> withdrawClicked()} colorScheme={colors.primary}>
                   Withdraw
                 </Button>
               </HStack>
             </HStack>            
           </Stack>
           <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
+          <InfoModal content={MODAL_TEXT.UNLOCK} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawClicked()} ></InfoModal>
         </Stack>
   );
 };

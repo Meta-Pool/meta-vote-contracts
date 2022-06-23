@@ -290,9 +290,9 @@ export const unlock = async (positionId: string , wallet: any) => {
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unlockPosition);
 };
 
-export const withdrawAllPosition = async (positionId: string, wallet: any ) => {
+export const withdrawAPosition = async (positionId: string, wallet: any ) => {
   const args = {
-    position_index_list: positionId ? positionId : '', 
+    position_index_list: positionId ? [positionId] : [], 
     amount_from_balance: '0'
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);

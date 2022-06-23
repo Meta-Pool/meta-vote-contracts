@@ -69,7 +69,7 @@ export const formatToLocaleNear = (value: number, decimals: number = 4) => {
 
 export const timeLeftTo = (time: any) => {
   if (!time || moment(time).diff(moment.utc()) < 0) {
-    return "";
+  //  return "";
   }
   const timeMoment = moment(time);
   const now = moment.utc();
@@ -79,6 +79,20 @@ export const timeLeftTo = (time: any) => {
     : timeMoment.diff(now, "hours") >= 1
     ? `${timeMoment.diff(now, "hours")} hours`
     : `${timeMoment.diff(now, "minutes")} minutes`;
+};
+
+export const timeRemain = (time: any) => {
+  if (!time || moment.utc().diff(moment(time)) < 0) {
+  //  return "";
+  }
+  const timeMoment = moment(time);
+  const now = moment.utc();
+
+  return now.diff(timeMoment, "days") > 0
+    ? `${now.diff(timeMoment, "days")} days`
+    : now.diff(timeMoment, "hours") >= 1
+    ? `${now.diff(timeMoment, "hours")} hours`
+    : `${now.diff(timeMoment, "minutes")} minutes`;
 };
 
 
