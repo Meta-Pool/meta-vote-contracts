@@ -300,7 +300,7 @@ export const withdrawAPosition = async (positionId: string, wallet: any ) => {
     position_index_list: positionId ? [positionId] : [], 
     amount_from_balance: '0'
   }
-  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw, "1");
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
 };
 
 export const withdrawAll = async (wallet: any) => {
