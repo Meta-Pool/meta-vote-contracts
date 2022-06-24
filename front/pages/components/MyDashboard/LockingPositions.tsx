@@ -28,7 +28,7 @@ import { colors } from '../../../constants/colors';
 import { getAllLockingPositions, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, timeRemain, yton } from '../../../lib/util';
+import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal, { InfoContent } from './InfoModal';
 import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
@@ -266,7 +266,7 @@ const LockingPosition = (props: Props) => {
           )
         }             
       <InfoModal content={modalContent}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={actionCall} ></InfoModal>
-      <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
+      <LockModal isOpen={isOpen} onClose={onClose}></LockModal>
     </section>
   );
 };
