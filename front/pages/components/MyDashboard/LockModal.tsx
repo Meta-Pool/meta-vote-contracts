@@ -21,7 +21,8 @@ import {
   StackDivider,
   HStack,
   Square,
-  Image
+  Image,
+  Flex
 } from '@chakra-ui/react';
 import React, {  useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -29,17 +30,19 @@ import { lock } from '../../../lib/near';
 import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy, yton } from '../../../lib/util';
+import { useStore as useVoter } from "../../../stores/voter";
+import { useStore as useWallet } from "../../../stores/wallet";
 
 type Props = {
-  wallet: any,
   isOpen: any, 
   onClose: any,
-  vPower: string
 }
 
 const LockModal = (props: Props) => {
-  const {wallet, isOpen, onClose, vPower} = props;
+  const { isOpen, onClose} = props;
   const [ sliderValue, setSliderValue] = useState(30);
+  const { wallet }= useWallet();
+  const { voterData } = useVoter();
 
   const initialValuesDeposit: any = {
     amount_lock: 0
@@ -60,6 +63,10 @@ const LockModal = (props: Props) => {
       }
     },
   });
+
+  const maxButtonClicked = ()=> {
+    formikLock.setValues({amount_lock: yton(voterData.votingPower)});
+  }
   
   const lockMetas = (values: any)=> {
     try {
@@ -101,7 +108,7 @@ const LockModal = (props: Props) => {
                         onChange={formikLock.handleChange}
                     ></Input>
                     <InputRightAddon>
-                      <Button bg={'black'} color={'white'} h='1.75rem' size='sm'>
+                      <Button bg={'black'} color={'white'} h='1.75rem' size='sm' onClick={()=>maxButtonClicked()}>
                         Max
                       </Button>
                     </InputRightAddon>  
@@ -120,10 +127,12 @@ const LockModal = (props: Props) => {
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button variant='ghost' mr={3} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme={colors.primary} onClick={(e: any) => formikLock.handleSubmit(e)}>Confirm</Button>
+            <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'center'}>
+              <Button colorScheme={colors.primary} onClick={(e: any) => formikLock.handleSubmit(e)}  m={1}>Lock</Button>
+              <Button variant='outline' color={'white'} bg={'purple.900'} _hover={{ bg: 'grey' }} m={1} onClick={onClose}>
+                Cancel
+              </Button>
+            </Flex>
           </ModalFooter>
         </ModalContent>
       </Modal>

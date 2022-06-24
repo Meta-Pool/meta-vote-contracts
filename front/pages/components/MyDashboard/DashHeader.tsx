@@ -18,10 +18,9 @@ import InfoModal from './InfoModal';
 import { MODAL_TEXT } from '../../../constants';
 
 type Props = {
-  shortVersion?: boolean
 }
 
-const DashboardHeader = (props: Props) => {
+const DashboardHeader = () => {
   const { wallet} = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
@@ -93,7 +92,7 @@ const DashboardHeader = (props: Props) => {
               </HStack>
             </HStack>            
           </Stack>
-          <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
+          <LockModal isOpen={isOpen} onClose={onClose} ></LockModal>
           <InfoModal content={MODAL_TEXT.UNLOCK} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawClicked()} ></InfoModal>
         </Stack>
   );
