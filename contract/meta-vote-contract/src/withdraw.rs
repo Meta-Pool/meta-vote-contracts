@@ -12,6 +12,7 @@ impl MetaVoteContract {
     ) {
         ext_ft::ext(self.meta_token_contract_address.clone())
             .with_static_gas(GAS_FOR_FT_TRANSFER)
+            .with_attached_deposit(1)
             .ft_transfer(
                 voter_id.clone(),
                 BalanceJSON::from(amount),
