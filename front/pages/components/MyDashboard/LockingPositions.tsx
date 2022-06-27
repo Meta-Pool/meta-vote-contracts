@@ -21,7 +21,8 @@ import {
   AccordionPanel,
   AccordionIcon,
   Circle,
-  useBreakpointValue
+  useBreakpointValue,
+  Heading
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -46,7 +47,7 @@ const LockingPosition = (props: Props) => {
   const [ modalContent, setModalContent] = useState<InfoContent>({title: '', text:''}); 
 
   
-  const { isOpen, onClose } = useDisclosure();
+  const { isOpen, onClose, onOpen } = useDisclosure();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfoModal} = useDisclosure();
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
@@ -167,9 +168,11 @@ const LockingPosition = (props: Props) => {
     <section>        
         { /* *********** DESKTOP UI ***************** */
           isDesktop && (
-            <TableContainer mt={30}>
+            <TableContainer minH={400} mt={30}>
               <Table  >
-                <Thead>
+              {
+                voterData.lockingPositions && voterData.lockingPositions.length > 0 && (
+                  <Thead>
                   <Tr>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}isNumeric >$META amount</Th>
@@ -179,7 +182,19 @@ const LockingPosition = (props: Props) => {
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}>Action</Th>
                   </Tr>
                 </Thead>
+                )
+              }
                 <Tbody>
+                  {
+                    voterData.lockingPositions && (
+                      <Flex minH={400} direction='column' alignItems={'center'} justifyContent={'center'}>
+                        <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
+                        <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
+                          Lock $META to get Voting Power
+                        </Button>
+                      </Flex>
+                    )
+                  }
                   {  voterData.lockingPositions.map((position: any, index: number)=> {
                       return (
                         <Tr key={index}>
@@ -216,6 +231,16 @@ const LockingPosition = (props: Props) => {
         {   /************ MOBILE UI ******************/
           !isDesktop && (
             <>
+              {
+                    voterData.lockingPositions && (
+                      <Flex minH={400} direction='column' alignItems={'center'} justifyContent={'center'}>
+                        <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
+                        <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
+                          Lock $META to get Voting Power
+                        </Button>
+                      </Flex>
+                    )
+                  }
               {
                 voterData.lockingPositions.map( (position: any, index: number)=> 
                  {

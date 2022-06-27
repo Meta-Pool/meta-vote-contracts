@@ -12,7 +12,7 @@ const MyDashboardPage = (props: Props) => {
   return (
       <Container maxW="container.2xl" id="dashboard">
         <DashboardHeader></DashboardHeader>
-          <Tabs  colorScheme='black ' mt={50}>
+          <Tabs  colorScheme='black ' mt={50} mb={50}>
             <TabList  >
               <Tab  borderTopRadius={'32px'} p={'32px'} _selected={{textUnderlineOffset: '10px', color: 'black' , bg: { base: 'none', md: 'white'}, textDecor: { base: 'underline', md: 'none'} }} fontSize={{base: 'xl', md: '4xl'}} >My Voting Power</Tab>
               <Tab  borderTopRadius={'32px'} p={'32px'} _selected={{textUnderlineOffset: '10px', color: 'black' , bg: { base: 'none', md: 'white'}, textDecor: { base: 'underline', md: 'none'} }} fontSize={{base: 'xl', md: '4xl'}}>My Votes</Tab>
