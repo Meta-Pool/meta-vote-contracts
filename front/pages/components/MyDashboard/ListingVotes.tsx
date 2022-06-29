@@ -16,8 +16,10 @@ import {
   VStack,
   AccordionIcon,
   AccordionPanel,
+  Heading,
   Text,
-  useBreakpointValue
+  useBreakpointValue,
+  Flex
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -38,7 +40,7 @@ const ListingVotes = () => {
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
 
-  const contract = CONTRACT_ADDRESS;
+  const contract = CONTRACT_ADDRESS ? CONTRACT_ADDRESS : '';
 
   const getVotes = async ()=> {
     const newVoterData = voterData;
@@ -72,16 +74,20 @@ const ListingVotes = () => {
     <section>
         { /* *********** DESKTOP UI ***************** */
           isDesktop && (
-          <TableContainer mt={30}>
-            <Table  >
-              <Thead>
-                <Tr>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'} >Platform</Th>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Project</Th>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Actions</Th>
-                </Tr>
-              </Thead>
+          <TableContainer minH={400} mt={30}>
+            <Table position={'relative'} >
+              {
+                voterData.votingResults && voterData.votingResults.length > 0 && (
+                <Thead>
+                  <Tr>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'} >Platform</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'}>Project</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'}>Actions</Th>
+                  </Tr>
+                </Thead>
+                )
+              }
               <Tbody>
                 {  voterData.votingResults.map((position: any, index: number)=> {
                     return (
@@ -96,6 +102,13 @@ const ListingVotes = () => {
                     )
                 })}
               </Tbody>
+              {
+                voterData.votingResults && (
+                  <Flex minH={400}>
+                    <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
+                  </Flex>
+                )
+              }
             </Table>
           </TableContainer>
           )
@@ -104,6 +117,13 @@ const ListingVotes = () => {
         { /* *********** MOBILE UI ***************** */
           !isDesktop && (
           <>
+            {
+                voterData.votingResults && (
+                  <Flex minH={400}>
+                    <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
+                  </Flex>
+                )
+              }
             {  voterData.votingResults.map((position: any, index: number)=> {
                   return (
                     <Accordion  key={index} allowMultiple>
