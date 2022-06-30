@@ -24,7 +24,7 @@ import {
   useBreakpointValue,
   Heading
 } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { colors } from '../../../constants/colors';
 import { getAllLockingPositions, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
@@ -62,9 +62,6 @@ const LockingPosition = (props: Props) => {
   const getTimeRemaining = (position: any): string => {
     const timeUnlockingStartAt = moment(position.unlocking_started_at);
     const unlockingFinishedTime = timeUnlockingStartAt.add(position.locking_period, 'day');
-
-
-
     return getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING ? timeLeftTo(unlockingFinishedTime) : getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED ? '0 days' : '-'
   }
 
@@ -153,6 +150,64 @@ const LockingPosition = (props: Props) => {
 
       case POSITION_STATUS.UNLOKING:
         return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
+    }
+  }
+
+  const withdrawClicked = async (amount: string, positionId: string)=> {
+    try {
+      withdraw(wallet, amount, positionId); 
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const relockClicked = async (positionIndex: string, period: string, amount: string)=>{
+    try {
+      relock(positionIndex, period, amount, wallet);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const getStatusTag = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return ( <Tag colorScheme={'red'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> )
+
+      case POSITION_STATUS.UNLOCKED:
+        return ( <Tag colorScheme={'green'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag>)
+
+      case POSITION_STATUS.UNLOKING:
+        return ( <Tag colorScheme={'yellow'} variant='solid'>{STATUS[getLockinPositionStatus(position)]}</Tag> ) 
+    }
+  }
+
+  const getStatusCircle = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return ( <><Circle mr={5} size={3} bg={'green'}/>{STATUS[getLockinPositionStatus(position)]}</> )
+
+      case POSITION_STATUS.UNLOCKED:
+        return ( <><Circle mr={5} size={3} bg={'red'}/>{STATUS[getLockinPositionStatus(position)]}</>)
+
+      case POSITION_STATUS.UNLOKING:
+        return (<><Circle mr={5} size={3} bg={'orange'}/>{STATUS[getLockinPositionStatus(position)]}</> ) 
+    }
+  }
+
+  const getButtonbyStatus = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return ( <Button colorScheme={colors.primary}  w={'100%'} onClick={()=> unlockClicked(position.index)}>Start unlock</Button> )
+
+      case POSITION_STATUS.UNLOCKED:
+        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> withdrawClicked(position.amount ,position.index)}>Withdraw</Button>)
+
+      case POSITION_STATUS.UNLOKING:
+        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> relockClicked(position.index, position.locking_period, position.amount)}>Relock</Button> ) 
     }
   }
 

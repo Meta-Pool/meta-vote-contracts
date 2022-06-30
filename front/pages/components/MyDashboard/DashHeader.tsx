@@ -10,6 +10,7 @@ import {
 import React, { useEffect } from 'react';
 import { colors } from '../../../constants/colors';
 import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, withdrawAll } from '../../../lib/near';
+
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
@@ -40,6 +41,7 @@ const DashboardHeader = () => {
 
   const withdrawClicked = async ()=> {
        withdrawAll(wallet); 
+
   }
 
   useEffect(  () =>{
@@ -60,6 +62,7 @@ const DashboardHeader = () => {
               </VStack>
               <Button position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
             </HStack>
+
             <HStack justify={'space-between'}>
               <Text fontSize={'xl'}>In use</Text>
               <Text fontSize={'xl'} color={colors.primary}>{yton(voterData.inUseVPower)}</Text>
@@ -78,10 +81,12 @@ const DashboardHeader = () => {
               <Text fontSize={'xl'}>$META locked</Text>
               <Text fontSize={'5xl'} color={colors.primary}>{yton(voterData.metaLocked)}</Text>
             </HStack>
+
             <HStack  justify={'space-between'} backgroundColor={'white'} p={padding}>
               <Text fontSize={'xl'}>$META unlocking</Text>
               <Text fontSize={'5xl'} color={colors.primary}>{yton(voterData.metaUnlocking)}</Text>
             </HStack>
+
             <HStack justify={'space-between'} backgroundColor={'white'} p={padding}>
               <Text fontSize={'xl'}>$META to withdraw</Text>
               <HStack>

@@ -39,6 +39,7 @@ const Header: React.FC<ButtonProps> = (props) => {
   const [signInAccountId, setSignInAccountId] = useState(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
+
   const router = useRouter();
   const nearConfig = getNearConfig();
   const onConnect = async () => {
@@ -118,6 +119,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                   </Square>
                   <Text>{formatToLocaleNear(balance)}</Text>
                 </HStack>
+
                  {
                   isDesktop && (
                   <Link href={nearConfig.refFinance} isExternal>

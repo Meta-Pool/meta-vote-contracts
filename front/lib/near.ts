@@ -32,7 +32,9 @@ export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID
 export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 
 export const gas = new BN("70000000000000");
+
 const env = 'development';
+
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 
@@ -312,7 +314,7 @@ export const relock = async (positionIndex: string, period: string, amount: stri
   const args = {
     index: positionIndex,
     locking_period: period,
-    amount_from_balance: '0'
+    amount_from_balance: amount
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.relock);
 };

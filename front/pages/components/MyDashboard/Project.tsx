@@ -8,6 +8,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { getVotes } from '../../../lib/near';
+
 import { yton } from '../../../lib/util';
 import { useStore as useWallet } from "../../../stores/wallet";
 import VoteModal from './VoteModal';

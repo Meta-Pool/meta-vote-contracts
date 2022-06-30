@@ -88,6 +88,7 @@ const ListingVotes = () => {
                 </Thead>
                 )
               }
+
               <Tbody>
                 {  voterData.votingResults.map((position: any, index: number)=> {
                     return (
