@@ -103,7 +103,7 @@ const ListingVotes = () => {
                 })}
               </Tbody>
               {
-                voterData.votingResults && (
+                voterData.votingResults.length === 0 && (
                   <Flex minH={400}>
                     <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
                   </Flex>
@@ -118,7 +118,7 @@ const ListingVotes = () => {
           !isDesktop && (
           <>
             {
-                voterData.votingResults && (
+                voterData.votingResults.length === 0 && (
                   <Flex minH={400}>
                     <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
                   </Flex>

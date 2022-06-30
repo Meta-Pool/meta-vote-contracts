@@ -186,7 +186,7 @@ const LockingPosition = (props: Props) => {
               }
                 <Tbody>
                   {
-                    voterData.lockingPositions && (
+                    voterData.lockingPositions.length === 0 && (
                       <Flex minH={400} direction='column' alignItems={'center'} justifyContent={'center'}>
                         <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
                         <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
@@ -232,7 +232,7 @@ const LockingPosition = (props: Props) => {
           !isDesktop && (
             <>
               {
-                    voterData.lockingPositions && (
+                    voterData.lockingPositions.length === 0 && (
                       <Flex minH={400} direction='column' alignItems={'center'} justifyContent={'center'}>
                         <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
                         <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
@@ -278,7 +278,6 @@ const LockingPosition = (props: Props) => {
                               <Text p={2} fontSize={'xl'}> <HStack>{getStatusCircle(position)}</HStack></Text>
                             </HStack>
                             { getButtonbyStatus(position)}
-
                           </VStack>
                         </AccordionPanel>
                       </AccordionItem>
