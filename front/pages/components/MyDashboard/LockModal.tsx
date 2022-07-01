@@ -22,16 +22,19 @@ import {
   HStack,
   Square,
   Image,
-  Flex
+  Flex,
+  Spacer,
+  Divider
 } from '@chakra-ui/react';
-import React, {  useState } from 'react';
+import React, {  useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { lock } from '../../../lib/near';
-import { useFormik } from 'formik';
+import { FormikContext, useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy, yton } from '../../../lib/util';
 import { useStore as useVoter } from "../../../stores/voter";
 import { useStore as useWallet } from "../../../stores/wallet";
+import { useStore as useBalance } from "../../../stores/balance";
 
 type Props = {
   isOpen: any, 
@@ -41,7 +44,9 @@ type Props = {
 const LockModal = (props: Props) => {
   const { isOpen, onClose} = props;
   const [ sliderValue, setSliderValue] = useState(30);
+  const [ vPowerSim, setVPowerSim] = useState(0);
   const { wallet }= useWallet();
+  const { balance } = useBalance();
   const { voterData } = useVoter();
 
   const initialValuesDeposit: any = {
@@ -61,11 +66,36 @@ const LockModal = (props: Props) => {
       } else {
         lockMetas(values);
       }
-    },
+    }
   });
 
+  const inputChange = (e: any, blur?: boolean)=>{
+    updateVpowerSim(e.target.value);
+    blur ? formikLock.handleBlur(e) : formikLock.handleChange(e);
+  }
+
+  const updateVpowerSim = (amount? : any)=> {
+    const vPower = calculateVPower(sliderValue, amount ? amount : formikLock.values.amount_lock);
+    setVPowerSim(vPower);
+  }
+
+  const calculateVPower = (days: any, amount: any)=> {
+    const minLockPeriod = 1;
+    const maxLockPeriod = 300;
+    const multiplier = 1 + (4 * (days - minLockPeriod) / (maxLockPeriod - minLockPeriod))
+    return amount * multiplier;
+  }
+
+
+  useEffect(() => {
+    updateVpowerSim();
+  }, [sliderValue])
+
+  
+  
+
   const maxButtonClicked = ()=> {
-    formikLock.setValues({amount_lock: yton(voterData.votingPower)});
+    formikLock.setValues({amount_lock: balance.toString()});
   }
   
   const lockMetas = (values: any)=> {
@@ -103,9 +133,9 @@ const LockModal = (props: Props) => {
                         name="amount_lock"
                         colorScheme={colors.primary} 
                         value={formikLock.values.amount_lock}
-                        onPaste={formikLock.handleChange}
-                        onBlur={formikLock.handleBlur}
-                        onChange={formikLock.handleChange}
+                        onPaste={(e)=> inputChange(e)}
+                        onBlur={(e)=> inputChange(e, true)}
+                        onChange={(e)=> inputChange(e)}
                     ></Input>
                     <InputRightAddon>
                       <Button bg={'black'} color={'white'} h='1.75rem' size='sm' onClick={()=>maxButtonClicked()}>
@@ -116,14 +146,22 @@ const LockModal = (props: Props) => {
               </HStack>
               
               <StackDivider></StackDivider >
-              <Slider defaultValue={30} min={0} max={120} step={1} onChange={(val) => setSliderValue(val)}>
+              <Slider defaultValue={30} min={0} max={300} step={1} onChange={(val) => setSliderValue(val)}>
                 <SliderTrack bg={colors.primary + '.200'}>
                   <Box position='relative' right={10} />
                   <SliderFilledTrack bg={colors.primary +'.500'} />
                 </SliderTrack>
                 <SliderThumb bg={colors.primary+'.500'} boxSize={6} />
               </Slider>
-              <HStack><Text fontWeight={200} fontSize={'xl'} color={'indigo.500'}>AutoLock days:</Text> <Text fontWeight={500} fontSize={'xl'} color={'white'}>{sliderValue}</Text> </HStack>
+              <HStack>
+                <Text fontWeight={200} fontSize={'lg'} color={'indigo.500'}>AutoLock days:</Text> 
+                <Text fontWeight={500} fontSize={'lg'} color={'white'}>{sliderValue}</Text> 
+                
+              </HStack>
+              <HStack>
+              <Text fontWeight={500} fontSize={'lg'} color={'indigo.500'}> Voting Power:</Text>
+                <Text fontWeight={500} fontSize={'2xl'} color={'white'}> { vPowerSim.toFixed(4)} </Text>
+              </HStack>
             </VStack>
           </ModalBody>
           <ModalFooter>
