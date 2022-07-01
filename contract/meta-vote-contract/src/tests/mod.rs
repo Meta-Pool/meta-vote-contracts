@@ -753,7 +753,7 @@ fn test_clear_locking_position() {
 
 #[test]
 
-#[should_panic(expected="Not enough free voting power to unlock!")]
+#[should_panic(expected="Not enough free voting power to unlock! You have 0, required 20370370370370370370370370.")]
 fn test_unlock_position_without_voting_power() {
     const LOCKING_PERIOD: u64 = 100;
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);

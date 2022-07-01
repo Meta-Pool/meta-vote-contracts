@@ -86,7 +86,11 @@ impl MetaVoteContract {
         let mut locking_position = voter.get_position(index);
 
         let voting_power = locking_position.voting_power;
-        require!(voter.voting_power >= voting_power, "Not enough free voting power to unlock!");
+        assert!(
+            voter.voting_power >= voting_power,
+            "Not enough free voting power to unlock! You have {}, required {}.",
+            voter.voting_power, voting_power
+        );
 
         log!(
             "UNLOCK: {} unlocked position {}.",
@@ -117,14 +121,19 @@ impl MetaVoteContract {
         );
         assert!(
             (locking_position.amount - amount) >= self.min_deposit_amount,
-            "A locking position cannot have less than {} $META",
+            "A locking position cannot have less than {} META",
             self.min_deposit_amount
         );
         let remove_voting_power = self.calculate_voting_power(amount, locking_period);
-        require!(
-            locking_position.voting_power >= remove_voting_power
-                && voter.voting_power >= remove_voting_power,
-            "Not enough free voting power to unlock!"
+        assert!(
+            locking_position.voting_power >= remove_voting_power,
+            "Not enough free voting power to unlock! Locking position has {}, required {}.",
+            locking_position.voting_power, remove_voting_power
+        );
+        assert!(
+            voter.voting_power >= remove_voting_power,
+            "Not enough free voting power to unlock! You have {}, required {}.",
+            voter.voting_power, remove_voting_power
         );
 
         log!(
@@ -160,9 +169,10 @@ impl MetaVoteContract {
 
         // Check voter balance and unlocking position amount.
         let amount_from_balance = amount_from_balance.0;
-        require!(
+        assert!(
             voter.balance >= amount_from_balance,
-            "Not enough balance."
+            "Not enough balance. You have {} META in balance, required {}.",
+            voter.balance, amount_from_balance
         );
         // Check if position is unlocking.
         require!(
@@ -214,18 +224,20 @@ impl MetaVoteContract {
         // Check voter balance and unlocking position amount.
         let amount_from_balance = amount_from_balance.0;
         let amount_from_position = amount_from_position.0;
-        require!(
+        assert!(
             voter.balance >= amount_from_balance,
-            "Not enough balance."
+            "Not enough balance. You have {} META in balance, required {}.",
+            voter.balance, amount_from_balance
         );
-        require!(
+        assert!(
             locking_position.amount >= amount_from_position,
-            "Locking position amount is not enough."
+            "Locking position amount is not enough. Locking position has {} META, required {}.",
+            locking_position.amount, amount_from_position
         );
         let amount = amount_from_balance + amount_from_position;
         assert!(
             amount >= self.min_deposit_amount,
-            "A locking position cannot have less than {} $META.",
+            "A locking position cannot have less than {} META.",
             self.min_deposit_amount
         );
         // Check if position is unlocking.
@@ -250,7 +262,7 @@ impl MetaVoteContract {
             let new_amount = locking_position.amount - amount_from_position;
             assert!(
                 amount >= self.min_deposit_amount,
-                "A locking position cannot have less than {} $META.",
+                "A locking position cannot have less than {} META.",
                 self.min_deposit_amount
             );
             locking_position.amount = new_amount;
@@ -283,13 +295,14 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter(&voter_id);
 
         let amount = amount_from_balance.0;
-        require!(
+        assert!(
             voter.balance >= amount,
-            "Not enough balance."
+            "Not enough balance. You have {} META in balance, required {}.",
+            voter.balance, amount
         );
         assert!(
             amount >= self.min_deposit_amount,
-            "A locking position cannot have less than {} $META.",
+            "A locking position cannot have less than {} META.",
             self.min_deposit_amount
         );
 
@@ -340,7 +353,11 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter(&voter_id);
         let amount_from_balance = Meta::from(amount_from_balance);
-        require!(voter.balance >= amount_from_balance, "Not enough balance.");
+        assert!(
+            voter.balance >= amount_from_balance,
+            "Not enough balance. You have {} META in balance, required {}.",
+            voter.balance, amount_from_balance
+        );
         let remaining_balance = voter.balance - amount_from_balance;
 
         // Clear locking positions could increase the voter balance.
@@ -399,7 +416,11 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let voting_power = VotingPower::from(voting_power);
-        require!(voter.voting_power >= voting_power, "Not enough available Voting Power.");
+        assert!(
+            voter.voting_power >= voting_power,
+            "Not enough free voting power to unlock! You have {}, required {}.",
+            voter.voting_power, voting_power
+        );
         assert!(
             voter.vote_positions.len() <= self.max_voting_positions as u64,
             "Cannot exceed {} voting positions.", self.max_voting_positions
@@ -456,7 +477,11 @@ impl MetaVoteContract {
         if votes < voting_power {
             // Increase votes.
             let additional_votes = voting_power - votes;
-            require!(voter.voting_power >= additional_votes, "Not enough additional Voting Power.");        
+            assert!(
+                voter.voting_power >= additional_votes,
+                "Not enough free voting power to unlock! You have {}, required {}.",
+                voter.voting_power, additional_votes
+            );
             voter.voting_power -= additional_votes;
             votes += additional_votes;
 

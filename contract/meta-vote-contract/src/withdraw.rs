@@ -38,11 +38,11 @@ impl MetaVoteContract {
             PromiseResult::NotReady => unreachable!(),
             PromiseResult::Successful(_) => {
 
-                log!("WITHDRAW: {} $META transfer to {}", amount, voter_id.to_string());
+                log!("WITHDRAW: {} META transfer to {}", amount, voter_id.to_string());
             },
             PromiseResult::Failed => {
                 log!(
-                    "FAILED: {} $META not transfered. Recovering {} state.",
+                    "FAILED: {} META not transfered. Recovering {} state.",
                     amount, &voter_id.to_string()
                 );
                 self.restore_transfer_to_meta(amount, voter_id);
