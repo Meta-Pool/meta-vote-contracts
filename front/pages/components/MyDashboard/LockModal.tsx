@@ -32,6 +32,7 @@ import lockValidation from '../../../validation/lockValidation';
 import { ntoy, yton } from '../../../lib/util';
 import { useStore as useVoter } from "../../../stores/voter";
 import { useStore as useWallet } from "../../../stores/wallet";
+import { useStore as useBalance } from "../../../stores/balance";
 
 type Props = {
   isOpen: any, 
@@ -42,6 +43,7 @@ const LockModal = (props: Props) => {
   const { isOpen, onClose} = props;
   const [ sliderValue, setSliderValue] = useState(30);
   const { wallet }= useWallet();
+  const { balance } = useBalance();
   const { voterData } = useVoter();
 
   const initialValuesDeposit: any = {
@@ -65,7 +67,7 @@ const LockModal = (props: Props) => {
   });
 
   const maxButtonClicked = ()=> {
-    formikLock.setValues({amount_lock: yton(voterData.votingPower)});
+    formikLock.setValues({amount_lock: balance.toString()});
   }
   
   const lockMetas = (values: any)=> {
