@@ -17,6 +17,7 @@ import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal from './InfoModal';
 import { MODAL_TEXT } from '../../../constants';
+import ButtonOnLogin from '../ButtonLogin';
 
 type Props = {
 }
@@ -60,7 +61,7 @@ const DashboardHeader = () => {
                 <Text fontSize={'xl'}>My Voting Power</Text>
                 <Text fontSize={'5xl'} >{yton(voterData.votingPower)}</Text>
               </VStack>
-              <Button position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
+              <Button disabled={!wallet?.isSignedIn()} position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
             </HStack>
 
             <HStack justify={'space-between'}>
@@ -72,9 +73,11 @@ const DashboardHeader = () => {
               <Text fontSize={'xl'} color={colors.primary}>{voterData.votingResults.length}</Text>
             </HStack>
             <Spacer></Spacer>
-            <Button  fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
-              Lock $META to get Voting Power
-            </Button>
+            <ButtonOnLogin>
+              <Button  fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
+                Lock $META to get Voting Power
+              </Button>
+            </ButtonOnLogin>
           </Stack>
           <Stack w={{ base: '100%', md: '48%' }}  spacing={5} direction={'column'}>
             <HStack  justify={'space-between'} backgroundColor={'white'} p={padding}>
