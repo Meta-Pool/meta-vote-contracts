@@ -16,7 +16,8 @@ export interface VoterContractData {
 
 export interface VoterData {
   voterData: VoterContractData,
-  setVoterData: (newVoterData: VoterContractData) => void
+  setVoterData: (newVoterData: VoterContractData) => void,
+  clearVoterData:() => void,
 }
 
 const initVoterData: VoterContractData = {
@@ -36,5 +37,8 @@ export const useStore = create<VoterData>((set) => ({
   voterData: initVoterData,
   setVoterData: (newVoterData: VoterContractData) => set((state) => {
     return ({ ...state , voterData: newVoterData })
+  }),
+  clearVoterData: () => set((state) => {
+    return ({ ...state , voterData: initVoterData })
   })
 }));

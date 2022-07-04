@@ -19,6 +19,10 @@ Cargo.lock
 *.bak
 contract/res/*.wasm
 
+# dev-deploy keys
+contract/neardev
+contract/neardev_meta_token
+
 # Mac
 .DS_Store
 

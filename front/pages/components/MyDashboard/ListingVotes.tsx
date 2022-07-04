@@ -1,7 +1,5 @@
 import {
   Button, 
-  Container, 
-  Flex, 
   useDisclosure, 
   TableContainer,
   Table,
@@ -10,7 +8,6 @@ import {
   Th,
   Tbody,
   Td,
-  Show,
   Accordion,
   AccordionItem,
   AccordionButton,
@@ -19,24 +16,31 @@ import {
   VStack,
   AccordionIcon,
   AccordionPanel,
-  Text
+  Heading,
+  Text,
+  useBreakpointValue,
+  Flex
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { getVotesByVoter, unvoteProject } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import LockModal from './LockModal';
 import { yton } from '../../../lib/util';
+import InfoModal from './InfoModal';
+import { CONTRACT_ADDRESS, MODAL_TEXT } from '../../../constants';
 
-type Props = {
-}
 
-const ListingVotes = (props: Props) => {
+const ListingVotes = () => {
   const { wallet} = useWallet();
-  const { isOpen,  onClose } = useDisclosure();
-  const { voterData, setVoterData } = useVoter();
+  const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
 
+  const { voterData, setVoterData } = useVoter();
+  const [ positionSelected, setPositionSel ] = useState('')
+  const isDesktop = useBreakpointValue({ base: false, md: true });
+
+
+  const contract = CONTRACT_ADDRESS ? CONTRACT_ADDRESS : '';
 
   const getVotes = async ()=> {
     const newVoterData = voterData;
@@ -44,19 +48,23 @@ const ListingVotes = (props: Props) => {
     setVoterData(newVoterData);
   }
 
-  const unvoteClicked = (idVote: string)=> {
+  const unvote = (id: any)=> {
       try {
-        const contract = 'metayield-proyect';
-        unvoteProject(idVote, contract, wallet);
+        unvoteProject(id, contract, wallet);
       } catch (error) {
         console.error(error);
       }
   }
 
+  const unvotedClicked = (voteId: string) => {
+    setPositionSel(voteId);
+    onOpenInfo();
+  }
+
   useEffect(  () =>{
     (async ()=> {
       if (wallet && wallet.isSignedIn()) {
-        getVotes()
+        getVotes();
       }
     })();
   },[wallet])
@@ -64,25 +72,23 @@ const ListingVotes = (props: Props) => {
 
   return (
     <section>
-        <Flex justifyContent={{ base: 'center', md: 'space-between' }} flexDirection={{ base: 'column', md: 'row' }} >
-          
-          {/*<Heading lineHeight={'133%'} textAlign={{ base: 'center', md: 'start' }} fontWeight={700} color="gray.900" fontSize={'2xl'}> Votes List</Heading> 
-          <Button onClick={onOpen} w={300} colorScheme={colors.primary}>
-            Lock $META to get Voting Power
-            </Button>*/}
-        </Flex>
-        
-        <Show above='md'>
-          <TableContainer mt={30}>
-            <Table  >
-              <Thead>
-                <Tr>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'} >Platform</Th>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Project</Th>
-                  <Th color={'blackAlpha.500'} fontSize={'2xl'}>Actions</Th>
-                </Tr>
-              </Thead>
+        { /* *********** DESKTOP UI ***************** */
+          isDesktop && (
+          <TableContainer minH={400} mt={30}>
+            <Table position={'relative'} >
+              {
+                voterData.votingResults && voterData.votingResults.length > 0 && (
+                <Thead>
+                  <Tr>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'} >Platform</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'}>Project</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'}>Actions</Th>
+                  </Tr>
+                </Thead>
+                )
+              }
+
               <Tbody>
                 {  voterData.votingResults.map((position: any, index: number)=> {
                     return (
@@ -91,24 +97,41 @@ const ListingVotes = (props: Props) => {
                         <Td fontSize={'2xl'} >{position.votable_contract}</Td>
                         <Td fontSize={'2xl'}>{position.id} </Td>
                         <Td fontSize={'2xl'}>
-                            <Button colorScheme={colors.primary} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>
+                            <Button colorScheme={colors.primary} w={'100%'} onClick={()=> unvotedClicked(position.id)}>Unvote</Button>
                         </Td>
                       </Tr>
                     )
                 })}
               </Tbody>
+              {
+                voterData.votingResults.length === 0 && (
+                  <Flex minH={400}>
+                    <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
+                  </Flex>
+                )
+              }
             </Table>
           </TableContainer>
-        </Show>
-        <Show below={'md'}>
+          )
+        }
+
+        { /* *********** MOBILE UI ***************** */
+          !isDesktop && (
+          <>
+            {
+                voterData.votingResults.length === 0 && (
+                  <Flex minH={400}>
+                    <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
+                  </Flex>
+                )
+              }
             {  voterData.votingResults.map((position: any, index: number)=> {
                   return (
                     <Accordion  key={index} allowMultiple>
-                      <AccordionItem>
+                      <AccordionItem m={2}>
                         <AccordionButton _expanded={{bg:'white'}} bg={{base: 'white'}}>
                           <HStack w={'100%'} justify={'space-between'} textAlign="left">
-                            <HStack><Circle size={3} bg={'red'}></Circle>
-                            <Text fontSize={'xl'}> {position.id}</Text></HStack>
+                            <Text fontSize={'xl'}> {position.id}</Text>
                             <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.current_votes).toFixed(4)} </Text>
                           </HStack>
                           <AccordionIcon ml={5} fontSize={'2xl'} />
@@ -127,15 +150,18 @@ const ListingVotes = (props: Props) => {
                               <Text fontSize={'xl'}>Project:</Text>
                               <Text fontSize={'xl'}> {position.id}</Text>
                             </HStack>
-                            <Button w={'100%'} colorScheme={colors.primary} onClick={()=>unvoteClicked(position.id)}>Unvote</Button>
+                            <Button w={'100%'} colorScheme={colors.primary} onClick={()=> unvotedClicked(position.id)}>Unvote</Button>
                           </VStack>
                         </AccordionPanel>
                       </AccordionItem>
                     </Accordion>
                   )
-              })}
-        </Show>
-      <LockModal vPower={voterData.votingPower} isOpen={isOpen} onClose={onClose} wallet={wallet}></LockModal>
+              })
+            }
+          </>
+          )
+        }
+      <InfoModal content={{title :MODAL_TEXT.VOTE.title, text:MODAL_TEXT.VOTE.text}}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => unvote(positionSelected)} ></InfoModal>
     </section>
   );
 };

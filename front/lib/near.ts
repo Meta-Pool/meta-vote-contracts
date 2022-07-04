@@ -1,16 +1,12 @@
 import {
   keyStores,
-  Near,
   connect,
   WalletConnection,
-  utils,
   Contract,
   providers,
   ConnectConfig,
 } from "near-api-js";
-import { parseRpcError } from "near-api-js/lib/utils/rpc_errors";
 import {
-  FinalExecutionStatus,
   getTransactionLastResult,
 } from "near-api-js/lib/providers";
 const BN = require("bn.js");
@@ -22,25 +18,23 @@ import {
   metaPoolMethods,
   metaTokenMethods,
   projectTokenViewMethods,
-  projectTokenChangeMethods,
 } from "./methods";
 import {
   decodeJsonRpcData,
   encodeJsonRpcData,
   getPanicError,
   getTxFunctionCallMethod,
-  ntoy,
   yton,
 } from "./util";
-import { ExecutionError } from "near-api-js/lib/providers/provider";
-import { Wallet } from "phosphor-react";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
 export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 
 export const gas = new BN("70000000000000");
-const env = process.env.NODE_ENV;
+
+const env = 'development';
+
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 
@@ -173,9 +167,14 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
-const callChangeMetavoteMethod = async (wallet: any, args: any, method: string) => {
-  const contract = await getContract(wallet);
-  const response = (contract as any)[method](args, "200000000000000");
+const callChangeMetavoteMethod = async (wallet: any, args: any, method: string, deposit?: string) => {
+  const contract = await getContract(wallet); 
+  let response;
+  if (deposit) {
+    response = (contract as any)[method](args, "200000000000000", deposit);
+  } else {
+    response = (contract as any)[method](args, "200000000000000");
+  }
   return response;
 };
 
@@ -298,12 +297,17 @@ export const unlock = async (positionId: string , wallet: any) => {
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.unlockPosition);
 };
 
-export const withdraw = async (wallet: any, amount: string, positionId?: string ) => {
+export const withdrawAPosition = async (positionId: string, wallet: any ) => {
   const args = {
-    position_index_list: positionId ? positionId : '', 
-    amount_from_balance: amount
+    position_index_list: positionId ? [positionId] : [], 
+    amount_from_balance: '0'
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdraw);
+};
+
+export const withdrawAll = async (wallet: any) => {
+  const args = {}
+  return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.withdrawAll);
 };
 
 export const relock = async (positionIndex: string, period: string, amount: string, wallet: any ) => {

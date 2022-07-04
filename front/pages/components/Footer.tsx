@@ -12,6 +12,7 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import router from "next/router";
+import LockModal from "./MyDashboard/LockModal";
 
 const Footer: React.FC<ButtonProps> = (props) => {
   return (

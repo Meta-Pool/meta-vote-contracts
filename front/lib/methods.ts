@@ -1,4 +1,4 @@
-// katherine gasless methods (view methods)
+// metavote gasless methods (view methods)
 export const metavoteViewMethods = {
   getAllLockingPositions: "get_all_locking_positions",
   getLockingPosition: "get_locking_position",
@@ -13,15 +13,15 @@ export const metavoteViewMethods = {
 
 };
 
-// katherine gas methods (change methods)
+// metavote gas methods (change methods)
 export const metavoteChangeMethods = {
   unlockPosition: "unlock_position",
   unlockPartialPosition: "unlock_partial_position",
-  relockPosition: "relock_position",
   relockPartialPosition: "relock_partial_position",
   relockFromBalance: "relock_from_balance",
   clear_locking_position: "clear_locking_position",
   withdraw: "withdraw",
+  withdrawAll: "withdraw_all",
   vote: "vote",
   rebalance: "rebalance",
   unvote: "unvote",

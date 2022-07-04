@@ -26,13 +26,13 @@ impl FungibleTokenReceiver for MetaVoteContract {
         assert_eq!(
             env::predecessor_account_id(),
             self.meta_token_contract_address,
-            "This contract only works with $META from {}",
+            "This contract only works with META from {}",
             self.meta_token_contract_address.to_string()
         );
 
         self.assert_min_deposit_amount(amount);
         log!(
-            "DEPOSIT: {} $META deposited from {}",
+            "DEPOSIT: {} META deposited from {}",
             amount,
             &voter_id,
         );
@@ -49,7 +49,7 @@ impl MetaVoteContract {
     fn assert_min_deposit_amount(&self, amount: Balance) {
         assert!(
             amount >= self.min_deposit_amount,
-            "Minimum deposit amount is {} $META.",
+            "Minimum deposit amount is {} META.",
             self.min_deposit_amount
         );
     }

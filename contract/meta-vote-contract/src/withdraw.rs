@@ -12,6 +12,7 @@ impl MetaVoteContract {
     ) {
         ext_ft::ext(self.meta_token_contract_address.clone())
             .with_static_gas(GAS_FOR_FT_TRANSFER)
+            .with_attached_deposit(1)
             .ft_transfer(
                 voter_id.clone(),
                 BalanceJSON::from(amount),
@@ -37,11 +38,11 @@ impl MetaVoteContract {
             PromiseResult::NotReady => unreachable!(),
             PromiseResult::Successful(_) => {
 
-                log!("WITHDRAW: {} $META transfer to {}", amount, voter_id.to_string());
+                log!("WITHDRAW: {} META transfer to {}", amount, voter_id.to_string());
             },
             PromiseResult::Failed => {
                 log!(
-                    "FAILED: {} $META not transfered. Recovering {} state.",
+                    "FAILED: {} META not transfered. Recovering {} state.",
                     amount, &voter_id.to_string()
                 );
                 self.restore_transfer_to_meta(amount, voter_id);

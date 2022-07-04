@@ -28,7 +28,8 @@ import { colors } from '../../../constants/colors';
 import { lock } from '../../../lib/near';
 import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
-import { ntoy, yton } from '../../../lib/util';
+import { ntoy } from '../../../lib/util';
+
 
 type Props = {
   wallet: any,
