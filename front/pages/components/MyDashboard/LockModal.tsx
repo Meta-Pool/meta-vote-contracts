@@ -24,7 +24,8 @@ import {
   Image,
   Flex,
   Spacer,
-  Divider
+  Divider,
+  Stack
 } from '@chakra-ui/react';
 import React, {  useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -153,20 +154,22 @@ const LockModal = (props: Props) => {
                 </SliderTrack>
                 <SliderThumb bg={colors.primary+'.500'} boxSize={6} />
               </Slider>
-              <HStack>
-                <Text fontWeight={200} fontSize={'lg'} color={'indigo.500'}>AutoLock days:</Text> 
-                <Text fontWeight={500} fontSize={'lg'} color={'white'}>{sliderValue}</Text> 
-                
-              </HStack>
-              <HStack>
-              <Text fontWeight={500} fontSize={'lg'} color={'indigo.500'}> Voting Power:</Text>
-                <Text fontWeight={500} fontSize={'2xl'} color={'white'}> { vPowerSim.toFixed(4)} </Text>
-              </HStack>
+              <Stack w={'100%'} direction={{base:'column', md:'row'}} justify={'space-between'}>
+                <VStack align={{base:'flex-start', md:'flex-Start'}}>
+                  <Text fontWeight={200} fontSize={'lg'} color={'indigo.500'}>AutoLock days</Text> 
+                  <Text fontWeight={500} fontSize={'lg'} color={'white'}>{sliderValue}</Text> 
+                  
+                </VStack>
+                <VStack align={{base:'flex-start', md:'flex-end'}}>
+                  <Text fontWeight={500} fontSize={'lg'}   color={'indigo.500'}> Voting Power</Text>
+                  <Text fontWeight={500} fontSize={'lg'}  color={'white'}> { vPowerSim.toFixed(4)} </Text>
+                </VStack>
+              </Stack>
             </VStack>
           </ModalBody>
           <ModalFooter>
             <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'center'}>
-              <Button colorScheme={colors.primary} onClick={(e: any) => formikLock.handleSubmit(e)}  m={1}>Lock</Button>
+              <Button colorScheme={colors.secundary} onClick={(e: any) => formikLock.handleSubmit(e)}  m={1}>Lock</Button>
               <Button variant='outline' color={'white'} bg={'purple.900'} _hover={{ bg: 'grey' }} m={1} onClick={onClose}>
                 Cancel
               </Button>
