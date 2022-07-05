@@ -628,10 +628,12 @@ impl MetaVoteContract {
         contract_address: ContractAddress,
         votable_object_id: VotableObjId
     ) -> VotingPowerJSON {
-        let votes = self.votes.get(&contract_address)
-            .expect("Contract Address not in Meta Vote.")
-            .get(&votable_object_id)
-            .unwrap_or(0_u128);
+        let votes = match self.votes.get(&contract_address) {
+            Some(object) => {
+                object.get(&votable_object_id).unwrap_or(0_u128)
+            },
+            None => 0_u128,
+        };
         VotingPowerJSON::from(votes)
     }
 
