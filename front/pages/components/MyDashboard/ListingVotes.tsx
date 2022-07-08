@@ -19,7 +19,8 @@ import {
   Heading,
   Text,
   useBreakpointValue,
-  Flex
+  Flex,
+  Link
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -61,6 +62,14 @@ const ListingVotes = () => {
     onOpenInfo();
   }
 
+  const getProjectName = (project: string)=>{
+    return project.substring(project.indexOf('|') + 1)
+  }
+
+  const getProjectId = (project: string)=>{
+    return project.substring(0,project.indexOf('|'))
+  }
+
   useEffect(  () =>{
     (async ()=> {
       if (wallet && wallet.isSignedIn()) {
@@ -94,8 +103,8 @@ const ListingVotes = () => {
                     return (
                       <Tr key={index}>
                         <Td fontSize={'2xl'} isNumeric>{yton(position.current_votes).toFixed(4)}</Td>
-                        <Td fontSize={'2xl'} >{position.votable_contract}</Td>
-                        <Td fontSize={'2xl'}>{position.id} </Td>
+                        <Td fontSize={'2xl'} ><Link href={'https://' + position.votable_contract + '/vote/' + getProjectId(position.id)} isExternal>{position.votable_contract}</Link></Td>
+                        <Td fontSize={'2xl'}>{getProjectName(position.id)} </Td>
                         <Td fontSize={'2xl'}>
                             <Button colorScheme={colors.primary} w={'100%'} onClick={()=> unvotedClicked(position.id)}>Unvote</Button>
                         </Td>
