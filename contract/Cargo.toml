@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "meta-vote-contract",
-    "pipeline-contract",
     "test-meta-token"
 ]
 

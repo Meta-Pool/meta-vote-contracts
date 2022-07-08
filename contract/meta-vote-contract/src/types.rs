@@ -4,7 +4,6 @@ use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::json_types::U128;
 
 pub type VoterId = AccountId;
-pub type VoterIdJSON = String;
 pub type VotingPower = u128;
 pub type Days = u16;
 pub type Meta = Balance;
