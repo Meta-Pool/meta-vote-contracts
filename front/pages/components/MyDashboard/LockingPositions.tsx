@@ -53,7 +53,7 @@ const LockingPosition = (props: Props) => {
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
-  const STATUS = ['Locked', 'Unlocked', 'Unloking...'];
+  const STATUS = ['Locked', 'Unlocked', 'Unlocking...'];
  
   const getVotingPositions = async ()=> {
     const newVoterData = voterData;
