@@ -178,7 +178,7 @@ const LockingPosition = (props: Props) => {
                     <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}isNumeric >$META amount</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Autolock days</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Remainig time</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Remaining time</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}>Status</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}>Action</Th>
                   </Tr>
