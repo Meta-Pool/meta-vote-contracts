@@ -51,7 +51,8 @@ const LockModal = (props: Props) => {
   const { voterData } = useVoter();
 
   const initialValuesDeposit: any = {
-    amount_lock: 0
+    amount_lock: 0,
+    balance: balance
   };
 
   const formikLock = useFormik({
@@ -87,6 +88,12 @@ const LockModal = (props: Props) => {
     return amount * multiplier;
   }
 
+  useEffect(() => {
+    formikLock.setValues({
+      amount_lock: 0,
+      balance: balance
+    })
+  }, [])
 
   useEffect(() => {
     updateVpowerSim();
@@ -96,7 +103,7 @@ const LockModal = (props: Props) => {
   
 
   const maxButtonClicked = ()=> {
-    formikLock.setValues({amount_lock: balance.toString()});
+    formikLock.setValues({amount_lock: balance.toString(), balance: balance});
   }
   
   const lockMetas = (values: any)=> {
@@ -132,6 +139,7 @@ const LockModal = (props: Props) => {
                     <Input
                         id="amount_lock"
                         name="amount_lock"
+                        type="number"
                         colorScheme={colors.primary} 
                         value={formikLock.values.amount_lock}
                         onPaste={(e)=> inputChange(e)}
@@ -145,6 +153,13 @@ const LockModal = (props: Props) => {
                     </InputRightAddon>  
                   </InputGroup>
               </HStack>
+              {
+                formikLock.dirty && (
+                  <Stack>
+                    <Text dangerouslySetInnerHTML={{ __html: (formikLock.errors && formikLock.errors.amount_lock )? formikLock.errors.amount_lock as  string : ''}} fontSize={'xs'} color={'red'}></Text>
+                  </Stack>
+                )
+              }
               
               <StackDivider></StackDivider >
               <Slider defaultValue={30} min={0} max={300} step={1} onChange={(val) => setSliderValue(val)}>
