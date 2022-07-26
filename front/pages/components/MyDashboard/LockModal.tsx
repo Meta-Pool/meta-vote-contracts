@@ -104,6 +104,8 @@ const LockModal = (props: Props) => {
 
   const maxButtonClicked = ()=> {
     formikLock.setValues({amount_lock: balance.toString(), balance: balance});
+    updateVpowerSim(balance);
+
   }
   
   const lockMetas = (values: any)=> {
