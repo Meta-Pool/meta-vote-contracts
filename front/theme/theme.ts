@@ -40,13 +40,13 @@ const customTheme = extendTheme(
     styles: {
       global: () => ({
         body: {
-          bg: "#F6F2E8",
+          bg: "linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)",
         }
       })
     },
     fonts: {
-      heading: "Meta Space",
-      body: "Meta Space",
+      heading: "Inter",
+      body: "Inter",
     },
   },
   proTheme
