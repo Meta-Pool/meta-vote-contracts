@@ -176,6 +176,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                 color="blue"
                 borderColor="blue"
                 variant="outline"
+                borderRadius={100}
                 onClick={() => onConnect()}
               >
                 Connect Wallet
