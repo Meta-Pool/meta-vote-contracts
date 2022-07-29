@@ -1,4 +1,5 @@
 import {
+  Box,
   Button, 
   HStack, 
   Spacer, 
@@ -18,6 +19,7 @@ import LockModal from './LockModal';
 import InfoModal from './InfoModal';
 import { MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
+import DashboardCard from './DashboardCard';
 
 type Props = {
 }
@@ -54,51 +56,35 @@ const DashboardHeader = () => {
   },[wallet])
 
   return (
-        <Stack w={'100%'} flexDirection={{ base: 'column', md: 'row' }} spacing={'10px'} justify={'space-between'}>
-          <Stack w={{ base: '100%', md: '48%' }} backgroundColor={'white'}  spacing={10} p={padding} direction={'column'}>
+        <Stack w={'100%'} flexDirection={{ base: 'column', md: 'column' }}  color={'white'} spacing={'10px'} justify={'space-between'}>
+          <Stack w={{ base: '100%', md: '48%' }}  spacing={10} p={padding} direction={'row'}>
             <HStack position={'relative'}>
               <VStack align={'flex-start'}>
-                <Text fontSize={'xl'}>My Voting Power</Text>
-                <Text fontSize={'5xl'} >{yton(voterData.votingPower)}</Text>
+                <Text opacity={0.6} fontSize={'14px'} bg={"#120e2829"} p={'8px'}>My Voting Power</Text>
+                <Text fontSize={'64px'} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
               </VStack>
-              <Button disabled={!wallet?.isSignedIn()} position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
+              {/* <Button disabled={!wallet?.isSignedIn()} position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button> */ }
             </HStack>
 
-            <HStack justify={'space-between'}>
-              <Text fontSize={'xl'}>In use</Text>
-              <Text fontSize={'xl'} color={colors.primary}>{yton(voterData.inUseVPower)}</Text>
-            </HStack>
-            <HStack justify={'space-between'}>
-              <Text fontSize={'xl'}>Projects you voted</Text>
-              <Text fontSize={'xl'} color={colors.primary}>{voterData.votingResults.length}</Text>
-            </HStack>
+            
             <Spacer></Spacer>
-            <ButtonOnLogin>
+            {/* <ButtonOnLogin>
               <Button  fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
                 Lock $META to get Voting Power
               </Button>
-            </ButtonOnLogin>
+            </ButtonOnLogin> */}
           </Stack>
-          <Stack w={{ base: '100%', md: '48%' }}  spacing={5} direction={'column'}>
-            <HStack  justify={'space-between'} backgroundColor={'white'} p={padding}>
-              <Text fontSize={'xl'}>$META locked</Text>
-              <Text fontSize={'5xl'} color={colors.primary}>{yton(voterData.metaLocked)}</Text>
-            </HStack>
-
-            <HStack  justify={'space-between'} backgroundColor={'white'} p={padding}>
-              <Text fontSize={'xl'}>$META unlocking</Text>
-              <Text fontSize={'5xl'} color={colors.primary}>{yton(voterData.metaUnlocking)}</Text>
-            </HStack>
-
-            <HStack justify={'space-between'} backgroundColor={'white'} p={padding}>
-              <Text fontSize={'xl'}>$META to withdraw</Text>
-              <HStack>
-                <Text fontSize={'5xl'} mr={'32px'}>{yton(voterData.metaToWithdraw)}</Text>
-                <Button  fontSize={'xl'} disabled={ parseInt(voterData.metaToWithdraw)<=0} h={'80px'} onClick={()=> withdrawClicked()} colorScheme={colors.primary}>
-                  Withdraw
-                </Button>
-              </HStack>
-            </HStack>            
+          <Stack w={{ base: '100%', md: '100%' }} justifyContent={'space-evenly'}  spacing={5} direction={'row'}>
+            <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.png'} number={yton(voterData.inUseVPower)}></DashboardCard>
+            <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.png'} number={voterData.votingResults.length}></DashboardCard>
+            <DashboardCard  title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard>
+            <DashboardCard  title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
+            <Box position={'relative'}>
+              <DashboardCard  title='$META to withdra' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
+              <Button minWidth= {'176px'} position={'absolute'} bottom={-14}  fontSize={'md'} p={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
+                Withdraw
+              </Button>
+            </Box>
           </Stack>
           <LockModal isOpen={isOpen} onClose={onClose} ></LockModal>
           <InfoModal content={MODAL_TEXT.UNLOCK} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawClicked()} ></InfoModal>
