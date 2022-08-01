@@ -8,7 +8,7 @@ export const colors = {
   black: "#000000",
   white: "#FFFFFF",
   primary: 'indigo',
-  secundary: 'cyan',
+  secundary: 'purple',
 
 
   whiteAlpha: {
@@ -175,11 +175,11 @@ export const colors = {
     200: "#e9d5ff",
     300: "#d8b4fe",
     400: "#c084fc",
-    500: "#a855f7",
+    500: "#231B51",
     600: "#9333ea",
     700: "#7e22ce",
     800: "#6b21a8",
-    900: "#120E28",
+    900: "#231B51",
   },
   pink: {
     50: "#fdf2f8",

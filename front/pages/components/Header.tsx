@@ -104,7 +104,7 @@ const Header: React.FC<ButtonProps> = (props) => {
               borderRadius={100} 
               backgroundColor={colors.primary+".900"}
             >
-              <Text fontWeight={300} >{signInAccountId} </Text>
+              <Text  noOfLines={1} maxW={'20vw'}   fontWeight={300} >{signInAccountId} </Text>
               <ExternalLinkIcon></ExternalLinkIcon>
             </HStack>
           ) }
