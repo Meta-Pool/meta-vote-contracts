@@ -40,7 +40,7 @@ const customTheme = extendTheme(
     styles: {
       global: () => ({
         body: {
-          bg: "linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)",
+          // bg: "linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)",
         }
       })
     },

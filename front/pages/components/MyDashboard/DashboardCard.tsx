@@ -4,15 +4,16 @@ import {
   Box,
   Image,
   Text, 
-  Stack,
-  Flex
+  Flex,
+  VStack
 } from "@chakra-ui/react";
 
 type CardProps = {
   title: string,
   number: string | number,
   iconSrc: any,
-  ligthMode?: boolean
+  ligthMode?: boolean,
+  horizontal?: boolean
 }
 
 
@@ -20,18 +21,32 @@ const DashboardCard = (props: CardProps) => {
 
 
   return (
-      <Box
-        bg={props.ligthMode ? "transparent" :"#120e2829"} 
-        minWidth= {'176px'}
-        padding= {'16px'}
-        h= {'120px'}
-      >
-        <Flex h={'100%'} direction={'column'} justify={'space-evenly'}>
-          <Image boxSize="20px" alt={props.title} src={props.iconSrc || './icons/check.png'}></Image>
-          <Text opacity={0.6} mt={3} fontSize={'14px'}>{props.title || 'Card Title'}</Text>
-          <Text fontSize={'24px'} fontFamily={'Meta Space'} >{props.number || '0'}</Text>
+     <>
+      { props.horizontal ? (
+        <Box  mt={'20px'} >
+          <Flex  h={'100%'} direction={'row'} justifyContent={'flex-start'}>
+          <Image ml={10} mr={10} boxSize="20px" alt={props.title} src={props.iconSrc || './icons/check.png'}></Image>
+          <Text  fontSize={'16px'}>{props.title || 'Card Title'}</Text>
+          <Text ml={'auto'} mr={10} fontSize={'18px'} fontFamily={'Meta Space'} >{props.number || '0'}</Text>
         </Flex>
-      </Box>
+        </Box>
+        ) : (
+        
+        <Box
+          bg={props.ligthMode ? "transparent" :"#120e2829"} 
+          minWidth= {{base: '98px', md: '176px'}}
+          padding= {'16px'}
+          h= {'120px'}>
+            <Flex h={'100%'} direction={'column'} justify={'space-evenly'}>
+              <Image boxSize="20px" alt={props.title} src={props.iconSrc || './icons/check.png'}></Image>
+              <Text opacity={0.6} mt={3} fontSize={'14px'}>{props.title || 'Card Title'}</Text>
+              <Text fontSize={'24px'} fontFamily={'Meta Space'} >{props.number || '0'}</Text>
+            </Flex>
+          </Box>
+        )
+      }
+     </>
+      
     ) 
 };
 

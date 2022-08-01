@@ -5,6 +5,7 @@ import {
   Spacer, 
   Stack, 
   Text, 
+  useBreakpointValue, 
   useDisclosure,
   VStack, 
 } from '@chakra-ui/react';
@@ -29,6 +30,7 @@ const DashboardHeader = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
+  const isDesktop = useBreakpointValue({ base: false, md: true });
 
   const padding = '24px';
 
@@ -56,39 +58,53 @@ const DashboardHeader = () => {
   },[wallet])
 
   return (
-        <Stack w={'100%'} flexDirection={{ base: 'column', md: 'column' }}  color={'white'} spacing={'10px'} justify={'space-between'}>
-          <Stack w={{ base: '100%', md: '48%' }}  spacing={10} p={padding} direction={'row'}>
+      <>
+        <Stack pb={{base:'32px', md: '80px'}} borderBottomLeftRadius={{base:'32px', md: '0px'}} borderBottomRightRadius={{base:'32px', md: '0px'}} bg={'linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)'} w={'100%'} flexDirection={{ base: 'column', md: 'column' }}  color={'white'} spacing={'10px'} justify={'space-between'}>
+          <Stack justify={'space-between'} alignItems={'flex-start'} w={{ base: '100%'}}  spacing={10} p={padding} direction={'row'}>
             <HStack position={'relative'}>
               <VStack align={'flex-start'}>
-                <Text opacity={0.6} fontSize={'14px'} bg={"#120e2829"} p={'8px'}>My Voting Power</Text>
-                <Text fontSize={'64px'} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
+                <Text hidden={!isDesktop} opacity={0.6} fontSize={'14px'} bg={"#120e2829"} p={'8px'}>My Voting Power</Text>
+                <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
+                <Text hidden={isDesktop} opacity={0.9} fontSize={'16px'}  p={'8px'}>My Voting Power</Text>
               </VStack>
               {/* <Button disabled={!wallet?.isSignedIn()} position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button> */ }
             </HStack>
 
-            
-            <Spacer></Spacer>
-            {/* <ButtonOnLogin>
-              <Button  fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
-                Lock $META to get Voting Power
-              </Button>
-            </ButtonOnLogin> */}
+            <Stack top={3} position={'relative'} hidden={isDesktop}>
+              <ButtonOnLogin>
+                <Button borderRadius={100}  color={colors.primary} bg={'white'} fontSize={{ base: "xs", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
+                  Lock more $META
+                </Button>
+              </ButtonOnLogin>
+            </Stack>
+
           </Stack>
-          <Stack w={{ base: '100%', md: '100%' }} justifyContent={'space-evenly'}  spacing={5} direction={'row'}>
+          
+          <Stack w={{ base: '100%', md: '100%' }} justifyContent={{base:'flex-end', md: 'space-evenly'}}  spacing={{base: 0, md: 5}} direction={'row'}>
             <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.png'} number={yton(voterData.inUseVPower)}></DashboardCard>
             <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.png'} number={voterData.votingResults.length}></DashboardCard>
-            <DashboardCard  title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard>
-            <DashboardCard  title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
-            <Box position={'relative'}>
-              <DashboardCard  title='$META to withdra' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
+            <Box hidden={!isDesktop}><DashboardCard   title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard> </Box>
+            <Box hidden={!isDesktop}><DashboardCard   title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard></Box>
+            <Box hidden={!isDesktop} position={'relative'}>
+              <DashboardCard  title='$META to withdraw' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
               <Button minWidth= {'176px'} position={'absolute'} bottom={-14}  fontSize={'md'} p={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
                 Withdraw
               </Button>
             </Box>
           </Stack>
+          
           <LockModal isOpen={isOpen} onClose={onClose} ></LockModal>
           <InfoModal content={MODAL_TEXT.UNLOCK} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawClicked()} ></InfoModal>
         </Stack>
+        <Box  hidden={isDesktop}>
+          <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard>
+          <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
+          <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
+          <Button ml={'100px'} mt={5} maxWidth= {'88px'} h={'32px'} fontSize={'10px'} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
+            Withdraw
+          </Button>
+        </Box>
+      </>
   );
 };
 
