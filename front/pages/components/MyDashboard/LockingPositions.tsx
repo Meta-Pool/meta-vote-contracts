@@ -42,6 +42,8 @@ import VPositionCard from './VPositionCard';
 type Props = {
 }
 
+
+
 const LockingPosition = (props: Props) => {
 
   const { wallet} = useWallet();
@@ -121,13 +123,13 @@ const LockingPosition = (props: Props) => {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <Tag colorScheme={'red'} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag> )
+        return ( <Tag colorScheme={colors.states.success} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Tag colorScheme={'green'} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag>)
+        return ( <Tag colorScheme={colors.states.danger} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag>)
 
       case POSITION_STATUS.UNLOKING:
-        return ( <Tag colorScheme={'yellow'} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag> ) 
+        return ( <Tag colorScheme={colors.states.warning} variant='solid'>{ STATUS[getLockinPositionStatus(position)]}</Tag> ) 
     }
   }
 
@@ -135,13 +137,13 @@ const LockingPosition = (props: Props) => {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <><Circle mr={5} size={3} bg={'green'}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</> )
+        return ( <><Circle mr={5} size={4} bg={colors.states.success}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <><Circle mr={5} size={3} bg={'red'}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</>)
+        return ( <><Circle mr={5} size={4} bg={colors.states.danger}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</>)
 
       case POSITION_STATUS.UNLOKING:
-        return (<><Circle mr={5} size={3} bg={'orange'}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</> ) 
+        return (<><Circle mr={5} size={4} bg={colors.states.warning}/>{!hideText && STATUS[getLockinPositionStatus(position)]}</> ) 
     }
   }
 
@@ -250,34 +252,48 @@ const LockingPosition = (props: Props) => {
                         <AccordionButton  _expanded={{bg:'white'}}  bg={{base: 'white'}}>
                           <HStack w={'100%'} justify={'space-between'} textAlign="left">
                             <HStack>{ getStatusCircle(position, true)}
-                            <Text fontSize={'xl'}>{position.locking_period} days </Text></HStack>
-                            <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.voting_power).toFixed(4)} </Text>
+                            <Text fontSize={'14px'}>{position.locking_period} days </Text></HStack>
+                            <Text  bg={colors.secundary+".50"} p={2}  fontWeight={700} fontSize={'18px'}>{yton(position.voting_power).toFixed(4)} </Text>
                           </HStack>
                           <AccordionIcon ml={5} fontSize={'2xl'} />
                         </AccordionButton>
-                        <AccordionPanel pb={4}>
-                          <VStack >
+                        <AccordionPanel >
+                          <VStack px={5} pb={10}>
                             <HStack w={'100%'} justify={'space-between'}> 
-                              <Text fontSize={'xl'}>$META amount:</Text>
-                              <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {yton(position.amount).toFixed(4)}</Text>
+                              <HStack>
+                                <Image mr={10} boxSize="20px" alt={'amount-icon'} src={'./meta.png'}></Image>
+                                <Text textAlign={'start'}  fontSize={'14px'}>$META amount:</Text>
+                              </HStack>
+                              <Text p={2} fontWeight={700} bg={colors.secundary+".50"} fontSize={'14px'}> {yton(position.amount).toFixed(4)}</Text>
                             </HStack>
                             <HStack w={'100%'} justify={'space-between'}> 
-                              <Text fontSize={'xl'}>Voting Power:</Text>
-                              <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {yton(position.voting_power).toFixed(4)}</Text>
+                              <HStack>
+                                <Image mr={10} boxSize="20px" alt={'lock-icon'} src={'./icons/lock_bold.png'}></Image>
+                                <Text textAlign={'start'}  fontSize={'14px'}>Autolock </Text>
+                              </HStack>
+                              <Text p={2} fontWeight={700} bg={colors.secundary+".50"} fontSize={'14px'}> {position.locking_period} days</Text>
                             </HStack>
                             <HStack w={'100%'} justify={'space-between'}> 
-                              <Text fontSize={'xl'}>Autolock days</Text>
-                              <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {position.locking_period} Days</Text>
-                            </HStack>
-                            <HStack w={'100%'} justify={'space-between'}> 
-                              <Text fontSize={'xl'}>Remaining time</Text>
-                              <Text p={2} bg={colors.secundary+".50"} fontSize={'xl'}> {getTimeRemaining(position)} Days</Text>
+                              <HStack>
+                                <Image mr={10} boxSize="20px" alt={'time-icon'} src={'./icons/clock.png'}></Image>
+                                <Text textAlign={'start'}  fontSize={'14px'}>Remaining time</Text>
+                              </HStack>
+                              <Text p={2} fontWeight={700} bg={colors.secundary+".50"} fontSize={'14px'}> {getTimeRemaining(position)} </Text>
                             </HStack>
                             <HStack  w={'100%'} justify={'space-between'}> 
-                              <Text fontSize={'xl'}>Status:</Text>
-                              <Text p={2} fontSize={'xl'}> <HStack>{getStatusCircle(position)}</HStack></Text>
+                              <HStack>
+                                <Box mr={7}>
+                                  {getStatusCircle(position, true)}
+                                </Box>
+                                <Text textAlign={'start'}  fontSize={'14px'}>Status</Text>
+
+                              </HStack>
+                              <Text ml={8} p={2} fontWeight={700} fontSize={'14px'}> {STATUS[getLockinPositionStatus(position)]}</Text>
                             </HStack>
-                            { getButtonbyStatus(position)}
+                            <HStack  w={'100%'}>
+                              { getButtonbyStatus(position)}
+
+                            </HStack>
                           </VStack>
                         </AccordionPanel>
                       </AccordionItem>

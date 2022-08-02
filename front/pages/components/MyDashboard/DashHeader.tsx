@@ -59,7 +59,17 @@ const DashboardHeader = () => {
 
   return (
       <>
-        <Stack px={{base:'5px', md: '10%'}} pb={{base:'32px', md: '150px'}} borderBottomLeftRadius={{base:'32px', md: '0px'}} borderBottomRightRadius={{base:'32px', md: '0px'}} bg={'linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)'} w={'100%'} flexDirection={{ base: 'column', md: 'column' }}  color={'white'} spacing={'10px'} justify={'space-between'}>
+        <Stack 
+          px={{base:'5px', md: '10%'}} 
+          pb={{base:'32px', md: '150px'}} 
+          borderBottomLeftRadius={{base:'32px', md: '0px'}} 
+          borderBottomRightRadius={{base:'32px', md: '0px'}} 
+          bg={colors.bgGradient} 
+          w={'100%'} 
+          flexDirection={{ base: 'column', md: 'column' }}  
+          color={'white'} 
+          spacing={'10px'} 
+          justify={'space-between'}>
           <Stack justify={'space-between'} alignItems={'flex-start'} w={{ base: '100%'}}  spacing={10} p={padding} direction={'row'}>
             <HStack position={'relative'}>
               <VStack align={'flex-start'}>
@@ -69,7 +79,6 @@ const DashboardHeader = () => {
               </VStack>
               {/* <Button disabled={!wallet?.isSignedIn()} position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button> */ }
             </HStack>
-
             <Stack top={3} position={'relative'} hidden={isDesktop}>
               <ButtonOnLogin>
                 <Button borderRadius={100}  color={colors.primary} bg={'white'} fontSize={{ base: "xs", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
@@ -77,9 +86,7 @@ const DashboardHeader = () => {
                 </Button>
               </ButtonOnLogin>
             </Stack>
-
           </Stack>
-          
           <Stack w={{ base: '100%', md: '100%' }} justifyContent={{base:'flex-end', md: 'space-evenly'}}  spacing={{base: 0, md: 5}} direction={'row'}>
             <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.png'} number={yton(voterData.inUseVPower)}></DashboardCard>
             <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.png'} number={voterData.votingResults.length}></DashboardCard>
@@ -92,14 +99,13 @@ const DashboardHeader = () => {
               </Button>
             </Box>
           </Stack>
-          
           <LockModal isOpen={isOpen} onClose={onClose} ></LockModal>
           <InfoModal content={MODAL_TEXT.UNLOCK} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawClicked()} ></InfoModal>
         </Stack>
         <Box  hidden={isDesktop}>
-          <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard>
-          <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
-          <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
+          <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock_bold.png'} number={yton(voterData.metaLocked)}></DashboardCard>
+          <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock_bold.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
+          <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw_bold.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
           <Button ml={'100px'} mt={5} maxWidth= {'88px'} h={'32px'} fontSize={'10px'} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
             Withdraw
           </Button>
