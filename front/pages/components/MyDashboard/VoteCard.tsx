@@ -2,73 +2,99 @@
 import * as React from "react";
 import {
   Box,
-  Image,
-  Text, 
-  Flex,
-  VStack,
   HStack,
-  Avatar,
-  Stack
+  Stack,
+  Button,
+  Link,
+  Text,
+  VStack,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionIcon,
+  AccordionPanel,
+  useBreakpointValue,
+  Circle
 } from "@chakra-ui/react";
-import { POSITION_STATUS } from "../../../lib/util";
+import { colors } from "../../../constants/colors";
+import { yton } from "../../../lib/util";
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 type CardProps = {
-  vPower: any,
-  amount: any,
-  period: any,
-  status: POSITION_STATUS,
-  remaining: string,
-  statusElement: JSX.Element,
-  icon: JSX.Element,
-  button: JSX.Element,
+  position: any,
+  unvoteAction: any
 }
 
 
 const VoteCard = (props: CardProps) => {
+  const { position, unvoteAction } = props;
+  const isDesktop = useBreakpointValue({ base: false, md: true });
+
+  const getProjectName = (project: string)=>{
+    return project && project.substring(project.indexOf('|') + 1)
+  }
+
+  const getProjectId = (project: string)=>{
+    return project && project.substring(0,project.indexOf('|'))
+  }
 
   return (
       
-        <Stack bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
-          {/* Card header */}
-          <HStack align={'flex-start'} justify={'space-between'}>
-            <VStack spacing={0} align={'flex-start'}>
-              <Text fontSize={'24px'} fontWeight={700} fontFamily={'Meta Space'}>1.01131</Text>
-              <Text>Voting Power</Text>
-            </VStack>
-            <HStack>
-              <Image
-                boxSize="20px"
-                objectFit="cover"
-                src="/meta.png"
-                alt="stnear"
-              />
-              <Text>1.000</Text>
+        isDesktop! ? (
+          <Stack bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} maxH={'200px'} minW={'330px'}>
+            {/* Card header */}
+            <HStack align={'flex-start'} justify={'space-between'}>
+              <VStack align={'flex-start'}>
+                <HStack>
+                  <Circle mr={5} size={4} bg={colors.states.success}/>
+                  <Text fontSize={'24px'} fontWeight={700}>{getProjectName(position.id)} </Text>
+                </HStack>
+                <HStack fontSize={'16px'}><Text fontWeight={700} fontFamily={'Meta Space'}>{yton(position.current_votes).toFixed(4)}</Text><Text>Voting Power</Text> </HStack>
+              </VStack>
+              <Link href={'https://' + position.votable_contract + '/vote/' + getProjectId(position.id)} isExternal><ExternalLinkIcon></ExternalLinkIcon></Link>
             </HStack>
-          </HStack>
-          
-          <Box>
-            {/* Icons bar  */}
-          <HStack spacing={0} justify={'flex-start'}>
-            {props.icon}
-          </HStack>
-          
-          {/* Card Body */}
-          <HStack justify={'space-between'}>
-            <HStack spacing={0}>
-              {props.statusElement}
-              {
-                (props.status && POSITION_STATUS.UNLOKING) ? 
-                (<Text>{props.remaining}</Text>) :
-                (<Text>{props.period} days</Text>)
-              }
-            </HStack>
-              
             <Box>
-              {props.button}
+    
+            {/* Card Body */}
+            <HStack justify={'space-between'}>
+              <HStack spacing={0}>
+                <Link href={'https://' + position.votable_contract + '/vote/' + getProjectId(position.id)} isExternal>{position.votable_contract} </Link>
+              </HStack>
+              <Box>
+                <Button borderRadius={100} px={10} colorScheme={colors.primary} w={'100%'} onClick={ unvoteAction}>Unvote</Button>
+              </Box>
+            </HStack>
             </Box>
-          </HStack>
-          </Box>
-        </Stack>
+          </Stack>
+        ) : (
+          <Accordion  w={'100%'}  allowMultiple>
+            <AccordionItem m={2} >
+              <AccordionButton _expanded={{bg:'white'}} bg={{base: 'white'}}>
+                <HStack w={'100%'} justify={'space-between'} textAlign="left">
+                  <HStack>
+                    <Circle mr={5} size={4} bg={colors.states.success}/>
+                    <Text fontSize={'16px'}> {getProjectName(position.id)}</Text>
+                  </HStack>
+                  <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.current_votes).toFixed(4)} </Text>
+                </HStack>
+                <AccordionIcon ml={5} fontSize={'2xl'} />
+              </AccordionButton>
+              <AccordionPanel px={10} py={2} pb={20}>
+                <VStack spacing={5}>
+                  <HStack w={'100%'} justify={'space-between'}> 
+                    <Text fontSize={'14px'}>Platform</Text>
+                    <Text fontSize={'14px'} fontWeight={700}> {position.votable_contract}</Text>
+                  </HStack>
+                  <HStack w={'100%'} justify={'space-between'}> 
+                    <Text fontSize={'14px'}>Project</Text>
+                    <Text fontSize={'14px'} fontWeight={700}> {position.id}</Text>
+                  </HStack>
+                  <Button borderRadius={100} w={'100%'} colorScheme={colors.primary} onClick={unvoteAction}>Unvote</Button>
+                </VStack>
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+        )
       
     ) 
 };

@@ -25,14 +25,23 @@ type CardProps = {
 
 
 const VPositionCard = (props: CardProps) => {
-
+  const {
+    vPower,
+    amount,
+    period,
+    status,
+    remaining,
+    statusElement,
+    icon,
+    button
+  } = props;
   return (
       
         <Stack bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
           {/* Card header */}
           <HStack align={'flex-start'} justify={'space-between'}>
             <VStack spacing={0} align={'flex-start'}>
-              <Text fontSize={'24px'} fontWeight={700} fontFamily={'Meta Space'}>1.01131</Text>
+              <Text fontSize={'24px'} fontWeight={700} fontFamily={'Meta Space'}>{vPower}</Text>
               <Text>Voting Power</Text>
             </VStack>
             <HStack>
@@ -42,29 +51,29 @@ const VPositionCard = (props: CardProps) => {
                 src="/meta.png"
                 alt="stnear"
               />
-              <Text>1.000</Text>
+              <Text>{amount}</Text>
             </HStack>
           </HStack>
           
           <Box>
             {/* Icons bar  */}
           <HStack spacing={0} justify={'flex-start'}>
-            {props.icon}
+            {icon}
           </HStack>
           
           {/* Card Body */}
           <HStack justify={'space-between'}>
             <HStack spacing={0}>
-              {props.statusElement}
+              {statusElement}
               {
-                (props.status && POSITION_STATUS.UNLOKING) ? 
-                (<Text>{props.remaining}</Text>) :
-                (<Text>{props.period} days</Text>)
+                (status && POSITION_STATUS.UNLOKING) ? 
+                (<Text>{remaining}</Text>) :
+                (<Text>{period} days</Text>)
               }
             </HStack>
               
             <Box>
-              {props.button}
+              {button}
             </Box>
           </HStack>
           </Box>
