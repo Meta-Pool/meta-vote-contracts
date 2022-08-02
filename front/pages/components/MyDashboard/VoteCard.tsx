@@ -47,18 +47,18 @@ const VoteCard = (props: CardProps) => {
               <VStack align={'flex-start'}>
                 <HStack>
                   <Circle mr={5} size={4} bg={colors.states.success}/>
-                  <Text fontSize={'24px'} fontWeight={700}>{getProjectName(position.id)} </Text>
+                  <Text fontSize={'24px'} fontWeight={700}>{getProjectName(position?.id)} </Text>
                 </HStack>
-                <HStack fontSize={'16px'}><Text fontWeight={700} fontFamily={'Meta Space'}>{yton(position.current_votes).toFixed(4)}</Text><Text>Voting Power</Text> </HStack>
+                <HStack fontSize={'16px'}><Text fontWeight={700} fontFamily={'Meta Space'}>{yton(position?.current_votes).toFixed(4)}</Text><Text>Voting Power</Text> </HStack>
               </VStack>
-              <Link href={'https://' + position.votable_contract + '/vote/' + getProjectId(position.id)} isExternal><ExternalLinkIcon></ExternalLinkIcon></Link>
+              <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal><ExternalLinkIcon></ExternalLinkIcon></Link>
             </HStack>
             <Box>
     
             {/* Card Body */}
             <HStack justify={'space-between'}>
               <HStack spacing={0}>
-                <Link href={'https://' + position.votable_contract + '/vote/' + getProjectId(position.id)} isExternal>{position.votable_contract} </Link>
+                <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal>{position?.votable_contract} </Link>
               </HStack>
               <Box>
                 <Button borderRadius={100} px={10} colorScheme={colors.primary} w={'100%'} onClick={ unvoteAction}>Unvote</Button>
@@ -73,9 +73,9 @@ const VoteCard = (props: CardProps) => {
                 <HStack w={'100%'} justify={'space-between'} textAlign="left">
                   <HStack>
                     <Circle mr={5} size={4} bg={colors.states.success}/>
-                    <Text fontSize={'16px'}> {getProjectName(position.id)}</Text>
+                    <Text fontSize={'16px'}> {getProjectName(position?.id)}</Text>
                   </HStack>
-                  <Text  bg={colors.secundary+".50"} p={2} fontSize={'18px'} fontWeight={700} fontFamily={'Meta Space'}>{yton(position.current_votes).toFixed(4)} </Text>
+                  <Text  bg={colors.secundary+".50"} p={2} fontSize={'18px'} fontWeight={700} fontFamily={'Meta Space'}>{yton(position?.current_votes).toFixed(4)} </Text>
                 </HStack>
                 <AccordionIcon ml={5} fontSize={'2xl'} />
               </AccordionButton>
@@ -83,11 +83,11 @@ const VoteCard = (props: CardProps) => {
                 <VStack spacing={5}>
                   <HStack w={'100%'} justify={'space-between'}> 
                     <Text fontSize={'14px'}>Platform</Text>
-                    <Text fontSize={'14px'} fontWeight={700}> {position.votable_contract}</Text>
+                    <Text fontSize={'14px'} fontWeight={700}> {position?.votable_contract}</Text>
                   </HStack>
                   <HStack w={'100%'} justify={'space-between'}> 
                     <Text fontSize={'14px'}>Project</Text>
-                    <Text fontSize={'14px'} fontWeight={700}> {position.id}</Text>
+                    <Text fontSize={'14px'} fontWeight={700}> {position?.id}</Text>
                   </HStack>
                   <Button borderRadius={100} w={'100%'} colorScheme={colors.primary} onClick={unvoteAction}>Unvote</Button>
                 </VStack>
