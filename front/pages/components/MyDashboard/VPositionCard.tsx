@@ -99,6 +99,9 @@ const VPositionCard = (props: CardProps) => {
         </> ) 
     }
   }
+  if (!position) {
+    return (<></>)
+  }
   return (
           isDesktop ? (
             <Stack bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
