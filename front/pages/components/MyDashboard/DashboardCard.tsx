@@ -26,7 +26,7 @@ const DashboardCard = (props: CardProps) => {
           <Flex  h={'100%'} direction={'row'} justifyContent={'flex-start'}>
           <Image ml={10} mr={10} boxSize="20px" alt={props.title} src={props.iconSrc || './icons/check.png'}></Image>
           <Text  fontSize={'16px'}>{props.title || 'Card Title'}</Text>
-          <Text ml={'auto'} mr={10} fontSize={'18px'} fontFamily={'Meta Space'} >{props.number || '0'}</Text>
+          <Text ml={'auto'} mr={10} fontSize={'18px'} fontWeight={700} fontFamily={'Meta Space'} >{props.number || '0'}</Text>
         </Flex>
         </Box>
         ) : (

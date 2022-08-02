@@ -9,8 +9,12 @@ export const colors = {
   white: "#FFFFFF",
   primary: 'indigo',
   secundary: 'purple',
-
-
+  bgGradient: 'linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)',
+  states: {
+    warning: '#EC602A',
+    danger: '#FF1F67',
+    success: '#32E7B1'
+  },
   whiteAlpha: {
     50: "rgba(255, 255, 255, 0.04)",
     100: "rgba(255, 255, 255, 0.06)",
