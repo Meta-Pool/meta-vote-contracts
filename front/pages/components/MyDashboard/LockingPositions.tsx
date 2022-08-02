@@ -216,8 +216,7 @@ const LockingPosition = (props: Props) => {
                                   status={getLockinPositionStatus(position)}
                                   statusElement={getStatusCircle(position, true)}
                                   icon={getIconStatus(position)}
-                                  button={(getButtonbyStatus(position))}>
-                                </VPositionCard>
+                                  button={(getButtonbyStatus(position))}/>
                             )
                         })}
 

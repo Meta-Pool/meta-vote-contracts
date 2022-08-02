@@ -10,11 +10,18 @@ import {
   Stack,
   Link,
   Spacer,
+  Button,
+  useDisclosure,
 } from "@chakra-ui/react";
 import router from "next/router";
 import LockModal from "./MyDashboard/LockModal";
+import ButtonOnLogin from "./ButtonLogin";
+import { colors } from "../../constants/colors";
+
 
 const Footer: React.FC<ButtonProps> = (props) => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+
   return (
     <Container
       maxW="container.2xl"
@@ -23,17 +30,24 @@ const Footer: React.FC<ButtonProps> = (props) => {
       as={Stack}
       direction={{ base: "column", md: "row" }}
       spacing={4}
-      justify={{ base: "center", md: "space-between" }}
+      justify={{ base: "center", md: "center" }}
       align={{ base: "center", md: "center" }}
     >
-    <Stack onClick={() => router.push(`/`)} cursor="pointer">
+    <Stack  onClick={() => router.push(`/`)} cursor="pointer">
           {/*<Image
             objectFit="cover"
             src="/logo.svg"
             alt="logo"
+            
   />*/}
+        <ButtonOnLogin>
+          <Button  borderRadius={100} fontSize={{ base: "16px", md: "16px" }}  onClick={onOpen} colorScheme={colors.primary}>
+          Lock more $META
+          </Button>
+        </ButtonOnLogin>
+        
       </Stack>
-      <Stack direction={{ base: "column", sm: "row" }} alignItems={{base: "center", sm: "flex-start"}} spacing={6}>
+      {/*<Stack direction={{ base: "column", sm: "row" }} alignItems={{base: "center", sm: "flex-start"}} spacing={6}>
         <Text fontSize="xs">© 2022 Meta Vote Inc</Text>
         <Link href="https://rctracks.io/privacy-policy/" target={"_blank"} fontSize="xs">
           Privacy
@@ -47,7 +61,8 @@ const Footer: React.FC<ButtonProps> = (props) => {
         <Link href="https://twitter.com/meta_pool" target={"_blank"} variant="link">
           <img src="/twitter.svg" alt="Twitter" />
         </Link>
-      </Stack>
+</Stack>*/}
+      <LockModal isOpen={isOpen} onClose={onClose}></LockModal>
     </Container>
   );
 };
