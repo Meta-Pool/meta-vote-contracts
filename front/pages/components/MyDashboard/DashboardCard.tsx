@@ -19,7 +19,6 @@ type CardProps = {
 
 const DashboardCard = (props: CardProps) => {
 
-
   return (
      <>
       { props.horizontal ? (

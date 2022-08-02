@@ -59,7 +59,7 @@ const DashboardHeader = () => {
 
   return (
       <>
-        <Stack pb={{base:'32px', md: '80px'}} borderBottomLeftRadius={{base:'32px', md: '0px'}} borderBottomRightRadius={{base:'32px', md: '0px'}} bg={'linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)'} w={'100%'} flexDirection={{ base: 'column', md: 'column' }}  color={'white'} spacing={'10px'} justify={'space-between'}>
+        <Stack px={{base:'5px', md: '10%'}} pb={{base:'32px', md: '150px'}} borderBottomLeftRadius={{base:'32px', md: '0px'}} borderBottomRightRadius={{base:'32px', md: '0px'}} bg={'linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)'} w={'100%'} flexDirection={{ base: 'column', md: 'column' }}  color={'white'} spacing={'10px'} justify={'space-between'}>
           <Stack justify={'space-between'} alignItems={'flex-start'} w={{ base: '100%'}}  spacing={10} p={padding} direction={'row'}>
             <HStack position={'relative'}>
               <VStack align={'flex-start'}>
