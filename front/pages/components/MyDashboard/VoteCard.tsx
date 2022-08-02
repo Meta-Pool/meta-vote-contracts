@@ -75,7 +75,7 @@ const VoteCard = (props: CardProps) => {
                     <Circle mr={5} size={4} bg={colors.states.success}/>
                     <Text fontSize={'16px'}> {getProjectName(position.id)}</Text>
                   </HStack>
-                  <Text  bg={colors.secundary+".50"} p={2} fontSize={'xl'}>{yton(position.current_votes).toFixed(4)} </Text>
+                  <Text  bg={colors.secundary+".50"} p={2} fontSize={'18px'} fontWeight={700} fontFamily={'Meta Space'}>{yton(position.current_votes).toFixed(4)} </Text>
                 </HStack>
                 <AccordionIcon ml={5} fontSize={'2xl'} />
               </AccordionButton>
