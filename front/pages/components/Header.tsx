@@ -31,6 +31,7 @@ import { useStore as useBalance } from "../../stores/balance";
 import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
 import { useStore as useVoter } from "../../stores/voter";
+import VPositionCard from "./MyDashboard/VPositionCard";
 
 const Header: React.FC<ButtonProps> = (props) => {
   const { wallet, setWallet } = useWallet();

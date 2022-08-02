@@ -27,11 +27,11 @@ const Footer: React.FC<ButtonProps> = (props) => {
       align={{ base: "center", md: "center" }}
     >
     <Stack onClick={() => router.push(`/`)} cursor="pointer">
-          <Image
+          {/*<Image
             objectFit="cover"
             src="/logo.svg"
             alt="logo"
-          />
+  />*/}
       </Stack>
       <Stack direction={{ base: "column", sm: "row" }} alignItems={{base: "center", sm: "flex-start"}} spacing={6}>
         <Text fontSize="xs">© 2022 Meta Vote Inc</Text>

@@ -22,7 +22,8 @@ import {
   AccordionIcon,
   Circle,
   useBreakpointValue,
-  Heading
+  Heading,
+  Box
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -36,6 +37,7 @@ import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
 import { STATUS_CODES } from 'http';
 import moment from 'moment';
 import ButtonOnLogin from '../ButtonLogin';
+import VPositionCard from './VPositionCard';
 
 type Props = {
 }
@@ -147,15 +149,35 @@ const LockingPosition = (props: Props) => {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <Button colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK)}>Start unlock</Button> )
+        return ( <Button borderRadius={100} fontSize={'16px'} colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK)}>Start unlock</Button> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW)}>Withdraw</Button>)
+        return ( <Button borderRadius={100} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW)}>Withdraw</Button>)
 
       case POSITION_STATUS.UNLOKING:
-        return ( <Button colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
+        return ( <Button borderRadius={100} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
     }
   }
+
+  const getIconStatus = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return (           
+          <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/lock_gray.png'}></Image>
+        )
+
+      case POSITION_STATUS.UNLOCKED:
+        return ( <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/unlock_gray.png'}></Image>)
+
+      case POSITION_STATUS.UNLOKING:
+        return ( <>
+        <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/unlock_gray.png'}></Image>
+        <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/clock_gray.png'}></Image>
+        </> ) 
+    }
+  }
+
 
   useEffect(  () =>{
     (async ()=> {
@@ -169,26 +191,10 @@ const LockingPosition = (props: Props) => {
     <section>        
         { /* *********** DESKTOP UI ***************** */
           isDesktop && (
-            <TableContainer minH={400} mt={30}>
-              <Table  >
-              {
-                voterData.lockingPositions && voterData.lockingPositions.length > 0 && (
-                  <Thead>
-                  <Tr>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'}isNumeric >$META amount</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Autolock days</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Remaining time</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'}>Status</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'}>Action</Th>
-                  </Tr>
-                </Thead>
-                )
-              }
-                <Tbody>
+            <>
                   {
-                    voterData.lockingPositions.length === 0 && (
-                      <Flex minH={400} direction='column' alignItems={'center'} justifyContent={'center'}>
+                    voterData.lockingPositions.length === 0 ? (
+                      <Flex minH={400} direction='column'  alignItems={'center'} justifyContent={'center'}>
                         <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
                         <ButtonOnLogin>
                           <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
@@ -197,39 +203,30 @@ const LockingPosition = (props: Props) => {
                         </ButtonOnLogin>
                         
                       </Flex>
+                    ) : (
+                      <Flex flexWrap={'wrap'}>
+                        {  voterData.lockingPositions.map((position: any, index: number)=> {
+                            return (
+                                <VPositionCard 
+                                  key={index}
+                                  vPower={yton(position.voting_power).toFixed(4)}
+                                  amount={yton(position.amount).toFixed(4)}
+                                  period={position.locking_period}
+                                  remaining={getTimeRemaining(position)}
+                                  status={getLockinPositionStatus(position)}
+                                  statusElement={getStatusCircle(position, true)}
+                                  icon={getIconStatus(position)}
+                                  button={(getButtonbyStatus(position))}>
+                                </VPositionCard>
+                            )
+                        })}
+
+                      </Flex>
                     )
                   }
-                  {  voterData.lockingPositions.map((position: any, index: number)=> {
-                      return (
-                        <Tr key={index}>
-                          <Td  fontSize={'2xl'} isNumeric>{yton(position.voting_power).toFixed(4)}</Td>
-                          <Td  fontSize={'2xl'} isNumeric> 
-                            <HStack justify={'end'}>
-                              <Text>{yton(position.amount).toFixed(4)}</Text> 
-                              <Square minW="30px">
-                                <Image
-                                  boxSize="20px"
-                                  objectFit="cover"
-                                  src="/meta.svg"
-                                  alt="stnear"
-                                />
-                              </Square>
-                            </HStack>
-                          </Td>
-                          <Td fontSize={'2xl'} isNumeric >{position.locking_period} days</Td>
-                          <Td fontSize={'2xl'} isNumeric >{getTimeRemaining(position)}</Td>                          
-                          <Td fontSize={'2xl'} > 
-                            <HStack>{ getStatusCircle(position) } </HStack>
-                          </Td>
-                          <Td>
-                            { getButtonbyStatus(position)}
-                          </Td>
-                        </Tr>
-                      )
-                  })}
-                </Tbody>
-              </Table>
-            </TableContainer>)
+                  
+              </>
+            )
         }
 
         {   /************ MOBILE UI ******************/

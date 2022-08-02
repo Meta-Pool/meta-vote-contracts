@@ -51,7 +51,7 @@ function App({ Component, pageProps }: AppProps) {
         </NextHead>
         <Header />
         <Component {...pageProps} />
-        {/* <Footer /> */}
+        <Footer />
         {/* enable analytics script only for production */}
         { /*isProduction && (
           <>
