@@ -120,8 +120,8 @@ const LockModal = (props: Props) => {
   return (
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
-        <ModalContent bg={'purple.900'}>
-          <ModalHeader textAlign={'center'} color={'white'} fontWeight={500}>New Lock Position</ModalHeader>
+        <ModalContent>
+          <ModalHeader textAlign={'center'} fontWeight={500}>New Lock Position</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align={'flex-start'}>

@@ -23,7 +23,9 @@ import {
   Circle,
   useBreakpointValue,
   Heading,
-  Box
+  Box,
+  Stack,
+  Tooltip
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -38,6 +40,7 @@ import { STATUS_CODES } from 'http';
 import moment from 'moment';
 import ButtonOnLogin from '../ButtonLogin';
 import VPositionCard from './VPositionCard';
+import { AddIcon } from '@chakra-ui/icons';
 
 type Props = {
 }
@@ -146,11 +149,16 @@ const LockingPosition = (props: Props) => {
                           />
                     )
                 })}
-
+                
+                <Tooltip label='Lock $META to get Voting Power'>
+                  <Stack onClick={onOpen} _hover={{border: '3px solid lightgray', cursor: 'pointer'}} borderRadius={"30px"} bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'center'} align={'center'} minH={'234px'} minW={'330px'}>
+                    <AddIcon fontSize={'40px'} color={'lightgray'}></AddIcon>
+                  </Stack>
+                </Tooltip>
               </Flex>
-            )    
+          )
         }
-            
+
       <InfoModal content={modalContent}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={actionCall} ></InfoModal>
       <LockModal isOpen={isOpen} onClose={onClose}></LockModal>
     </section>
