@@ -33,21 +33,21 @@ const InfoModal = (props: Props) => {
   return (
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
-        <ModalContent bg={'purple.900'}>
-          <ModalHeader textAlign={'center'} color={'white'} fontWeight={500}>{content?.title}</ModalHeader>
+        <ModalContent >
+          <ModalHeader textAlign={'center'} fontSize={'24px'}  fontWeight={700}>{content?.title}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align={'flex-start'}>
               <StackDivider></StackDivider >
-              <Text fontWeight={400} color={'white'} fontSize={'sm'}>{content?.text}</Text>
+              <Text fontWeight={400}  fontSize={'16px'}>{content?.text}</Text>
             </VStack>
           </ModalBody>
-          <ModalFooter>
-            <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'center'}>
-              <Button colorScheme={colors.secundary} onClick={onSubmit}  m={1}>Yep</Button>
-              <Button variant='outline' color={'white'} bg={'purple.900'} _hover={{ bg: 'grey' }} m={1} onClick={onClose}>
+          <ModalFooter mt={10}>
+            <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'flex-end'}>
+              <Button borderRadius={100} variant='outline' _hover={{ bg: 'grey' }} m={1} onClick={onClose}>
                 Cancel
               </Button>
+              <Button borderRadius={100} colorScheme={colors.primary} px={20} onClick={onSubmit}  m={1}>Yep</Button>
             </Flex>
           </ModalFooter>
         </ModalContent>
