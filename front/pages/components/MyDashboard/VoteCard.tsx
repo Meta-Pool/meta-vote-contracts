@@ -14,11 +14,13 @@ import {
   AccordionIcon,
   AccordionPanel,
   useBreakpointValue,
-  Circle
+  Circle,
+  Image
 } from "@chakra-ui/react";
 import { colors } from "../../../constants/colors";
 import { yton } from "../../../lib/util";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { WHITELIST_SITES } from "../../../constants/whitelist";
 
 type CardProps = {
   position: any,
@@ -38,10 +40,15 @@ const VoteCard = (props: CardProps) => {
     return project && project.substring(0,project.indexOf('|'))
   }
 
+  const getProjectLogoUrl = (platform: string) => {
+    const platformData = WHITELIST_SITES.find((site: any)=> site.platform === platform);
+    return platformData ? platformData.isologo : '';
+  }
+
   return (
       
         isDesktop! ? (
-          <Stack bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} maxH={'200px'} minW={'330px'}>
+          <Stack borderRadius={"30px"} spacing={10} minH={'234px'} bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} maxH={'200px'} minW={'330px'}>
             {/* Card header */}
             <HStack align={'flex-start'} justify={'space-between'}>
               <VStack align={'flex-start'}>
@@ -49,16 +56,20 @@ const VoteCard = (props: CardProps) => {
                   <Circle mr={5} size={4} bg={colors.states.success}/>
                   <Text fontSize={'24px'} fontWeight={700}>{getProjectName(position?.id)} </Text>
                 </HStack>
-                <HStack fontSize={'16px'}><Text fontWeight={700} fontFamily={'Meta Space'}>{yton(position?.current_votes).toFixed(4)}</Text><Text>Voting Power</Text> </HStack>
+                <HStack fontSize={'16px'}>
+                  <Text ml={'45px'}  fontWeight={700} fontFamily={'Meta Space'}>{yton(position?.current_votes).toFixed(4)}</Text>
+                  <Text>Voting Power</Text> </HStack>
               </VStack>
-              <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal><ExternalLinkIcon></ExternalLinkIcon></Link>
+              <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal><ExternalLinkIcon boxSize={6}></ExternalLinkIcon></Link>
             </HStack>
             <Box>
     
             {/* Card Body */}
             <HStack justify={'space-between'}>
               <HStack spacing={0}>
-                <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal>{position?.votable_contract} </Link>
+                <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal>
+                  <Image src={getProjectLogoUrl(position?.votable_contract)} alt={'logo'}></Image>
+                </Link>
               </HStack>
               <Box>
                 <Button borderRadius={100} px={10} colorScheme={colors.primary} w={'100%'} onClick={ unvoteAction}>Unvote</Button>
@@ -89,7 +100,10 @@ const VoteCard = (props: CardProps) => {
                     <Text fontSize={'14px'}>Project</Text>
                     <Text fontSize={'14px'} fontWeight={700}> {position?.id}</Text>
                   </HStack>
-                  <Button borderRadius={100} w={'100%'} colorScheme={colors.primary} onClick={unvoteAction}>Unvote</Button>
+                  <HStack>
+                    <Image src={getProjectLogoUrl(position?.votable_contract)} alt={'logo'}></Image>
+                    <Button borderRadius={100} w={'100%'} colorScheme={colors.primary} onClick={unvoteAction}>Unvote</Button>
+                  </HStack>
                 </VStack>
               </AccordionPanel>
             </AccordionItem>
