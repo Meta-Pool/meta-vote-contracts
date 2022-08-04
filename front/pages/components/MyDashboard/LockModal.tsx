@@ -121,19 +121,18 @@ const LockModal = (props: Props) => {
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader textAlign={'center'} fontWeight={500}>New Lock Position</ModalHeader>
+          <ModalHeader textAlign={'center'} fontWeight={700}>New Lock Position</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align={'flex-start'}>
-              <Text fontWeight={400} color={'white'} fontSize={'sm'}>$META amount</Text>
               <HStack spacing={10}>
                   <InputGroup  colorScheme={colors.primary} size='lg'>
-                    <InputLeftAddon> 
+                    <InputLeftAddon bg={'#efefef'}> 
                           <Square minW="30px">
                             <Image
                               boxSize="20px"
                               objectFit="cover"
-                              src="/meta.svg"
+                              src="/meta_black.png"
                               alt="stnear"
                             />
                           </Square>
@@ -142,14 +141,15 @@ const LockModal = (props: Props) => {
                         id="amount_lock"
                         name="amount_lock"
                         type="number"
+                        bg={'#efefef'}
                         colorScheme={colors.primary} 
                         value={formikLock.values.amount_lock}
                         onPaste={(e)=> inputChange(e)}
                         onBlur={(e)=> inputChange(e, true)}
                         onChange={(e)=> inputChange(e)}
                     ></Input>
-                    <InputRightAddon>
-                      <Button bg={'black'} color={'white'} h='1.75rem' size='sm' onClick={()=>maxButtonClicked()}>
+                    <InputRightAddon bg={'#efefef'}>
+                      <Button colorScheme={colors.primary} borderRadius={100} color={'white'}  h='1.75rem' size='sm' onClick={()=>maxButtonClicked()}>
                         Max
                       </Button>
                     </InputRightAddon>  
@@ -164,32 +164,40 @@ const LockModal = (props: Props) => {
               }
               
               <StackDivider></StackDivider >
-              <Slider defaultValue={30} min={0} max={300} step={1} onChange={(val) => setSliderValue(val)}>
-                <SliderTrack bg={colors.primary + '.200'}>
-                  <Box position='relative' right={10} />
-                  <SliderFilledTrack bg={colors.primary +'.500'} />
-                </SliderTrack>
-                <SliderThumb bg={colors.primary+'.500'} boxSize={6} />
-              </Slider>
-              <Stack w={'100%'} direction={{base:'column', md:'row'}} justify={'space-between'}>
-                <VStack align={{base:'flex-start', md:'flex-Start'}}>
-                  <Text fontWeight={200} fontSize={'lg'} color={'indigo.500'}>AutoLock days</Text> 
-                  <Text fontWeight={500} fontSize={'lg'} color={'white'}>{sliderValue}</Text> 
-                  
-                </VStack>
-                <VStack align={{base:'flex-start', md:'flex-end'}}>
-                  <Text fontWeight={500} fontSize={'lg'}   color={'indigo.500'}> Voting Power</Text>
-                  <Text fontWeight={500} fontSize={'lg'}  color={'white'}> { vPowerSim.toFixed(4)} </Text>
-                </VStack>
+              
+              <Stack spacing={5} w={'100%'} direction={{base:'column', md:'column'}} justify={'space-between'}>
+                <HStack align={{base:'flex-start', md:'flex-end'}} justify={'space-between'}>
+                  <HStack>
+                    <Image boxSize="16px" alt={'lock-icon'} src={'./icons/check_bold.png'}></Image>
+                    <Text fontWeight={500} fontSize={'16px'}   > Voting Power</Text>
+                  </HStack>
+                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(4)} </Text>
+                </HStack>
+
+                <Slider defaultValue={30} min={0} max={300} step={1} onChange={(val) => setSliderValue(val)}>
+                  <SliderTrack >
+                    <Box position='relative' right={10} />
+                    <SliderFilledTrack  bg={colors.primary +'.500'} />
+                  </SliderTrack>
+                  <SliderThumb bg={colors.primary+'.500'} boxSize={6} />
+                </Slider>
+                
+                <HStack align={{base:'flex-start', md:'flex-Start'}} justify={'space-between'}>
+                  <HStack >
+                    <Image boxSize="16px" alt={'lock-icon'} src={'./icons/lock_bold.png'}></Image>
+                    <Text fontWeight={500} fontSize={'16px'} >AutoLock days</Text> 
+                  </HStack>
+                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'} >{sliderValue}</Text> 
+                </HStack>
               </Stack>
             </VStack>
           </ModalBody>
-          <ModalFooter>
-            <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'center'}>
-              <Button colorScheme={colors.secundary} onClick={(e: any) => formikLock.handleSubmit(e)}  m={1}>Lock</Button>
-              <Button variant='outline' color={'white'} bg={'purple.900'} _hover={{ bg: 'grey' }} m={1} onClick={onClose}>
+          <ModalFooter mt={10}>
+            <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'flex-end'}>
+              <Button borderRadius={100} variant='outline'  m={1} onClick={onClose}>
                 Cancel
               </Button>
+              <Button borderRadius={100} colorScheme={colors.primary} px={70} onClick={(e: any) => formikLock.handleSubmit(e)}  m={1}>Lock</Button>
             </Flex>
           </ModalFooter>
         </ModalContent>
