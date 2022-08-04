@@ -118,7 +118,7 @@ const VPositionCard = (props: CardProps) => {
                     src="/meta.png"
                     alt="stnear"
                   />
-                  <Text>{amount}</Text>
+                  <Text  fontWeight={700} fontSize={'18px'}>{amount}</Text>
                 </HStack>
               </HStack>
               <Box>

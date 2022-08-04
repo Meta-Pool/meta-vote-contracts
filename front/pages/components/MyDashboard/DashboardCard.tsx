@@ -37,7 +37,7 @@ const DashboardCard = (props: CardProps) => {
           padding= {'16px'}
           h= {'120px'}>
             <Flex h={'100%'} direction={'column'} justify={'space-evenly'}>
-              <Image boxSize="20px" alt={props.title} src={props.iconSrc || './icons/check.png'}></Image>
+              <Image boxSize="25px" alt={props.title} src={props.iconSrc || './icons/check.png'}></Image>
               <Text opacity={0.6} mt={3} fontSize={'14px'}>{props.title || 'Card Title'}</Text>
               <Text fontSize={'24px'} fontFamily={'Meta Space'} >{props.number || '0'}</Text>
             </Flex>

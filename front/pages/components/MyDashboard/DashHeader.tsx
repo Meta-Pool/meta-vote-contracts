@@ -87,17 +87,21 @@ const DashboardHeader = () => {
               </ButtonOnLogin>
             </Stack>
           </Stack>
-          <Stack w={{ base: '100%', md: '100%' }} justifyContent={{base:'flex-end', md: 'space-evenly'}}  spacing={{base: 0, md: 5}} direction={'row'}>
-            <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.png'} number={yton(voterData.inUseVPower)}></DashboardCard>
-            <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.png'} number={voterData.votingResults.length}></DashboardCard>
-            <Box hidden={!isDesktop}><DashboardCard   title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard> </Box>
-            <Box hidden={!isDesktop}><DashboardCard   title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard></Box>
-            <Box hidden={!isDesktop} position={'relative'}>
-              <DashboardCard  title='$META to withdraw' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-              <Button minWidth= {'176px'} position={'absolute'} bottom={-14}  fontSize={'md'} p={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
-                Withdraw
-              </Button>
-            </Box>
+          <Stack w={{ base: '100%', md: '100%' }} justifyContent={{base:'flex-end', md: 'space-between'}}  spacing={{base: 0, md: 5}} direction={'row'}>
+            <HStack spacing={8}>
+              <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.png'} number={yton(voterData.inUseVPower)}></DashboardCard>
+              <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.png'} number={voterData.votingResults.length}></DashboardCard>
+            </HStack>
+            <HStack spacing={8}>
+              <Box hidden={!isDesktop}><DashboardCard   title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard> </Box>
+              <Box hidden={!isDesktop}><DashboardCard   title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard></Box>
+              <Box hidden={!isDesktop} position={'relative'}>
+                <DashboardCard  title='$META to withdraw' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
+                <Button minWidth= {'176px'} position={'absolute'} bottom={'-55px'}  fontSize={'md'} fontWeight={700} px={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
+                  Withdraw
+                </Button>
+              </Box>
+            </HStack>
           </Stack>
           <LockModal isOpen={isOpen} onClose={onClose} ></LockModal>
           <InfoModal content={MODAL_TEXT.UNLOCK} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawClicked()} ></InfoModal>
@@ -106,7 +110,7 @@ const DashboardHeader = () => {
           <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock_bold.png'} number={yton(voterData.metaLocked)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock_bold.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw_bold.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-          <Button ml={'100px'} mt={5} maxWidth= {'88px'} h={'32px'} fontSize={'10px'} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
+          <Button ml={'100px'} mt={5} maxWidth= {'88px'} p={'32px'} fontSize={'10px'} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
             Withdraw
           </Button>
         </Box>
