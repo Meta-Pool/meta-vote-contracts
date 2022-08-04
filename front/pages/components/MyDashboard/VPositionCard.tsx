@@ -104,7 +104,7 @@ const VPositionCard = (props: CardProps) => {
   }
   return (
           isDesktop ? (
-            <Stack bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
+            <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
               {/* Card header */}
               <HStack align={'flex-start'} justify={'space-between'}>
                 <VStack spacing={0} align={'flex-start'}>
