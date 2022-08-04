@@ -20,7 +20,8 @@ import {
   Text,
   useBreakpointValue,
   Flex,
-  Link
+  Link,
+  Center
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -87,9 +88,9 @@ const ListingVotes = () => {
               }      
               {
                 voterData.votingResults.length === 0 && (
-                  <Flex minH={400}>
+                  <Center w={'100%'}>
                     <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
-                  </Flex>
+                  </Center>
                 )
               }
           </Flex>

@@ -105,7 +105,7 @@ const Header: React.FC<ButtonProps> = (props) => {
               borderRadius={100} 
               backgroundColor={colors.primary+".900"}
             >
-              <Text  noOfLines={1} maxW={'20vw'}   fontWeight={300} >{signInAccountId} </Text>
+              <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{signInAccountId} </Text>
               <ExternalLinkIcon></ExternalLinkIcon>
             </HStack>
           ) }
@@ -121,7 +121,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                       alt="stnear"
                     />
                   </Square>
-                  <Text fontFamily={'Meta Space'} fontWeight={300}>{formatToLocaleNear(balance)}</Text>
+                  <Text fontFamily={'Meta Space'} fontSize={'18px'} fontWeight={500}>{formatToLocaleNear(balance)}</Text>
                 </HStack>
 
                  {
@@ -132,7 +132,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                       p={"5px 16px"} 
                       borderRadius={100} 
                       backgroundColor={colors.primary+".900"}>
-                      <Link fontWeight={300} href={nearConfig.refFinance} isExternal>
+                      <Link fontWeight={500} href={nearConfig.refFinance} isExternal>
                         Get more $META
                       </Link>
                       <ExternalLinkIcon></ExternalLinkIcon>

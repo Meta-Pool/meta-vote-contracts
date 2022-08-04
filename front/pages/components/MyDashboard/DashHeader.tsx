@@ -97,7 +97,7 @@ const DashboardHeader = () => {
               <Box hidden={!isDesktop}><DashboardCard   title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard></Box>
               <Box hidden={!isDesktop} position={'relative'}>
                 <DashboardCard  title='$META to withdraw' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-                <Button minWidth= {'176px'} position={'absolute'} bottom={-14}  fontSize={'md'} p={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
+                <Button minWidth= {'176px'} position={'absolute'} bottom={'-55px'}  fontSize={'md'} fontWeight={700} px={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
                   Withdraw
                 </Button>
               </Box>
@@ -110,7 +110,7 @@ const DashboardHeader = () => {
           <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock_bold.png'} number={yton(voterData.metaLocked)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock_bold.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw_bold.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-          <Button ml={'100px'} mt={5} maxWidth= {'88px'} h={'32px'} fontSize={'10px'} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
+          <Button ml={'100px'} mt={5} maxWidth= {'88px'} p={'32px'} fontSize={'10px'} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
             Withdraw
           </Button>
         </Box>

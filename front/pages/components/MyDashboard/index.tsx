@@ -17,8 +17,8 @@ const MyDashboardPage = (props: Props) => {
         <DashboardHeader></DashboardHeader>
         <Tabs px={{base:'5px', md: '10%'}}  colorScheme='black ' mb={50}>
           <TabList border={'4px solid white'} w={'fit-content'} borderRadius={100} bg={'white'} position={{base: 'inherit', md: 'relative'}} top={{base: 0 , md:-20}}>
-            <Tab  borderRadius={100} py={{base:'10px',md:'20px'}} px={'32px'} borderColor={'white'}  _selected={selectedProps} fontSize={{base: '16px', md: '24px'}}>My Voting Power</Tab>
-            <Tab  borderRadius={100} py={{base:'10px',md:'20px'}} px={'32px'} borderColor={'white'}  _selected={selectedProps} fontSize={{base: '16px', md: '24px'}}>My Votes</Tab>
+            <Tab  borderRadius={100} py={{base:'10px',md:'15px'}} px={'32px'} borderColor={'white'}  _selected={selectedProps} fontSize={{base: '16px', md: '24px'}}>My Voting Power</Tab>
+            <Tab  borderRadius={100} py={{base:'10px',md:'15px'}} px={'32px'} borderColor={'white'}  _selected={selectedProps} fontSize={{base: '16px', md: '24px'}}>My Votes</Tab>
           </TabList>
           <TabPanels backgroundColor={{md: 'white'}} >
             <TabPanel>
