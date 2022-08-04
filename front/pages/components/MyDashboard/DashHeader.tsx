@@ -77,7 +77,7 @@ const DashboardHeader = () => {
                 <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
                 <Text hidden={isDesktop} opacity={0.9} fontSize={'16px'}  p={'8px'}>My Voting Power</Text>
               </VStack>
-              {/* <Button disabled={!wallet?.isSignedIn()} position={'absolute'} h={'56px'} w={'56px'} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button> */ }
+              <Button borderRadius={100} disabled={!wallet?.isSignedIn()} position={'absolute'} px={5} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>
               <ButtonOnLogin>
