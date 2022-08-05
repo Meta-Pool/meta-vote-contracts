@@ -5,6 +5,7 @@ import {
   Spacer, 
   Stack, 
   Text, 
+  Tooltip, 
   useBreakpointValue, 
   useDisclosure,
   VStack, 
@@ -77,7 +78,9 @@ const DashboardHeader = () => {
                 <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
                 <Text hidden={isDesktop} opacity={0.9} fontSize={'16px'}  p={'8px'}>My Voting Power</Text>
               </VStack>
-              <Button borderRadius={100} disabled={!wallet?.isSignedIn()} position={'absolute'} px={5} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
+              <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
+                <Button hidden={!isDesktop} borderRadius={100} disabled={!wallet?.isSignedIn()} position={'absolute'} px={5} top={0} right={0} onClick={onOpen}colorScheme={colors.primary}> +</Button>
+              </Tooltip>
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>
               <ButtonOnLogin>
@@ -110,7 +113,7 @@ const DashboardHeader = () => {
           <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock_bold.png'} number={yton(voterData.metaLocked)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock_bold.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw_bold.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-          <Button ml={'100px'} mt={5} maxWidth= {'88px'} p={'32px'} fontSize={'10px'} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
+          <Button ml={'100px'} mt={5} p={{base: '10px' ,md:'32px'}} px={{base: '20px', md: '32px'}} fontSize={{base: 'md' ,md:'10px'}} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
             Withdraw
           </Button>
         </Box>

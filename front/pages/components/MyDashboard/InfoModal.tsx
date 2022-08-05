@@ -44,7 +44,7 @@ const InfoModal = (props: Props) => {
           </ModalBody>
           <ModalFooter mt={10}>
             <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'flex-end'}>
-              <Button borderRadius={100} variant='outline' _hover={{ bg: 'grey' }} m={1} onClick={onClose}>
+              <Button borderRadius={100} variant='outline'  m={1} onClick={onClose}>
                 Cancel
               </Button>
               <Button borderRadius={100} colorScheme={colors.primary} px={20} onClick={onSubmit}  m={1}>Yep</Button>

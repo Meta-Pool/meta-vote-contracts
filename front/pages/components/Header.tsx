@@ -148,9 +148,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                     variant="none"
                     />
                   <MenuList color={colors.primary}>
-                      <MenuItem  fontSize={'xl'}onClick={() => router.push("/#faq")}>
-                        FAQ
-                      </MenuItem>
+                      
                     {
                       wallet?.isSignedIn() && ( 
                         <>
@@ -162,9 +160,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                             >
                               My Wallet
                           </MenuItem>
-                          <MenuItem  fontSize={'xl'}onClick={() => router.push("/dashboard")}>
-                            My Dashboard
-                          </MenuItem>
+
                           <MenuItem  fontSize={'xl'}onClick={() => logout()}>Disconnect</MenuItem>
                         </>
                       )
