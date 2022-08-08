@@ -129,14 +129,14 @@ const LockingPosition = (props: Props) => {
               <Flex minH={400} direction='column'  alignItems={'center'} justifyContent={'center'}>
                 <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
                 <ButtonOnLogin>
-                  <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
+                  <Button borderRadius={100} w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.primary}>
                     Lock $META to get Voting Power
                   </Button>
                 </ButtonOnLogin>
                 
               </Flex>
             ) : (
-              <Flex flexWrap={'wrap'}>
+              <Flex flexWrap={'wrap'} justifyContent={'space-between'}>
                 {  voterData.lockingPositions.map((position: any, index: number)=> {
                     return (
                         <VPositionCard 
