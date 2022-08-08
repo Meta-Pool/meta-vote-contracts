@@ -18,7 +18,7 @@ import {
   IconButton,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import {  HamburgerIcon } from "@chakra-ui/icons";
+import {  ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
   getWallet,
   getMetaBalance,
@@ -31,6 +31,7 @@ import { useStore as useBalance } from "../../stores/balance";
 import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
 import { useStore as useVoter } from "../../stores/voter";
+import VPositionCard from "./MyDashboard/VPositionCard";
 
 const Header: React.FC<ButtonProps> = (props) => {
   const { wallet, setWallet } = useWallet();
@@ -91,7 +92,7 @@ const Header: React.FC<ButtonProps> = (props) => {
   }, []);
 
   return (
-    <Box as="section" pb={{ base: "12", md: "12" }}>
+    <Box color={"white"} bg={"#4121EE"}>
       <Box as="nav" alignContent="flex-end">
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
@@ -100,9 +101,12 @@ const Header: React.FC<ButtonProps> = (props) => {
               onClick={() => router.push(`/`)}
               cursor="pointer"
               alignItems="center"
+              p={"5px 16px"} 
+              borderRadius={100} 
+              backgroundColor={colors.primary+".900"}
             >
-              <Text>Hi</Text>
-              <Text fontWeight={500} p={"10px 16px"} backgroundColor={colors.secundary+".900"}>{signInAccountId}</Text>
+              <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{signInAccountId} </Text>
+              <ExternalLinkIcon></ExternalLinkIcon>
             </HStack>
           ) }
             <Spacer />
@@ -113,18 +117,27 @@ const Header: React.FC<ButtonProps> = (props) => {
                     <Image
                       boxSize="20px"
                       objectFit="cover"
-                      src="/meta.svg"
+                      src="/meta_white.png"
                       alt="stnear"
                     />
                   </Square>
-                  <Text>{formatToLocaleNear(balance)}</Text>
+                  <Text fontFamily={'Meta Space'} fontSize={'18px'} fontWeight={500}>{formatToLocaleNear(balance)}</Text>
                 </HStack>
 
                  {
                   isDesktop && (
-                  <Link href={nearConfig.refFinance} isExternal>
-                    Get more $META
-                  </Link>
+                    <HStack
+                      cursor="pointer"
+                      alignItems="center"
+                      p={"5px 16px"} 
+                      borderRadius={100} 
+                      backgroundColor={colors.primary+".900"}>
+                      <Link fontWeight={500} href={nearConfig.refFinance} isExternal>
+                        Get more $META
+                      </Link>
+                      <ExternalLinkIcon></ExternalLinkIcon>
+                    </HStack>
+                  
                   )
                  }
                   
@@ -134,10 +147,8 @@ const Header: React.FC<ButtonProps> = (props) => {
                     icon={<HamburgerIcon h="22px" />}
                     variant="none"
                     />
-                  <MenuList>
-                      <MenuItem  fontSize={'xl'}onClick={() => router.push("/#faq")}>
-                        FAQ
-                      </MenuItem>
+                  <MenuList color={colors.primary}>
+                      
                     {
                       wallet?.isSignedIn() && ( 
                         <>
@@ -149,9 +160,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                             >
                               My Wallet
                           </MenuItem>
-                          <MenuItem  fontSize={'xl'}onClick={() => router.push("/dashboard")}>
-                            My Dashboard
-                          </MenuItem>
+
                           <MenuItem  fontSize={'xl'}onClick={() => logout()}>Disconnect</MenuItem>
                         </>
                       )
@@ -164,6 +173,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                 color="blue"
                 borderColor="blue"
                 variant="outline"
+                borderRadius={100}
                 onClick={() => onConnect()}
               >
                 Connect Wallet

@@ -8,9 +8,13 @@ export const colors = {
   black: "#000000",
   white: "#FFFFFF",
   primary: 'indigo',
-  secundary: 'cyan',
-
-
+  secundary: 'purple',
+  bgGradient: 'linear-gradient(180deg, #4121EE -2.88%, #735DE9 100%)',
+  states: {
+    warning: '#EC602A',
+    danger: '#FF1F67',
+    success: '#32E7B1'
+  },
   whiteAlpha: {
     50: "rgba(255, 255, 255, 0.04)",
     100: "rgba(255, 255, 255, 0.06)",
@@ -175,11 +179,11 @@ export const colors = {
     200: "#e9d5ff",
     300: "#d8b4fe",
     400: "#c084fc",
-    500: "#a855f7",
+    500: "#231B51",
     600: "#9333ea",
     700: "#7e22ce",
     800: "#6b21a8",
-    900: "#120E28",
+    900: "#231B51",
   },
   pink: {
     50: "#fdf2f8",

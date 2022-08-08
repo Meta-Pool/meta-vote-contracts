@@ -314,7 +314,7 @@ export const relock = async (positionIndex: string, period: string, amount: stri
   const args = {
     index: positionIndex,
     locking_period: period,
-    amount_from_balance: amount
+    amount_from_balance: '0'
   }
   return  callChangeMetavoteMethod(wallet, args, metavoteChangeMethods.relock);
 };
