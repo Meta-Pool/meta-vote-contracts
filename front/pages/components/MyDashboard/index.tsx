@@ -21,10 +21,10 @@ const MyDashboardPage = (props: Props) => {
             <Tab  borderRadius={100} py={{base:'10px',md:'15px'}} px={'32px'} borderColor={'white'}  _selected={selectedProps} fontSize={{base: '16px', md: '24px'}}>My Votes</Tab>
           </TabList>
           <TabPanels backgroundColor={{md: 'white'}} >
-            <TabPanel>
+            <TabPanel p={0}>
             <LockingPosition></LockingPosition>
             </TabPanel>
-            <TabPanel>
+            <TabPanel p={0}>
             <ListingVotes></ListingVotes>
             </TabPanel>
           </TabPanels>
