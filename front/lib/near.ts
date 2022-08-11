@@ -28,9 +28,9 @@ import {
 } from "./util";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
+export const NETWORK_ID =  process.env.NEXT_PUBLIC_NETWORK_ID || 'testnet';
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
 export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
-
 export const gas = new BN("70000000000000");
 
 const env = 'development';

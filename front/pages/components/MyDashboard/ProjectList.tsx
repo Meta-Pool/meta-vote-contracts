@@ -6,6 +6,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { getVotes } from '../../../lib/near';
 import { useStore as useWallet } from "../../../stores/wallet";
+import { useWalletSelector } from '../../contexts/WalletSelectorContext';
 import Project from './Project';
 
 type Props = {
@@ -16,6 +17,8 @@ type Props = {
 
 const ProjectList = (props: Props) => {
   const { wallet }= useWallet();
+  const { selector, modal, accounts, accountId } = useWalletSelector();
+
   const projects = [ 
     {
       id: 'ProjectDemo1',
@@ -42,7 +45,7 @@ const ProjectList = (props: Props) => {
   const [myProject, setProject] = useState(projects);
 
   useEffect( ()=>{ ( async()=>{
-    if(wallet && wallet?.isSignedIn()) {
+    if(selector?.isSignedIn()) {
       const projectsTemp = projects;
       const myVotes1 = await getVotes("ProjectDemo1", "metayield-proyect")
       projectsTemp[0].votes = myVotes1;
@@ -53,7 +56,7 @@ const ProjectList = (props: Props) => {
       setProject(projectsTemp);
     }
   } )()
-  },[wallet])
+  },[selector])
 
   return (
     <section id="project-list">

@@ -32,6 +32,7 @@ import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
 import { useStore as useVoter } from "../../stores/voter";
 import VPositionCard from "./MyDashboard/VPositionCard";
+import { useWalletSelector } from "../contexts/WalletSelectorContext";
 
 const Header: React.FC<ButtonProps> = (props) => {
   const { wallet, setWallet } = useWallet();
@@ -39,6 +40,7 @@ const Header: React.FC<ButtonProps> = (props) => {
   const {  clearVoterData } = useVoter();
   const [signInAccountId, setSignInAccountId] = useState(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
+  const { selector, modal, accounts, accountId } = useWalletSelector();
 
 
   const router = useRouter();
@@ -56,6 +58,23 @@ const Header: React.FC<ButtonProps> = (props) => {
     await wallet!.signOut();
     const tempWallet = await getWallet();
     setWallet(tempWallet);
+  };
+
+  const handleSignIn = () => {
+    modal.show();
+  };
+
+  const handleSwitchWallet = () => {
+    modal.show();
+  };
+
+  const handleSignOut = async () => {
+    const wallet = await selector.wallet();
+
+    wallet.signOut().catch((err: any) => {
+      console.log("Failed to sign out");
+      console.error(err);
+    });
   };
 
   useEffect(() => {
@@ -96,7 +115,7 @@ const Header: React.FC<ButtonProps> = (props) => {
       <Box as="nav" alignContent="flex-end">
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
-          {wallet?.isSignedIn() && (
+          {selector?.isSignedIn() && (
             <HStack
               onClick={() => router.push(`/`)}
               cursor="pointer"
@@ -110,7 +129,7 @@ const Header: React.FC<ButtonProps> = (props) => {
             </HStack>
           ) }
             <Spacer />
-            {wallet?.isSignedIn() ? (
+            {selector?.isSignedIn() ? (
               <HStack spacing={10}>
                 <HStack>
                   <Square minW="30px">
@@ -150,7 +169,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                   <MenuList color={colors.primary}>
                       
                     {
-                      wallet?.isSignedIn() && ( 
+                     selector?.isSignedIn() && ( 
                         <>
                           <MenuItem fontSize={'xl'}
                               as={"a"}
@@ -161,7 +180,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                               My Wallet
                           </MenuItem>
 
-                          <MenuItem  fontSize={'xl'}onClick={() => logout()}>Disconnect</MenuItem>
+                          <MenuItem  fontSize={'xl'}onClick={() => handleSignOut()}>Disconnect</MenuItem>
                         </>
                       )
                     }
@@ -174,7 +193,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                 borderColor="blue"
                 variant="outline"
                 borderRadius={100}
-                onClick={() => onConnect()}
+                onClick={() => handleSignIn()}
               >
                 Connect Wallet
               </Button>

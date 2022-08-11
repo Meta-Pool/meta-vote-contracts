@@ -11,6 +11,7 @@ import { getVotes } from '../../../lib/near';
 
 import { yton } from '../../../lib/util';
 import { useStore as useWallet } from "../../../stores/wallet";
+import { useWalletSelector } from '../../contexts/WalletSelectorContext';
 import VoteModal from './VoteModal';
 
 type Props = {
@@ -24,9 +25,10 @@ const Project = (props: Props) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { wallet }= useWallet();
   const [ votes, setVotes] =useState('0')
+  const { selector, modal, accounts, accountId } = useWalletSelector();
 
   useEffect( ()=>{ ( async()=>{
-    if(wallet && wallet?.isSignedIn() && project) {
+    if(selector?.isSignedIn() && project) {
       const myVotes1 = await getVotes(project.id, project.contract)
       setVotes(myVotes1);
     }

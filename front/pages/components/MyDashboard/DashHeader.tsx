@@ -22,6 +22,7 @@ import InfoModal from './InfoModal';
 import { MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
 import DashboardCard from './DashboardCard';
+import { useWalletSelector } from '../../contexts/WalletSelectorContext';
 
 type Props = {
 }
@@ -32,6 +33,7 @@ const DashboardHeader = () => {
   const { voterData, setVoterData } = useVoter();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
   const isDesktop = useBreakpointValue({ base: false, md: true });
+  const { selector, modal, accounts, accountId } = useWalletSelector();
 
   const padding = '24px';
 
@@ -77,7 +79,7 @@ const DashboardHeader = () => {
                 <HStack>
                   <Text hidden={!isDesktop} opacity={0.6} fontSize={'14px'} bg={"#120e2829"} p={'8px'}>My Voting Power</Text>
                   <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
-                    <Button hidden={!isDesktop} fontSize={'xl'} fontWeight={700} borderRadius={100} disabled={!wallet?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> +</Button>
+                    <Button hidden={!isDesktop} fontSize={'xl'} fontWeight={700} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> +</Button>
                   </Tooltip>
                 </HStack>
                 <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>

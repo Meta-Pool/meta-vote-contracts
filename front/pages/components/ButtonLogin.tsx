@@ -5,9 +5,11 @@ import {
 } from "@chakra-ui/react";
 import { useStore as useWallet } from "../../stores/wallet";
 import { METAPOOL_CONTRACT_ID } from "../../lib/near";
+import { useWalletSelector } from "../contexts/WalletSelectorContext";
 
 const ButtonOnLogin = (props: any) => {
   const { wallet } = useWallet();
+  const { selector, modal, accounts, accountId } = useWalletSelector();
 
   const onConnect = async () => {
     try {
@@ -17,7 +19,7 @@ const ButtonOnLogin = (props: any) => {
     }
   };
   return (
-    wallet?.isSignedIn() ? (
+    selector?.isSignedIn() ? (
     <>
       { props.children}
     </> ) : (
