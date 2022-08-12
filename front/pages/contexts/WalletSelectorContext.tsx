@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { map, distinctUntilChanged } from "rxjs";
-import { NetworkId, setupWalletSelector } from "@near-wallet-selector/core";
+import { NetworkId, setupWalletSelector, Wallet } from "@near-wallet-selector/core";
 import type { WalletSelector, AccountState } from "@near-wallet-selector/core";
 import { setupModal } from "@near-wallet-selector/modal-ui";
 import type { WalletSelectorModal } from "@near-wallet-selector/modal-ui";
@@ -19,6 +19,8 @@ declare global {
   interface Window {
     selector: WalletSelector;
     modal: WalletSelectorModal;
+    account_id: string | null;
+    wallet: Wallet | null;
   }
 }
 
@@ -124,10 +126,10 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
 
     const subscription = selector.store.observable
       .pipe(
-        map((state) => state.accounts),
+        map((state: any) => state.accounts),
         distinctUntilChanged()
       )
-      .subscribe((nextAccounts) => {
+      .subscribe((nextAccounts: any) => {
         console.log("Accounts Update", nextAccounts);
 
         setAccounts(nextAccounts);
