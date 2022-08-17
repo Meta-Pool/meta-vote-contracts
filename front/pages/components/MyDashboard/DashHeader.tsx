@@ -2,7 +2,6 @@ import {
   Box,
   Button, 
   HStack, 
-  Spacer, 
   Stack, 
   Text, 
   Tooltip, 
@@ -14,7 +13,6 @@ import React, { useEffect } from 'react';
 import { colors } from '../../../constants/colors';
 import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, withdrawAll } from '../../../lib/near';
 
-import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
@@ -28,37 +26,35 @@ type Props = {
 }
 
 const DashboardHeader = () => {
-  const { wallet} = useWallet();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { voterData, setVoterData } = useVoter();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
   const isDesktop = useBreakpointValue({ base: false, md: true });
-  const { selector, modal, accounts, accountId } = useWalletSelector();
+  const { selector } = useWalletSelector();
 
   const padding = '24px';
 
   const initMyData = async ()=> {
     const newVoterData = voterData;
-    newVoterData.votingPower = await getAvailableVotingPower(wallet);
-    newVoterData.inUseVPower = await getInUseVotingPower(wallet);
-    newVoterData.metaLocked = await getLockedBalance(wallet);
-    newVoterData.metaToWithdraw = await getBalanceMetaVote(wallet);
-    newVoterData.metaUnlocking = await getUnlockingBalance(wallet);
+    newVoterData.votingPower = await getAvailableVotingPower();
+    newVoterData.inUseVPower = await getInUseVotingPower();
+    newVoterData.metaLocked = await getLockedBalance();
+    newVoterData.metaToWithdraw = await getBalanceMetaVote();
+    newVoterData.metaUnlocking = await getUnlockingBalance();
     setVoterData(newVoterData);
   }
 
   const withdrawClicked = async ()=> {
-       withdrawAll(wallet); 
-
+       withdrawAll(); 
   }
 
   useEffect(  () =>{
     (async ()=> {
-      if (wallet && wallet.isSignedIn()) {
+      if (selector && selector.isSignedIn()) {
         initMyData()
       }
     })();
-  },[wallet])
+  },[selector])
 
   return (
       <>

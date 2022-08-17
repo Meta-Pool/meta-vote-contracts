@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Button,
   Text,
@@ -20,45 +20,24 @@ import {
 } from "@chakra-ui/react";
 import {  ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
-  getWallet,
   getMetaBalance,
-  METAPOOL_CONTRACT_ID,
   getNearConfig,
 } from "../../lib/near";
 import { colors } from "../../constants/colors";
-import { useStore as useWallet } from "../../stores/wallet";
 import { useStore as useBalance } from "../../stores/balance";
 import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
 import { useStore as useVoter } from "../../stores/voter";
-import VPositionCard from "./MyDashboard/VPositionCard";
 import { useWalletSelector } from "../contexts/WalletSelectorContext";
 
 const Header: React.FC<ButtonProps> = (props) => {
-  const { wallet, setWallet } = useWallet();
   const { balance, setBalance } = useBalance();
-  const {  clearVoterData } = useVoter();
-  const [signInAccountId, setSignInAccountId] = useState(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const { selector, modal, accounts, accountId } = useWalletSelector();
 
 
   const router = useRouter();
   const nearConfig = getNearConfig();
-  const onConnect = async () => {
-    try {
-      wallet!.requestSignIn(METAPOOL_CONTRACT_ID, "Metapool contract");
-    } catch (e) {
-      console.error("error", e);
-    }
-  };
-
-  const logout = async () => {
-    clearVoterData();
-    await wallet!.signOut();
-    const tempWallet = await getWallet();
-    setWallet(tempWallet);
-  };
 
   const handleSignIn = () => {
     modal.show();
@@ -79,22 +58,9 @@ const Header: React.FC<ButtonProps> = (props) => {
 
   useEffect(() => {
     (async () => {
-      if (wallet) {
-        
-      }
-    })();
-  }, [ wallet]);
-
-  useEffect(() => {
-    (async () => {
       try {
-        const tempWallet = await getWallet();
-        if (!wallet) {
-          setWallet(tempWallet);
-        }
-        if (tempWallet && tempWallet.getAccountId()) {
-          setSignInAccountId(tempWallet.getAccountId());
-          setBalance(await getMetaBalance(tempWallet!));
+        if (selector.isSignedIn() && accountId) {
+          setBalance(await getMetaBalance());
         }
       } catch (e) {
         console.error(e);
@@ -102,10 +68,12 @@ const Header: React.FC<ButtonProps> = (props) => {
     })();
 
     setInterval(async () => {
-      const tempWallet = await getWallet();
-      if (tempWallet && tempWallet.getAccountId()) {
-        const balance = await getMetaBalance(tempWallet);
-        setBalance(balance);
+      try {
+        if (selector.isSignedIn() && accountId) {
+          // setBalance(await getMetaBalance());
+        }
+      } catch (e) {
+        console.error(e);
       }
     }, 5000);
   }, []);
@@ -116,17 +84,20 @@ const Header: React.FC<ButtonProps> = (props) => {
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
           {selector?.isSignedIn() && (
-            <HStack
-              onClick={() => router.push(`/`)}
-              cursor="pointer"
-              alignItems="center"
-              p={"5px 16px"} 
-              borderRadius={100} 
-              backgroundColor={colors.primary+".900"}
-            >
-              <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{signInAccountId} </Text>
-              <ExternalLinkIcon></ExternalLinkIcon>
-            </HStack>
+            <Link href={`${nearConfig.explorerUrl}/accounts/${accountId}`} isExternal>
+              <HStack
+                onClick={() => router.push(`/`)}
+                cursor="pointer"
+                alignItems="center"
+                p={"5px 16px"} 
+                borderRadius={100} 
+                backgroundColor={colors.primary+".900"}
+              >
+                  <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{accountId} </Text>
+                  <ExternalLinkIcon ></ExternalLinkIcon>
+              </HStack>
+            </Link>
+
           ) }
             <Spacer />
             {selector?.isSignedIn() ? (
@@ -173,13 +144,12 @@ const Header: React.FC<ButtonProps> = (props) => {
                         <>
                           <MenuItem fontSize={'xl'}
                               as={"a"}
-                              href={`${nearConfig.explorerUrl}/accounts/${signInAccountId}`}
+                              href={`${nearConfig.explorerUrl}/accounts/${accountId}`}
                               target="_blank"
                               rel="noreferrer"
                             >
                               My Wallet
                           </MenuItem>
-
                           <MenuItem  fontSize={'xl'}onClick={() => handleSignOut()}>Disconnect</MenuItem>
                         </>
                       )

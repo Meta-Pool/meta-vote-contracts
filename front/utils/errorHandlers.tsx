@@ -1,11 +1,13 @@
 import { getTxStatus } from "../lib/near";
 
-export const ErrorHashHandler = async (router: any, toast: any, wallet: any) => {
+export const ErrorHashHandler = async (router: any, toast: any) => {
     const { transactionHashes } = router.query;
+    const account_id = window.account_id!;
+
     if (transactionHashes !== undefined) {
         const result = await getTxStatus(
             transactionHashes as string,
-            wallet?.getAccountId()
+            account_id
         );
         if (result.found) {
             const txSuccess = result.success && (result.data !== '0' || result.data === '')

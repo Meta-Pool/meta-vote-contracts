@@ -23,18 +23,14 @@ import {
   Square,
   Image,
   Flex,
-  Spacer,
-  Divider,
   Stack
 } from '@chakra-ui/react';
 import React, {  useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { lock } from '../../../lib/near';
-import { FormikContext, useFormik } from 'formik';
+import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
-import { ntoy, yton } from '../../../lib/util';
-import { useStore as useVoter } from "../../../stores/voter";
-import { useStore as useWallet } from "../../../stores/wallet";
+import { ntoy } from '../../../lib/util';
 import { useStore as useBalance } from "../../../stores/balance";
 
 type Props = {
@@ -46,9 +42,7 @@ const LockModal = (props: Props) => {
   const { isOpen, onClose} = props;
   const [ sliderValue, setSliderValue] = useState(30);
   const [ vPowerSim, setVPowerSim] = useState(0);
-  const { wallet }= useWallet();
   const { balance } = useBalance();
-  const { voterData } = useVoter();
 
   const initialValuesDeposit: any = {
     amount_lock: 0,
@@ -110,7 +104,7 @@ const LockModal = (props: Props) => {
   
   const lockMetas = (values: any)=> {
     try {
-      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock), wallet);
+      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock));
     }
     catch (error) {
       console.error(error);

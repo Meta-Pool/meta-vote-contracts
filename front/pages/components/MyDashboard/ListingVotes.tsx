@@ -1,60 +1,44 @@
 import {
-  Button, 
   useDisclosure, 
-  TableContainer,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  HStack,
-  Circle,
-  VStack,
-  AccordionIcon,
-  AccordionPanel,
   Heading,
-  Text,
-  useBreakpointValue,
   Flex,
-  Link,
   Center
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { colors } from '../../../constants/colors';
 import { getVotesByVoter, unvoteProject } from '../../../lib/near';
-import { useStore as useWallet } from "../../../stores/wallet";
 import { useStore as useVoter } from "../../../stores/voter";
-import { yton } from '../../../lib/util';
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
 import { CONTRACT_ADDRESS, MODAL_TEXT } from '../../../constants';
+import { useWalletSelector } from '../../contexts/WalletSelectorContext';
 
 
 const ListingVotes = () => {
-  const { wallet} = useWallet();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
 
   const { voterData, setVoterData } = useVoter();
   const [ positionSelected, setPositionSel ] = useState('')
-  const isDesktop = useBreakpointValue({ base: false, md: true });
+  const { selector } = useWalletSelector();
+  const [ procesingFlag, setProcessFlag] = useState(false); 
 
 
   const contract = CONTRACT_ADDRESS ? CONTRACT_ADDRESS : '';
 
   const getVotes = async ()=> {
     const newVoterData = voterData;
-    newVoterData.votingResults = await getVotesByVoter(wallet);
+    newVoterData.votingResults = await getVotesByVoter();
     setVoterData(newVoterData);
   }
 
   const unvote = (id: any)=> {
       try {
-        unvoteProject(id, contract, wallet);
+        setProcessFlag(true);
+        unvoteProject(id, contract).then(()=>{
+          getVotes();
+          setProcessFlag(false);
+        });
       } catch (error) {
+        setProcessFlag(false);
         console.error(error);
       }
   }
@@ -66,12 +50,11 @@ const ListingVotes = () => {
 
   useEffect(  () =>{
     (async ()=> {
-      if (wallet && wallet.isSignedIn()) {
+      if (selector && selector.isSignedIn()) {
         getVotes();
       }
     })();
-  },[wallet])
-
+  },[selector])
 
   return (
     <section>
@@ -83,6 +66,7 @@ const ListingVotes = () => {
                       <VoteCard 
                           key={index}
                           position={position}
+                          procesing={procesingFlag}
                           unvoteAction={()=>{unvotedClicked(position.id)}}/>
                 )})
               }      

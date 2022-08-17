@@ -107,6 +107,11 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
 
     window.selector = _selector;
     window.modal = _modal;
+    window.account_id = _selector.isSignedIn()
+      ? _selector.store.getState().accounts.find((account) => account.active)
+          ?.accountId || null
+      : null;
+    window.wallet = _selector.isSignedIn() ? await _selector.wallet() : null;
 
     setSelector(_selector);
     setModal(_modal);
