@@ -3,7 +3,7 @@ import * as React from "react";
 import {
   Button,
 } from "@chakra-ui/react";
-import { useWalletSelector } from "../contexts/WalletSelectorContext";
+import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 
 const ButtonOnLogin = (props: any) => {
   const { selector, modal} = useWalletSelector();

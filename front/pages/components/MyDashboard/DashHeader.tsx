@@ -20,7 +20,7 @@ import InfoModal from './InfoModal';
 import { MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
 import DashboardCard from './DashboardCard';
-import { useWalletSelector } from '../../contexts/WalletSelectorContext';
+import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 
 type Props = {
 }

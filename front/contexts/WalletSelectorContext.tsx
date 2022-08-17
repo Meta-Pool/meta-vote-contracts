@@ -1,10 +1,17 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { map, distinctUntilChanged } from "rxjs";
-import { NetworkId, setupWalletSelector, Wallet } from "@near-wallet-selector/core";
+import {
+  NetworkId,
+  setupWalletSelector,
+  Wallet,
+} from "@near-wallet-selector/core";
 import type { WalletSelector, AccountState } from "@near-wallet-selector/core";
 import { setupModal } from "@near-wallet-selector/modal-ui";
 import type { WalletSelectorModal } from "@near-wallet-selector/modal-ui";
-import { NearWalletParams, setupNearWallet } from "@near-wallet-selector/near-wallet";
+import {
+  NearWalletParams,
+  setupNearWallet,
+} from "@near-wallet-selector/near-wallet";
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupSender } from "@near-wallet-selector/sender";
 import { setupMathWallet } from "@near-wallet-selector/math-wallet";
@@ -12,8 +19,7 @@ import { setupNightly } from "@near-wallet-selector/nightly";
 import { setupLedger } from "@near-wallet-selector/ledger";
 import { setupWalletConnect } from "@near-wallet-selector/wallet-connect";
 import { setupNightlyConnect } from "@near-wallet-selector/nightly-connect";
-import { CONTRACT_ID, NETWORK_ID } from "../../lib/near";
-
+import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near"
 
 declare global {
   interface Window {
@@ -31,11 +37,9 @@ interface WalletSelectorContextValue {
   accountId: string | null;
 }
 
-
-
 const WalletSelectorContext =
   React.createContext<WalletSelectorContextValue | null>(null);
-  
+
 export const WalletSelectorContextProvider: React.FC = ({ children }) => {
   const [selector, setSelector] = useState<WalletSelector | null>(null);
   const [modal, setModal] = useState<WalletSelectorModal | null>(null);
@@ -47,11 +51,11 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         walletUrl: "https://wallet.testnet.near.org",
         iconUrl: "./assets/near-wallet-iconx.png",
       })(options);
-  
+
       if (!wallet) {
         return null;
       }
-  
+
       return {
         ...wallet,
         id: "near-wallet",
@@ -65,7 +69,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         },
       };
     };
-  }
+  };
 
   const init = useCallback(async () => {
     const _selector = await setupWalletSelector({
@@ -73,11 +77,11 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
       debug: true,
       modules: [
         setupNearWalletCustom(),
-        setupMyNearWallet(),
-        setupSender(),
+        // setupMyNearWallet(),
+        // setupSender(),
         setupMathWallet(),
-        setupNightly(),
-        setupLedger(),
+        // setupNightly(),
+        // setupLedger(),
         setupWalletConnect({
           projectId: "c4f79cc...",
           metadata: {
@@ -99,10 +103,9 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
       ],
     });
 
-
-    const _modal = setupModal(_selector, { contractId: CONTRACT_ID || '' });
+  
+    const _modal = setupModal(_selector, { contractId: CONTRACT_ID || "" });
     const state = _selector.store.getState();
-
     setAccounts(state.accounts);
 
     window.selector = _selector;
@@ -112,13 +115,12 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
           ?.accountId || null
       : null;
     window.wallet = _selector.isSignedIn() ? await _selector.wallet() : null;
-
     setSelector(_selector);
     setModal(_modal);
   }, []);
 
   useEffect(() => {
-    init().catch((err: any) => {
+    init().catch((err) => {
       console.error(err);
       alert("Failed to initialise wallet selector");
     });
@@ -131,10 +133,10 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
 
     const subscription = selector.store.observable
       .pipe(
-        map((state: any) => state.accounts),
+        map((state) => state.accounts),
         distinctUntilChanged()
       )
-      .subscribe((nextAccounts: any) => {
+      .subscribe((nextAccounts) => {
         console.log("Accounts Update", nextAccounts);
 
         setAccounts(nextAccounts);

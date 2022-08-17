@@ -15,7 +15,7 @@ import "../styles/nprogress.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Fonts from "./components/Fonts";
-import { WalletSelectorContextProvider } from "./contexts/WalletSelectorContext";
+import { WalletSelectorContextProvider } from "../contexts/WalletSelectorContext";
 import "@near-wallet-selector/modal-ui/styles.css";
 
 const isProduction = process.env.NODE_ENV === "production";

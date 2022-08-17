@@ -10,7 +10,7 @@ import { useStore as useVoter } from "../../../stores/voter";
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
 import { CONTRACT_ADDRESS, MODAL_TEXT } from '../../../constants';
-import { useWalletSelector } from '../../contexts/WalletSelectorContext';
+import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 
 
 const ListingVotes = () => {

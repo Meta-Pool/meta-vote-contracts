@@ -39,7 +39,7 @@ import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
 import VPositionCard from './VPositionCard';
 import { AddIcon } from '@chakra-ui/icons';
-import { useWalletSelector } from '../../contexts/WalletSelectorContext';
+import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 
 type Props = {
 }
