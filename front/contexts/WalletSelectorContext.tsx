@@ -81,7 +81,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         // setupSender(),
         setupMathWallet(),
         // setupNightly(),
-        // setupLedger(),
+        setupLedger(),
         /* setupWalletConnect({
           projectId: "c4f79cc...",
           metadata: {
@@ -91,7 +91,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
           },
         }),
-        setupNightlyConnect({
+        /* setupNightlyConnect({
           url: "wss://ncproxy.nightly.app/app",
           appMetadata: {
             additionalInfo: "",
