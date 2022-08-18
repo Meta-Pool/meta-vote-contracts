@@ -19,6 +19,7 @@ const ButtonOnLogin = (props: any) => {
       <Button
         color="blue"
         borderColor="blue"
+        borderRadius={100}
         variant="outline"
         onClick={() => onConnect()}
       >
