@@ -60,6 +60,7 @@ const DashboardHeader = () => {
       <>
         <Stack 
           px={{base:'5px', md: '10%'}} 
+          pt={{base:'32px', md: '50px'}} 
           pb={{base:'32px', md: '150px'}} 
           borderBottomLeftRadius={{base:'32px', md: '0px'}} 
           borderBottomRightRadius={{base:'32px', md: '0px'}} 
@@ -73,7 +74,7 @@ const DashboardHeader = () => {
             <HStack position={'relative'} spacing={2}>
               <VStack align={'flex-start'}>
                 <HStack>
-                  <Text hidden={!isDesktop} opacity={0.6} fontSize={'14px'} bg={"#120e2829"} p={'8px'}>My Voting Power</Text>
+                  <Text hidden={!isDesktop} opacity={1} color={"#BDB0FF"} fontSize={'14px'} bg={"indigo.400"} p={'8px'}>My Voting Power</Text>
                   <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
                     <Button hidden={!isDesktop} fontSize={'xl'} fontWeight={700} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> +</Button>
                   </Tooltip>
@@ -90,16 +91,16 @@ const DashboardHeader = () => {
               </ButtonOnLogin>
             </Stack>
           </Stack>
-          <Stack w={{ base: '100%', md: '100%' }} justifyContent={{base:'flex-end', md: 'space-between'}}  spacing={{base: 0, md: 5}} direction={'row'}>
+          <Stack w={{ base: '100%', md: '100%' }} flexWrap={{ base: 'wrap', md: 'nowrap' }} justifyContent={{base:'flex-end', md: 'space-between'}}  spacing={{base: 0, md: 5}} direction={'row'}>
             <HStack spacing={8}>
               <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.png'} number={yton(voterData.inUseVPower)}></DashboardCard>
               <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.png'} number={voterData.votingResults.length}></DashboardCard>
             </HStack>
             <HStack spacing={8}>
-              <Box hidden={!isDesktop}><DashboardCard   title='$META locked' iconSrc={'./icons/lock.png'} number={yton(voterData.metaLocked)}></DashboardCard> </Box>
-              <Box hidden={!isDesktop}><DashboardCard   title='$META unlocking' iconSrc={'./icons/unlock.png'} number={yton(voterData.metaUnlocking)}></DashboardCard></Box>
+              <Box hidden={!isDesktop}><DashboardCard   title='$META locked' iconSrc={'./icons/lock_white.svg'} number={yton(voterData.metaLocked)}></DashboardCard> </Box>
+              <Box hidden={!isDesktop}><DashboardCard   title='$META unlocking' iconSrc={'./icons/unlock_white.svg'} number={yton(voterData.metaUnlocking)}></DashboardCard></Box>
               <Box hidden={!isDesktop} position={'relative'}>
-                <DashboardCard  title='$META to withdraw' iconSrc={'./icons/withdraw.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
+                <DashboardCard  title='$META to withdraw' iconSrc={'./icons/withdraw_white.svg'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
                 <Button minWidth= {'176px'} position={'absolute'} bottom={'-55px'}  fontSize={'md'} fontWeight={700} px={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
                   Withdraw
                 </Button>

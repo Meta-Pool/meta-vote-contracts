@@ -83,23 +83,10 @@ const Header: React.FC<ButtonProps> = (props) => {
       <Box as="nav" alignContent="flex-end">
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
-          {selector?.isSignedIn() && (
-            <Link href={`${nearConfig.explorerUrl}/accounts/${accountId}`} isExternal>
-              <HStack
-                onClick={() => router.push(`/`)}
-                cursor="pointer"
-                alignItems="center"
-                p={"5px 16px"} 
-                borderRadius={100} 
-                backgroundColor={colors.primary+".900"}
-              >
-                  <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{accountId} </Text>
-                  <ExternalLinkIcon ></ExternalLinkIcon>
-              </HStack>
-            </Link>
-
-          ) }
+            <Image src="/metavote_logo.svg"></Image>
             <Spacer />
+
+          
             {selector?.isSignedIn() ? (
               <HStack spacing={10}>
                 <HStack>
@@ -130,11 +117,27 @@ const Header: React.FC<ButtonProps> = (props) => {
                   
                   )
                  }
+                 {
+                 isDesktop && selector?.isSignedIn() && (
+                  <Link href={`${nearConfig.explorerUrl}/accounts/${accountId}`} isExternal>
+                    <HStack
+                      onClick={() => router.push(`/`)}
+                      cursor="pointer"
+                      alignItems="center"
+                      p={"5px 16px"} 
+                      borderRadius={100} 
+                      backgroundColor={colors.primary+".900"}
+                    >
+                        <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{accountId} </Text>
+                        <ExternalLinkIcon ></ExternalLinkIcon>
+                    </HStack>
+                  </Link>
+                )}
                   
                 <Menu>
                   <MenuButton
                     as={IconButton}
-                    icon={<HamburgerIcon h="22px" />}
+                    icon={<Image src="/icons/dots.svg" h="22px" />}
                     variant="none"
                     />
                   <MenuList color={colors.primary}>

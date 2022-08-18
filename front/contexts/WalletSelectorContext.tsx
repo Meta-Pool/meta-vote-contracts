@@ -82,7 +82,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         setupMathWallet(),
         // setupNightly(),
         // setupLedger(),
-        setupWalletConnect({
+        /* setupWalletConnect({
           projectId: "c4f79cc...",
           metadata: {
             name: "NEAR Wallet Selector",
@@ -99,7 +99,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
             description: "Example dApp used by NEAR Wallet Selector",
             icon: "https://near.org/wp-content/uploads/2020/09/cropped-favicon-192x192.png",
           },
-        }),
+        }), */
       ],
     });
 
