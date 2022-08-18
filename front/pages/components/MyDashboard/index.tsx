@@ -2,7 +2,8 @@ import React from 'react';
 import DashboardHeader from './DashHeader';
 import LockingPosition from './LockingPositions';
 import ListingVotes from './ListingVotes';
-import { Container, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Container, Stack, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { colors } from "../../../constants/colors";
 
 
 type Props = {
@@ -10,27 +11,27 @@ type Props = {
 }
 
 const MyDashboardPage = (props: Props) => {
+  const selectedProps = {textUnderlineOffset: '10px', color: 'white' , bg: colors.secundary + '.500', textDecor: 'none' };
   return (
-      <Container maxW="container.2xl" id="dashboard">
+      <Stack spacing={{base: 50, md: 50}} id="dashboard">
         <DashboardHeader></DashboardHeader>
-          <Tabs  colorScheme='black ' mt={50} mb={50}>
-
-            <TabList  >
-              <Tab  borderTopRadius={'32px'} p={'32px'} _selected={{textUnderlineOffset: '10px', color: 'black' , bg: { base: 'none', md: 'white'}, textDecor: { base: 'underline', md: 'none'} }} fontSize={{base: 'xl', md: '4xl'}} >My Voting Power</Tab>
-              <Tab  borderTopRadius={'32px'} p={'32px'} _selected={{textUnderlineOffset: '10px', color: 'black' , bg: { base: 'none', md: 'white'}, textDecor: { base: 'underline', md: 'none'} }} fontSize={{base: 'xl', md: '4xl'}}>My Votes</Tab>
-            </TabList>
-            <TabPanels backgroundColor={{md: 'white'}} >
-              <TabPanel>
-              <LockingPosition></LockingPosition>
-              </TabPanel>
-              <TabPanel>
-              <ListingVotes></ListingVotes>
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+        <Tabs px={{base:'5px', md: '10%'}}  colorScheme='black ' mb={50}>
+          <TabList border={'4px solid white'} w={'fit-content'} borderRadius={100} bg={'white'} position={{base: 'inherit', md: 'relative'}} top={{base: 0 , md:-20}}>
+            <Tab  borderRadius={100} py={{base:'10px',md:'15px'}} px={'32px'} borderColor={'white'}  _selected={selectedProps} fontSize={{base: '16px', md: '24px'}}>My Voting Power</Tab>
+            <Tab  borderRadius={100} py={{base:'10px',md:'15px'}} px={'32px'} borderColor={'white'}  _selected={selectedProps} fontSize={{base: '16px', md: '24px'}}>My Votes</Tab>
+          </TabList>
+          <TabPanels backgroundColor={{md: 'white'}} >
+            <TabPanel p={0}>
+            <LockingPosition></LockingPosition>
+            </TabPanel>
+            <TabPanel p={0}>
+            <ListingVotes></ListingVotes>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
 
         {/*<ProjectList></ProjectList>*/}
-      </Container>
+      </Stack>
 
   );
 };
