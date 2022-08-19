@@ -69,6 +69,17 @@ const VPositionCard = (props: CardProps) => {
     return getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING ? timeLeftTo(unlockingFinishedTime) : getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED ? '0 days' : '-'
   }
 
+  const getColorVP  = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return 'black';
+      case POSITION_STATUS.UNLOCKED:
+      case POSITION_STATUS.UNLOKING:
+        return 'gray.200';
+    }
+   }
+
   const getButtonbyStatus = (position: any)=> {
     const status = getLockinPositionStatus(position); 
     switch (status) {
@@ -121,7 +132,7 @@ const VPositionCard = (props: CardProps) => {
               {/* Card header */}
               <HStack align={'flex-start'} justify={'space-between'}>
                 <VStack spacing={0} align={'flex-start'}>
-                  <Text fontSize={'24px'} fontWeight={700} fontFamily={'Meta Space'}>{vPower}</Text>
+                  <Text fontSize={'24px'} color={getColorVP(position)} fontWeight={700} fontFamily={'Meta Space'}>{vPower}</Text>
                   <Text>Voting Power</Text>
                 </VStack>
                 <HStack>

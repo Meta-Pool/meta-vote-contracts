@@ -74,13 +74,13 @@ const DashboardHeader = () => {
             <HStack position={'relative'} spacing={2}>
               <VStack align={'flex-start'}>
                 <HStack>
-                  <Text hidden={!isDesktop} opacity={1} color={"#BDB0FF"} fontSize={'14px'} bg={"indigo.400"} p={'8px'}>My Voting Power</Text>
+                  <Text hidden={!isDesktop} opacity={1} color={"#BDB0FF"} fontSize={'14px'} bg={"indigo.400"} p={'8px'}>Available Voting Power</Text>
                   <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
                     <Button hidden={!isDesktop} fontSize={'xl'} fontWeight={700} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> +</Button>
                   </Tooltip>
                 </HStack>
                 <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
-                <Text hidden={isDesktop} opacity={0.9} fontSize={'16px'}  p={'8px'}>My Voting Power</Text>
+                <Text hidden={isDesktop} opacity={0.9} fontSize={'16px'}  p={'8px'}>Available Voting Power</Text>
               </VStack>
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>
