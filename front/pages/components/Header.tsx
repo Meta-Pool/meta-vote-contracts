@@ -79,11 +79,11 @@ const Header: React.FC<ButtonProps> = (props) => {
   }, []);
 
   return (
-    <Box color={"white"} bg={"#4121EE"}>
+    <Box hidden={!selector?.isSignedIn()} color={"white"} bg={"#4121EE"}>
       <Box as="nav" alignContent="flex-end">
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
-            <Image src="/metavote_logo.svg"></Image>
+            <Image alt='logo metavote' src="/metavote_logo.svg"></Image>
             <Spacer />
 
           
