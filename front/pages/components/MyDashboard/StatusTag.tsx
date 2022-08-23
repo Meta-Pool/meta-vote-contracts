@@ -64,7 +64,7 @@ const StatusTag = (props: Props) => {
   
   const lockMetas = (values: any)=> {
     try {
-      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock), wallet);
+      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock));
     }
     catch (error) {
       console.error(error);

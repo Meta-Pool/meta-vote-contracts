@@ -33,7 +33,7 @@ const DashboardCard = (props: CardProps) => {
         
         <Box
           borderRadius={'8px'}
-          bg={props.ligthMode ? "transparent" :"#120e2829"} 
+          bg={props.ligthMode ? "transparent" :"indigo.400"} 
           minWidth= {{base: '98px', md: '176px'}}
           padding= {'16px'}
           h= {'120px'}>

@@ -24,12 +24,13 @@ import { WHITELIST_SITES } from "../../../constants/whitelist";
 
 type CardProps = {
   position: any,
-  unvoteAction: any
+  unvoteAction: any, 
+  procesing: boolean,
 }
 
 
 const VoteCard = (props: CardProps) => {
-  const { position, unvoteAction } = props;
+  const { position, unvoteAction, procesing } = props;
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
   const getProjectName = (project: string)=>{
@@ -102,7 +103,7 @@ const VoteCard = (props: CardProps) => {
                   </HStack>
                   <HStack>
                     <Image src={getProjectLogoUrl(position?.votable_contract)} alt={'logo'}></Image>
-                    <Button borderRadius={100} w={'100%'} colorScheme={colors.primary} onClick={unvoteAction}>Unvote</Button>
+                    <Button disabled={procesing} borderRadius={100} w={'100%'} colorScheme={colors.primary} onClick={unvoteAction}>Unvote</Button>
                   </HStack>
                 </VStack>
               </AccordionPanel>
