@@ -14,12 +14,16 @@ impl Voter {
         Self {
             balance: 0,
             locking_positions: Vector::new(
-                Keys::LockingPosition.as_prefix(id.as_str()).as_bytes()
+                StorageKey::LockingPosition {
+                    hash_id: generate_hash_id(id.to_string())
+                }
             ),
             voting_power: 0,
             vote_positions: UnorderedMap::new(
-                Keys::VoterVotes.as_prefix(id.as_str()).as_bytes()
-            ),
+                StorageKey::VotePosition {
+                    hash_id: generate_hash_id(id.to_string())
+                }
+            )
         }
     }
 
@@ -95,7 +99,9 @@ impl Voter {
             .get(&contract_address)
             .unwrap_or(
                 UnorderedMap::new(
-                    Keys::VoterVotes.as_prefix(&id).as_bytes()
+                    StorageKey::VoterVotes {
+                        hash_id: generate_hash_id(id.to_string())
+                    }
                 )
             )
     }

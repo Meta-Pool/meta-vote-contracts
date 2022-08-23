@@ -23,7 +23,9 @@ impl MetaVoteContract {
         .get(&contract_address)
         .unwrap_or(
             UnorderedMap::new(
-                Keys::ContractVotes.as_prefix(contract_address.as_str()).as_bytes()
+                StorageKey::ContractVotes {
+                    hash_id: generate_hash_id(contract_address.to_string())
+                }
             )
         )
     }
