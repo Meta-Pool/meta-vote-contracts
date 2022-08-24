@@ -4,8 +4,15 @@ import {
   Button,
 } from "@chakra-ui/react";
 import { useWalletSelector } from "../../contexts/WalletSelectorContext";
+import { AddIcon } from "@chakra-ui/icons";
 
-const ButtonOnLogin = (props: any) => {
+interface Props {
+  variant?: string,
+  color?: string,
+  children?: any
+}
+
+const ButtonOnLogin = (props: Props) => {
   const { selector, modal} = useWalletSelector();
 
   const onConnect = async () => {
@@ -17,10 +24,12 @@ const ButtonOnLogin = (props: any) => {
       { props.children}
     </> ) : (
       <Button
-        color="blue"
+        //color={props.color ? props.color : "blue"}
+        leftIcon={<AddIcon />}
+        colorScheme={props.color}
         borderColor="blue"
         borderRadius={100}
-        variant="outline"
+        variant={props.variant ? props.variant : "outline"}
         onClick={() => onConnect()}
       >
         Connect Wallet

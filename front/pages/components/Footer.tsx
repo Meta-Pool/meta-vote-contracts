@@ -17,13 +17,16 @@ import router from "next/router";
 import LockModal from "./MyDashboard/LockModal";
 import ButtonOnLogin from "./ButtonLogin";
 import { colors } from "../../constants/colors";
+import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 
 
 const Footer: React.FC<ButtonProps> = (props) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
+  const { selector} = useWalletSelector();
 
   return (
     <Container
+      hidden={!selector?.isSignedIn()}
       maxW="container.2xl"
       pt={{ base: "3rem", lg: "4rem" }}
       pb={{ base: "1rem", lg: "1rem" }}
