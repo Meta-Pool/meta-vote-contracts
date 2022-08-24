@@ -185,7 +185,13 @@ const LockingPosition = (props: Props) => {
                 })}
                 
                 <Tooltip hidden={!isDesktop} label='Lock $META to get Voting Power'>
-                  <Stack hidden={!isDesktop} onClick={onOpen} _hover={{border: '3px solid lightgray', cursor: 'pointer'}} borderRadius={"30px"} bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'center'} align={'center'} minH={'234px'} minW={'330px'}>
+                  <Stack hidden={!isDesktop} onClick={onOpen} 
+                    _hover={{border: '3px solid lightgray', cursor: 'pointer'}} 
+                    border={'2px solid #E5E5E5'} 
+                    borderRadius={"30px"} 
+                    bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} 
+                    justify={'center'} align={'center'} 
+                    minH={'176px'} h={'176px'} minW={'330px'}>
                     <AddIcon fontSize={'40px'} color={'lightgray'}></AddIcon>
                   </Stack>
                 </Tooltip>
