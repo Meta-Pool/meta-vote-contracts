@@ -25,11 +25,12 @@ import {
   Heading,
   Box,
   Stack,
-  Tooltip
+  Tooltip,
+  Link
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAllLockingPositions, relock, unlock, withdrawAPosition } from '../../../lib/near';
+import { getAllLockingPositions, getNearConfig, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
@@ -38,7 +39,7 @@ import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
 
 import ButtonOnLogin from '../ButtonLogin';
 import VPositionCard from './VPositionCard';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 
 type Props = {
@@ -151,15 +152,22 @@ const LockingPosition = (props: Props) => {
     <section>        
         { 
             voterData.lockingPositions.length === 0 ? (
-              <Flex minH={400} direction='column'  alignItems={'center'} justifyContent={'center'}>
-                <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
+              <Stack minH={400} spacing={10} direction='column'  alignItems={'flex-start'} justifyContent={'flex-start'}>
+                <Heading fontSize={'2xl'} >To get voting power, you need to lock $META.</Heading>
                 <ButtonOnLogin>
-                  <Button borderRadius={100} w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.primary}>
-                    Lock $META to get Voting Power
-                  </Button>
+                  <HStack spacing={5}>
+                    <Button  leftIcon={<AddIcon />} borderRadius={100}  fontSize={{ base: "md", md: "md" }}  onClick={onOpen} colorScheme={colors.primary}>
+                      Add Voting Power
+                    </Button>
+                    <Button borderRadius={100} rightIcon={ <ExternalLinkIcon/>} fontSize={{ base: "md", md: "md" }} variant={'outline'}  colorScheme={colors.primary}>
+                        <Link fontWeight={500} href={getNearConfig()?.refFinance} isExternal>
+                          Get more $META
+                        </Link>
+                    </Button>
+                  </HStack>
                 </ButtonOnLogin>
                 
-              </Flex>
+              </Stack>
             ) : (
               <Flex flexWrap={'wrap'} justifyContent={'space-between'}>
                 {  voterData.lockingPositions.map((position: any, index: number)=> {

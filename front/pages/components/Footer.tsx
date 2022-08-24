@@ -42,12 +42,13 @@ const Footer: React.FC<ButtonProps> = (props) => {
             src="/logo.svg"
             alt="logo"
             
-  />*/}
+        />
         <ButtonOnLogin>
           <Button  borderRadius={100} fontSize={{ base: "16px", md: "16px" }}  onClick={onOpen} colorScheme={colors.primary}>
           Lock more $META
           </Button>
-        </ButtonOnLogin>
+        </ButtonOnLogin>*/}
+        
         
       </Stack>
       {/*<Stack direction={{ base: "column", sm: "row" }} alignItems={{base: "center", sm: "flex-start"}} spacing={6}>

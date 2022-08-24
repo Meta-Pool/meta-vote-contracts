@@ -21,6 +21,7 @@ import { MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
 import DashboardCard from './DashboardCard';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
+import { AddIcon } from '@chakra-ui/icons';
 
 type Props = {
 }
@@ -73,14 +74,16 @@ const DashboardHeader = () => {
           <Stack justify={'space-between'} alignItems={'flex-start'} w={{ base: '100%'}}  spacing={10} p={padding} direction={'row'}>
             <HStack position={'relative'} spacing={2}>
               <VStack align={'flex-start'}>
-                <HStack>
-                  <Text hidden={!isDesktop} opacity={1} color={"#BDB0FF"} fontSize={'14px'} bg={"indigo.400"} p={'8px'}>Available Voting Power</Text>
+              <Text hidden={!isDesktop} opacity={1} color={"#F9F9FA"} fontSize={'20px'} p={'8px'}>My Voting Power</Text>
+
+                <HStack spacing={10}>
+                  <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
+
                   <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
-                    <Button hidden={!isDesktop} fontSize={'xl'} fontWeight={700} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> +</Button>
+                    <Button leftIcon={<AddIcon />} hidden={!isDesktop} fontSize={'16px'} fontWeight={500} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> Add Voting Power</Button>
                   </Tooltip>
                 </HStack>
-                <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
-                <Text hidden={isDesktop} opacity={0.9} fontSize={'16px'}  p={'8px'}>Available Voting Power</Text>
+                <Text hidden={isDesktop}  fontSize={'16px'}  p={'8px'}>My Voting Power</Text>
               </VStack>
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>
@@ -93,8 +96,8 @@ const DashboardHeader = () => {
           </Stack>
           <Stack w={{ base: '100%', md: '100%' }} flexWrap={{ base: 'wrap', md: 'nowrap' }} justifyContent={{base:'flex-end', md: 'space-between'}}  spacing={{base: 0, md: 5}} direction={'row'}>
             <HStack spacing={8}>
-              <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.png'} number={yton(voterData.inUseVPower)}></DashboardCard>
-              <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.png'} number={voterData.votingResults.length}></DashboardCard>
+              <DashboardCard ligthMode={true} title='In use' iconSrc={'./icons/layer.svg'} number={yton(voterData.inUseVPower)}></DashboardCard>
+              <DashboardCard ligthMode={true} title='Projects  voted' iconSrc={'./icons/check.svg'} number={voterData.votingResults.length}></DashboardCard>
             </HStack>
             <HStack spacing={8}>
               <Box hidden={!isDesktop}><DashboardCard   title='$META locked' iconSrc={'./icons/lock_white.svg'} number={yton(voterData.metaLocked)}></DashboardCard> </Box>

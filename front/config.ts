@@ -12,7 +12,8 @@ export const getConfig = (env: string)  => {
         helperUrl: "https://helper.mainnet.near.org",
         explorerUrl: "https://explorer.mainnet.near.org",
         metapoolUrl: "https://metapool.app/dapp/mainnet/meta",
-        refFinance: "https://www.ref.finance/"
+        refFinance: "https://www.ref.finance/",
+        metayieldUrl: "https://metayield.app" 
 
       };
     case "development":
@@ -25,8 +26,8 @@ export const getConfig = (env: string)  => {
         helperUrl: "https://helper.testnet.near.org",
         explorerUrl: "https://explorer.testnet.near.org",
         metapoolUrl: "https://metapool.app/dapp/testnet/meta",
-        refFinance: "https://www.ref.finance/"
-
+        refFinance: "https://www.ref.finance/",
+        metayieldUrl: "https://metayield.app" 
       };
     case "betanet":
       return {
@@ -37,8 +38,8 @@ export const getConfig = (env: string)  => {
         helperUrl: "https://helper.betanet.near.org",
         explorerUrl: "https://explorer.betanet.near.org",
         metapoolUrl: "https://metapool.app/dapp/testnet/meta",
-        refFinance: "https://www.ref.finance/"
-
+        refFinance: "https://www.ref.finance/",
+        metayieldUrl: "https://metayield.app" 
       };
     case "local":
       return {
@@ -49,6 +50,7 @@ export const getConfig = (env: string)  => {
         metapoolUrl: "https://metapool.app/dapp/testnet/meta",
         refFinance: "https://www.ref.finance/",
         contractName: CONTRACT_NAME,
+        metayieldUrl: "https://metayield.app" 
       };
     case "test":
     case "ci":
