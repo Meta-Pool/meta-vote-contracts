@@ -2,15 +2,20 @@ import {
   useDisclosure, 
   Heading,
   Flex,
-  Center
+  Center,
+  Button,
+  Link,
+  VStack
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { getVotesByVoter, unvoteProject } from '../../../lib/near';
+import { getNearConfig, getVotesByVoter, unvoteProject } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
 import { CONTRACT_ADDRESS, MODAL_TEXT } from '../../../constants';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
+import { colors } from '../../../constants/colors';
+import { Stack } from 'phosphor-react';
 
 
 const ListingVotes = () => {
@@ -72,9 +77,12 @@ const ListingVotes = () => {
               }      
               {
                 voterData.votingResults.length === 0 && (
-                  <Center w={'100%'}>
-                    <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
-                  </Center>
+                  <VStack  spacing={10} alignItems={'flex-start'} justify={'flex-start'}  w={'100%'}>
+                    <Heading fontSize={'2xl'} > You didn’t vote anything yet.</Heading>
+                    <Button  borderRadius={100}  fontSize={{ base: "md", md: "md" }}   colorScheme={colors.primary}>
+                      <Link href={getNearConfig().metayieldUrl} isExternal>Browser projects at MetaYield</Link>
+                    </Button>
+                  </VStack>
                 )
               }
           </Flex>
