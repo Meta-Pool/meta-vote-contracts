@@ -40,7 +40,7 @@ impl PipelineContract {
     #[init]
     pub fn new(
         owner_id: AccountId,
-        base_fee: MetaJSON,
+        base_fee: U128,
     ) -> Self {
         // require!(!env::state_exists(), "The contract is already initialized");
         Self {

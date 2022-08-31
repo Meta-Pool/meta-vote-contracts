@@ -1,4 +1,6 @@
-use crate::{*, utils::*};
+use crate::*;
+use crate::utils::proportional;
+use near_sdk::json_types::U128;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -10,11 +12,11 @@ pub struct LockingPosition {
 }
 
 impl LockingPosition {
-    pub fn locking_period_millis(&self) -> u64 {
+    pub(crate) fn locking_period_millis(&self) -> u64 {
         days_to_millis(self.locking_period)
     }
 
-    pub fn new(amount: Meta, locking_period: Days, voting_power: VotingPower) -> Self {
+    pub(crate) fn new(amount: Meta, locking_period: Days, voting_power: VotingPower) -> Self {
         LockingPosition {
             amount,
             locking_period,
@@ -23,11 +25,11 @@ impl LockingPosition {
         }
     }
 
-    pub fn is_locked(&self) -> bool {
+    pub(crate) fn is_locked(&self) -> bool {
         self.unlocking_started_at.is_none()
     }
 
-    pub fn is_unlocking(&self) -> bool {
+    pub(crate) fn is_unlocking(&self) -> bool {
         match self.unlocking_started_at {
             Some(date) => {
                 get_current_epoch_millis() <= (date + self.locking_period_millis())
@@ -36,7 +38,7 @@ impl LockingPosition {
         }
     }
 
-    pub fn is_unlocked(&self) -> bool {
+    pub(crate) fn is_unlocked(&self) -> bool {
         match self.unlocking_started_at {
             Some(date) => {
                 get_current_epoch_millis() > (date + self.locking_period_millis())
@@ -45,12 +47,12 @@ impl LockingPosition {
         }
     }
 
-    pub fn to_json(&self, index: Option<PositionIndex>) -> LockingPositionJSON {
+    pub(crate) fn to_json(&self, index: Option<PositionIndex>) -> LockingPositionJSON {
         LockingPositionJSON {
             index,
-            amount: BalanceJSON::from(self.amount),
+            amount: U128::from(self.amount),
             locking_period: self.locking_period,
-            voting_power: BalanceJSON::from(self.voting_power),
+            voting_power: U128::from(self.voting_power),
             unlocking_started_at: self.unlocking_started_at,
             is_unlocked: self.is_unlocked(),
             is_unlocking: self.is_unlocking(),
