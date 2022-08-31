@@ -12,7 +12,7 @@ export const enum ACTION_TYPE {
 export const MODAL_TEXT = {
     UNLOCK: {
       title: `Remove vote position`,
-      text: `Are you sure you want to remove this position? Your tokens will release when locking period ends.`
+      text: `Are you sure you want to remove this position? Your tokens will be releases when the locking period ends.`
     },
     RELOCK: {
       title: `Confirmation`,
@@ -27,6 +27,6 @@ export const MODAL_TEXT = {
     VOTE: {
       title: `Confirmation`,
       text: `Are you sure you want to remove your vote
-      position? Tokens remain locked until finish.`
+      position?`
     }
   }
