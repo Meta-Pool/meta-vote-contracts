@@ -158,7 +158,7 @@ const DashboardHeader = () => {
           <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock_bold.png'} number={yton(voterData.metaLocked)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock_bold.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw_bold.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-          <Button disabled={ procesingFlag || parseInt(voterData.metaToWithdraw)<=0}  ml={'100px'} mt={5} p={{base: '10px' ,md:'32px'}} px={{base: '20px', md: '32px'}} fontSize={{base: 'md' ,md:'10px'}} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
+          <Button disabled={ procesingFlag || parseInt(voterData.metaToWithdraw)<=0}  ml={'100px'} mt={5} p={{base: '10px' ,md:'32px'}} px={{base: '20px', md: '32px'}} fontSize={{base: 'md' ,md:'10px'}} borderRadius={100}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
             Withdraw
           </Button>
         </Box>
