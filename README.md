@@ -1,4 +1,6 @@
-# meta-vote
+# Meta Vote
+
+![Meta Vote Logo](media/logo.png)
 
 Implementation of a general voting system using the $META token.
 
