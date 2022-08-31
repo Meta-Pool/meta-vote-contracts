@@ -166,7 +166,7 @@ const LockModal = (props: Props) => {
                   <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(4)} </Text>
                 </HStack>
 
-                <Slider defaultValue={30} min={0} max={300} step={1} onChange={(val) => setSliderValue(val)}>
+                <Slider defaultValue={30} min={30} max={300} step={1} onChange={(val) => setSliderValue(val)}>
                   <SliderTrack >
                     <Box position='relative' right={10} />
                     <SliderFilledTrack  bg={colors.primary +'.500'} />
