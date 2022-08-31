@@ -14,7 +14,7 @@ mod withdraw;
 pub mod interface;
 
 use types::*;
-use utils::get_current_epoch_millis;
+use utils::{generate_hash_id, get_current_epoch_millis};
 use voter::Voter;
 use crate::utils::{days_to_millis, millis_to_days};
 use crate::{constants::*, locking_position::*};
@@ -45,12 +45,12 @@ impl MetaVoteContract {
         max_voting_positions: u8,
         meta_token_contract_address: ContractAddress,
     ) -> Self {
-        // require!(!env::state_exists(), "The contract is already initialized");
+        require!(!env::state_exists(), "The contract is already initialized");
         require!(min_locking_period < max_locking_period, "Review the min and max locking period");
         Self {
             owner_id,
-            voters: UnorderedMap::new(Keys::Voter),
-            votes: UnorderedMap::new(Keys::ContractVotes),
+            voters: UnorderedMap::new(StorageKey::Voters),
+            votes: UnorderedMap::new(StorageKey::Votes),
             min_locking_period,
             max_locking_period,
             min_deposit_amount: Meta::from(min_deposit_amount),
