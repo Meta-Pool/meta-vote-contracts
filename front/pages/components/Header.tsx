@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Button,
   Text,
@@ -20,62 +20,47 @@ import {
 } from "@chakra-ui/react";
 import {  ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
-  getWallet,
   getMetaBalance,
-  METAPOOL_CONTRACT_ID,
   getNearConfig,
 } from "../../lib/near";
 import { colors } from "../../constants/colors";
-import { useStore as useWallet } from "../../stores/wallet";
 import { useStore as useBalance } from "../../stores/balance";
 import { useRouter } from "next/router";
 import { formatToLocaleNear } from "../../lib/util";
 import { useStore as useVoter } from "../../stores/voter";
-import VPositionCard from "./MyDashboard/VPositionCard";
+import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 
 const Header: React.FC<ButtonProps> = (props) => {
-  const { wallet, setWallet } = useWallet();
   const { balance, setBalance } = useBalance();
-  const {  clearVoterData } = useVoter();
-  const [signInAccountId, setSignInAccountId] = useState(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
+  const { selector, modal, accounts, accountId } = useWalletSelector();
 
 
   const router = useRouter();
   const nearConfig = getNearConfig();
-  const onConnect = async () => {
-    try {
-      wallet!.requestSignIn(METAPOOL_CONTRACT_ID, "Metapool contract");
-    } catch (e) {
-      console.error("error", e);
-    }
+
+  const handleSignIn = () => {
+    modal.show();
   };
 
-  const logout = async () => {
-    clearVoterData();
-    await wallet!.signOut();
-    const tempWallet = await getWallet();
-    setWallet(tempWallet);
+  const handleSwitchWallet = () => {
+    modal.show();
   };
 
-  useEffect(() => {
-    (async () => {
-      if (wallet) {
-        
-      }
-    })();
-  }, [ wallet]);
+  const handleSignOut = async () => {
+    const wallet = await selector.wallet();
+
+    wallet.signOut().catch((err: any) => {
+      console.log("Failed to sign out");
+      console.error(err);
+    });
+  };
 
   useEffect(() => {
     (async () => {
       try {
-        const tempWallet = await getWallet();
-        if (!wallet) {
-          setWallet(tempWallet);
-        }
-        if (tempWallet && tempWallet.getAccountId()) {
-          setSignInAccountId(tempWallet.getAccountId());
-          setBalance(await getMetaBalance(tempWallet!));
+        if (selector.isSignedIn() && accountId) {
+          setBalance(await getMetaBalance());
         }
       } catch (e) {
         console.error(e);
@@ -83,34 +68,26 @@ const Header: React.FC<ButtonProps> = (props) => {
     })();
 
     setInterval(async () => {
-      const tempWallet = await getWallet();
-      if (tempWallet && tempWallet.getAccountId()) {
-        const balance = await getMetaBalance(tempWallet);
-        setBalance(balance);
+      try {
+        if (selector.isSignedIn() && accountId) {
+          // setBalance(await getMetaBalance());
+        }
+      } catch (e) {
+        console.error(e);
       }
     }, 5000);
   }, []);
 
   return (
-    <Box color={"white"} bg={"#4121EE"}>
+    <Box hidden={!selector?.isSignedIn()} color={"white"} bg={"#4121EE"}>
       <Box as="nav" alignContent="flex-end">
         <Container maxW="container.2xl" py={{ base: "3", lg: "4" }}>
           <HStack justify="space-between">
-          {wallet?.isSignedIn() && (
-            <HStack
-              onClick={() => router.push(`/`)}
-              cursor="pointer"
-              alignItems="center"
-              p={"5px 16px"} 
-              borderRadius={100} 
-              backgroundColor={colors.primary+".900"}
-            >
-              <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{signInAccountId} </Text>
-              <ExternalLinkIcon></ExternalLinkIcon>
-            </HStack>
-          ) }
+            <Image alt='logo metavote' src="/metavote_logo.svg"></Image>
             <Spacer />
-            {wallet?.isSignedIn() ? (
+
+          
+            {selector?.isSignedIn() ? (
               <HStack spacing={10}>
                 <HStack>
                   <Square minW="30px">
@@ -140,28 +117,43 @@ const Header: React.FC<ButtonProps> = (props) => {
                   
                   )
                  }
+                 {
+                 isDesktop && selector?.isSignedIn() && (
+                  <Link href={`${nearConfig.explorerUrl}/accounts/${accountId}`} isExternal>
+                    <HStack
+                      onClick={() => router.push(`/`)}
+                      cursor="pointer"
+                      alignItems="center"
+                      p={"5px 16px"} 
+                      borderRadius={100} 
+                      backgroundColor={colors.primary+".900"}
+                    >
+                        <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{accountId} </Text>
+                        <ExternalLinkIcon ></ExternalLinkIcon>
+                    </HStack>
+                  </Link>
+                )}
                   
                 <Menu>
                   <MenuButton
                     as={IconButton}
-                    icon={<HamburgerIcon h="22px" />}
+                    icon={<Image src="/icons/dots.svg" h="22px" />}
                     variant="none"
                     />
                   <MenuList color={colors.primary}>
                       
                     {
-                      wallet?.isSignedIn() && ( 
+                     selector?.isSignedIn() && ( 
                         <>
                           <MenuItem fontSize={'xl'}
                               as={"a"}
-                              href={`${nearConfig.explorerUrl}/accounts/${signInAccountId}`}
+                              href={`${nearConfig.explorerUrl}/accounts/${accountId}`}
                               target="_blank"
                               rel="noreferrer"
                             >
                               My Wallet
                           </MenuItem>
-
-                          <MenuItem  fontSize={'xl'}onClick={() => logout()}>Disconnect</MenuItem>
+                          <MenuItem  fontSize={'xl'}onClick={() => handleSignOut()}>Disconnect</MenuItem>
                         </>
                       )
                     }
@@ -174,7 +166,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                 borderColor="blue"
                 variant="outline"
                 borderRadius={100}
-                onClick={() => onConnect()}
+                onClick={() => handleSignIn()}
               >
                 Connect Wallet
               </Button>

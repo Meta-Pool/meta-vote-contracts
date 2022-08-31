@@ -25,74 +25,100 @@ import {
   Heading,
   Box,
   Stack,
-  Tooltip
+  Tooltip,
+  Link
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAllLockingPositions, relock, unlock, withdrawAPosition } from '../../../lib/near';
-import { useStore as useWallet } from "../../../stores/wallet";
+import { getAllLockingPositions, getNearConfig, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
-import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, yton } from '../../../lib/util';
+import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal, { InfoContent } from './InfoModal';
 import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
-import { STATUS_CODES } from 'http';
-import moment from 'moment';
+
 import ButtonOnLogin from '../ButtonLogin';
 import VPositionCard from './VPositionCard';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 
 type Props = {
 }
 
-
-
 const LockingPosition = (props: Props) => {
 
-  const { wallet} = useWallet();
   const { voterData, setVoterData } = useVoter();
   const [ actionCall, setActionCall] = useState(() => ()=>{}); 
-  const [ modalContent, setModalContent] = useState<InfoContent>({title: '', text:''}); 
+  const [ procesingFlag, setProcessFlag] = useState(false); 
 
-  
+  const [ modalContent, setModalContent] = useState<InfoContent>({title: '', text:''}); 
+  const { selector} = useWalletSelector();
+
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfoModal} = useDisclosure();
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
-
-  const STATUS = ['Locked', 'Unlocked', 'Unlocking...'];
  
   const getVotingPositions = async ()=> {
     const newVoterData = voterData;
-    newVoterData.lockingPositions = await getAllLockingPositions(wallet);
+    newVoterData.lockingPositions = [];
+    setVoterData(newVoterData);
+    newVoterData.lockingPositions = await getAllLockingPositions();
     setVoterData(newVoterData);
   }
 
+  const waitingTime = 500;
+
   const unlockPosition = (idPosition: string) => {
     try {
-      unlock(idPosition, wallet);
+      setProcessFlag(true);
+      unlock(idPosition).then(()=> {
+        // After the action I need to wait some async time to give the contract time to update the data. 
+        // Withoud the setTiemout the get is not retrieving the updated data
+        setTimeout(() => {
+          getVotingPositions();  
+        }, waitingTime);
+        setProcessFlag(false);
+      });
     } catch (error) {
+      setProcessFlag(false);
       console.error(error);
     }
+    infoOnClose();
+
   }
 
   const withdrawCall =  (positionId: string) => {
     try {
-      withdrawAPosition(positionId, wallet); 
+      setProcessFlag(true);
+      withdrawAPosition(positionId).then(()=> {
+        setTimeout(() => {
+          getVotingPositions();  
+        }, waitingTime);
+        setProcessFlag(false);
+      }); 
     } catch (error) {
+      setProcessFlag(false);
       console.error(error);
     }
+    infoOnClose();
   }
 
   const relockClicked =  (positionIndex: string, period: string, amount: string) => {
     try {
-      relock(positionIndex, period, amount, wallet);
+      setProcessFlag(true);
+      relock(positionIndex, period, amount).then(()=> {
+        setTimeout(() => {
+          getVotingPositions();  
+        }, waitingTime);
+        setProcessFlag(false);
+      }); 
     } catch (error) {
+      setProcessFlag(false);
       console.error(error);
     }
+    infoOnClose();
   }
-
-
 
   const clickedAction = (idPosition: string, type: ACTION_TYPE, period? :string, amount?: string) => {
     switch (type) {
@@ -116,25 +142,32 @@ const LockingPosition = (props: Props) => {
 
   useEffect(  () =>{
     (async ()=> {
-      if (wallet && wallet.isSignedIn()) {
+      if (selector && selector.isSignedIn()) {
         getVotingPositions()
       }
     })();
-  },[wallet])
+  },[selector])
 
   return (
     <section>        
         { 
             voterData.lockingPositions.length === 0 ? (
-              <Flex minH={400} direction='column'  alignItems={'center'} justifyContent={'center'}>
-                <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
+              <Stack minH={400} spacing={10} direction='column'  alignItems={'flex-start'} justifyContent={'flex-start'}>
+                <Heading fontSize={'2xl'} >To get voting power, you need to lock $META.</Heading>
                 <ButtonOnLogin>
-                  <Button borderRadius={100} w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.primary}>
-                    Lock $META to get Voting Power
-                  </Button>
+                  <HStack spacing={5}>
+                    <Button  leftIcon={<AddIcon />} borderRadius={100}  fontSize={{ base: "md", md: "md" }}  onClick={onOpen} colorScheme={colors.primary}>
+                      Add Voting Power
+                    </Button>
+                    <Button borderRadius={100} rightIcon={ <ExternalLinkIcon/>} fontSize={{ base: "md", md: "md" }} variant={'outline'}  colorScheme={colors.primary}>
+                        <Link fontWeight={500} href={getNearConfig()?.refFinance} isExternal>
+                          Get more $META
+                        </Link>
+                    </Button>
+                  </HStack>
                 </ButtonOnLogin>
                 
-              </Flex>
+              </Stack>
             ) : (
               <Flex flexWrap={'wrap'} justifyContent={'space-between'}>
                 {  voterData.lockingPositions.map((position: any, index: number)=> {
@@ -146,6 +179,7 @@ const LockingPosition = (props: Props) => {
                           amount={yton(position.amount).toFixed(4)}
                           period={position.locking_period}
                           clickedAction= {clickedAction}
+                          procesing={procesingFlag}
                           />
                     )
                 })}

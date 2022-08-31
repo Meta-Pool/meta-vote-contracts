@@ -1,60 +1,49 @@
 import {
-  Button, 
   useDisclosure, 
-  TableContainer,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  HStack,
-  Circle,
-  VStack,
-  AccordionIcon,
-  AccordionPanel,
   Heading,
-  Text,
-  useBreakpointValue,
   Flex,
+  Center,
+  Button,
   Link,
-  Center
+  VStack
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { colors } from '../../../constants/colors';
-import { getVotesByVoter, unvoteProject } from '../../../lib/near';
-import { useStore as useWallet } from "../../../stores/wallet";
+import { getNearConfig, getVotesByVoter, unvoteProject } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
-import { yton } from '../../../lib/util';
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
 import { CONTRACT_ADDRESS, MODAL_TEXT } from '../../../constants';
+import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
+import { colors } from '../../../constants/colors';
+import { Stack } from 'phosphor-react';
 
 
 const ListingVotes = () => {
-  const { wallet} = useWallet();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
 
   const { voterData, setVoterData } = useVoter();
   const [ positionSelected, setPositionSel ] = useState('')
-  const isDesktop = useBreakpointValue({ base: false, md: true });
+  const { selector } = useWalletSelector();
+  const [ procesingFlag, setProcessFlag] = useState(false); 
 
 
   const contract = CONTRACT_ADDRESS ? CONTRACT_ADDRESS : '';
 
   const getVotes = async ()=> {
     const newVoterData = voterData;
-    newVoterData.votingResults = await getVotesByVoter(wallet);
+    newVoterData.votingResults = await getVotesByVoter();
     setVoterData(newVoterData);
   }
 
   const unvote = (id: any)=> {
       try {
-        unvoteProject(id, contract, wallet);
+        setProcessFlag(true);
+        unvoteProject(id, contract).then(()=>{
+          getVotes();
+          setProcessFlag(false);
+        });
       } catch (error) {
+        setProcessFlag(false);
         console.error(error);
       }
   }
@@ -66,12 +55,11 @@ const ListingVotes = () => {
 
   useEffect(  () =>{
     (async ()=> {
-      if (wallet && wallet.isSignedIn()) {
+      if (selector && selector.isSignedIn()) {
         getVotes();
       }
     })();
-  },[wallet])
-
+  },[selector])
 
   return (
     <section>
@@ -83,14 +71,18 @@ const ListingVotes = () => {
                       <VoteCard 
                           key={index}
                           position={position}
+                          procesing={procesingFlag}
                           unvoteAction={()=>{unvotedClicked(position.id)}}/>
                 )})
               }      
               {
                 voterData.votingResults.length === 0 && (
-                  <Center w={'100%'}>
-                    <Heading fontSize={'2xl'} m={'auto'}> 😕 No votes!</Heading>
-                  </Center>
+                  <VStack  spacing={10} alignItems={'flex-start'} justify={'flex-start'}  w={'100%'}>
+                    <Heading fontSize={'2xl'} > You didn’t vote anything yet.</Heading>
+                    <Button  borderRadius={100}  fontSize={{ base: "md", md: "md" }}   colorScheme={colors.primary}>
+                      <Link href={getNearConfig().metayieldUrl} isExternal>Browser projects at MetaYield</Link>
+                    </Button>
+                  </VStack>
                 )
               }
           </Flex>

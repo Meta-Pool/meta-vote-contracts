@@ -16,7 +16,8 @@ import {
   AccordionPanel,
   Button,
   AccordionIcon,
-  Circle
+  Circle,
+  Tooltip
 } from "@chakra-ui/react";
 import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, yton } from "../../../lib/util";
 import { colors } from "../../../constants/colors";
@@ -28,7 +29,8 @@ type CardProps = {
   vPower: any,
   amount: any,
   period: any,
-  clickedAction: any
+  clickedAction: any,
+  procesing: boolean
 }
 
 
@@ -38,7 +40,8 @@ const VPositionCard = (props: CardProps) => {
     vPower,
     amount,
     period,
-    clickedAction
+    clickedAction,
+    procesing
   } = props;
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const STATUS = ['Locked', 'Unlocked', 'Unlocking...'];
@@ -66,17 +69,28 @@ const VPositionCard = (props: CardProps) => {
     return getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING ? timeLeftTo(unlockingFinishedTime) : getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED ? '0 days' : '-'
   }
 
+  const getColorVP  = (position: any)=> {
+    const status = getLockinPositionStatus(position); 
+    switch (status) {
+      case POSITION_STATUS.LOCKED:
+        return 'black';
+      case POSITION_STATUS.UNLOCKED:
+      case POSITION_STATUS.UNLOKING:
+        return 'gray.200';
+    }
+   }
+
   const getButtonbyStatus = (position: any)=> {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <Button borderRadius={100} fontSize={'16px'} colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK)}>Start unlock</Button> )
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK)}>Start unlock</Button> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Button borderRadius={100} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW)}>Withdraw</Button>)
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW)}>Withdraw</Button>)
 
       case POSITION_STATUS.UNLOKING:
-        return ( <Button borderRadius={100} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
     }
   }
   
@@ -85,18 +99,28 @@ const VPositionCard = (props: CardProps) => {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return (           
-          <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/lock_gray.png'}></Image>
+        return (                   
+          <Tooltip hidden={!isDesktop} label='This position is Locked.'>
+              <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/lock_gray.png'}></Image>
+          </Tooltip>        
         )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/unlock_gray.png'}></Image>)
+        return ( 
+          <Tooltip hidden={!isDesktop} label='This position is Unlocked.'>
+            <Image mr={2} boxSize="20px" alt={'unlocked'} src={'./icons/unlock_gray.png'}></Image>
+          </Tooltip>
+          )
 
       case POSITION_STATUS.UNLOKING:
-        return ( <>
-        <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/unlock_gray.png'}></Image>
-        <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/clock_gray.png'}></Image>
-        </> ) 
+        return ( 
+          <Tooltip hidden={!isDesktop} label='Unlocking the position.'>
+            <HStack spacing={0}>
+              <Image mr={2} boxSize="20px" alt={'unlocked'} src={'./icons/unlock_gray.png'}></Image>
+              <Image mr={2} boxSize="20px" alt={'clock'} src={'./icons/clock_gray.png'}></Image>
+            </HStack>
+          </Tooltip>
+        ) 
     }
   }
   if (!position) {
@@ -108,7 +132,7 @@ const VPositionCard = (props: CardProps) => {
               {/* Card header */}
               <HStack align={'flex-start'} justify={'space-between'}>
                 <VStack spacing={0} align={'flex-start'}>
-                  <Text fontSize={'24px'} fontWeight={700} fontFamily={'Meta Space'}>{vPower}</Text>
+                  <Text fontSize={'24px'} color={getColorVP(position)} fontWeight={700} fontFamily={'Meta Space'}>{vPower}</Text>
                   <Text>Voting Power</Text>
                 </VStack>
                 <HStack>
