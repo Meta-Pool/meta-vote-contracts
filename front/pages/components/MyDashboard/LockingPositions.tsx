@@ -26,7 +26,8 @@ import {
   Box,
   Stack,
   Tooltip,
-  Link
+  Link,
+  useToast
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -58,16 +59,18 @@ const LockingPosition = (props: Props) => {
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfoModal} = useDisclosure();
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
- 
+  const toast = useToast();
+
   const getVotingPositions = async ()=> {
     const newVoterData = voterData;
-    newVoterData.lockingPositions = [];
+    newVoterData.lockingPositions = voterData.lockingPositions;
     setVoterData(newVoterData);
     newVoterData.lockingPositions = await getAllLockingPositions();
     setVoterData(newVoterData);
+    setProcessFlag(false);
   }
 
-  const waitingTime = 500;
+  const waitingTime = 2000;
 
   const unlockPosition = (idPosition: string) => {
     try {
@@ -78,6 +81,15 @@ const LockingPosition = (props: Props) => {
         setTimeout(() => {
           getVotingPositions();  
         }, waitingTime);
+      }).catch(()=>
+      {
+        toast({
+          title: "Transaction error.",
+          status: "error",
+          duration: 9000,
+          position: "top-right",
+          isClosable: true,
+        });
         setProcessFlag(false);
       });
     } catch (error) {
@@ -95,6 +107,15 @@ const LockingPosition = (props: Props) => {
         setTimeout(() => {
           getVotingPositions();  
         }, waitingTime);
+      }).catch(()=>
+      {
+        toast({
+          title: "Transaction error.",
+          status: "error",
+          duration: 9000,
+          position: "top-right",
+          isClosable: true,
+        });
         setProcessFlag(false);
       }); 
     } catch (error) {
@@ -111,8 +132,17 @@ const LockingPosition = (props: Props) => {
         setTimeout(() => {
           getVotingPositions();  
         }, waitingTime);
+      }).catch(()=>
+      {
+        toast({
+          title: "Transaction error.",
+          status: "error",
+          duration: 9000,
+          position: "top-right",
+          isClosable: true,
+        });
         setProcessFlag(false);
-      }); 
+      })
     } catch (error) {
       setProcessFlag(false);
       console.error(error);

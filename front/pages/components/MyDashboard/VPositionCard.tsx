@@ -17,7 +17,8 @@ import {
   Button,
   AccordionIcon,
   Circle,
-  Tooltip
+  Tooltip,
+  Skeleton
 } from "@chakra-ui/react";
 import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, yton } from "../../../lib/util";
 import { colors } from "../../../constants/colors";
@@ -127,7 +128,14 @@ const VPositionCard = (props: CardProps) => {
     return (<></>)
   }
   return (
-          isDesktop ? (
+          
+          procesing ? (
+          <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
+            <Skeleton height='20px' />
+            <Skeleton height='20px' />
+            <Skeleton height='20px' />
+          </Stack>) :
+          ( isDesktop ? (
             <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
               {/* Card header */}
               <HStack align={'flex-start'} justify={'space-between'}>
@@ -219,7 +227,7 @@ const VPositionCard = (props: CardProps) => {
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
-          )
+          ))
     ) 
 };
 
