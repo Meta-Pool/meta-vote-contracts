@@ -156,9 +156,7 @@ const LockModal = (props: Props) => {
                   </Stack>
                 )
               }
-              
               <StackDivider></StackDivider >
-              
               <Stack spacing={5} w={'100%'} direction={{base:'column', md:'column'}} justify={'space-between'}>
                 <HStack align={{base:'flex-start', md:'flex-end'}} justify={'space-between'}>
                   <HStack>
@@ -168,7 +166,7 @@ const LockModal = (props: Props) => {
                   <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(4)} </Text>
                 </HStack>
 
-                <Slider defaultValue={30} min={30} max={300} step={1} onChange={(val) => setSliderValue(val)}>
+                <Slider defaultValue={30} min={0} max={300} step={1} onChange={(val) => setSliderValue(val)}>
                   <SliderTrack >
                     <Box position='relative' right={10} />
                     <SliderFilledTrack  bg={colors.primary +'.500'} />
