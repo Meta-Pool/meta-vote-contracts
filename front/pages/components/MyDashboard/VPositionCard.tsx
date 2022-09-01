@@ -24,6 +24,7 @@ import { getLockinPositionStatus, POSITION_STATUS, timeLeftTo, yton } from "../.
 import { colors } from "../../../constants/colors";
 import moment from "moment";
 import { ACTION_TYPE } from "../../../constants";
+import { prepareDataForValidation } from "formik";
 
 type CardProps = {
   position: any
@@ -85,31 +86,32 @@ const VPositionCard = (props: CardProps) => {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK)}>Start unlock</Button> )
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK)}>Start unlock</Button> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW)}>Withdraw</Button>)
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW)}>Withdraw</Button>)
 
       case POSITION_STATUS.UNLOKING:
-        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
     }
   }
   
 
   const getIconStatus = (position: any)=> {
     const status = getLockinPositionStatus(position); 
+    const boxSize = '20px';
     switch (status) {
       case POSITION_STATUS.LOCKED:
         return (                   
           <Tooltip hidden={!isDesktop} label='This position is Locked.'>
-              <Image mr={2} boxSize="20px" alt={'locked'} src={'./icons/lock_gray.png'}></Image>
+              <Image mr={2} boxSize={boxSize} alt={'locked'} src={'./icons/lock_gray.png'}></Image>
           </Tooltip>        
         )
 
       case POSITION_STATUS.UNLOCKED:
         return ( 
           <Tooltip hidden={!isDesktop} label='This position is Unlocked.'>
-            <Image mr={2} boxSize="20px" alt={'unlocked'} src={'./icons/unlock_gray.png'}></Image>
+            <Image mr={2} boxSize={boxSize} alt={'unlocked'} src={'./icons/unlock_gray.png'}></Image>
           </Tooltip>
           )
 
@@ -117,8 +119,7 @@ const VPositionCard = (props: CardProps) => {
         return ( 
           <Tooltip hidden={!isDesktop} label='Unlocking the position.'>
             <HStack spacing={0}>
-              <Image mr={2} boxSize="20px" alt={'unlocked'} src={'./icons/unlock_gray.png'}></Image>
-              <Image mr={2} boxSize="20px" alt={'clock'} src={'./icons/clock_gray.png'}></Image>
+              <Image mr={2} boxSize={boxSize} alt={'unlocked'} src={'./icons/unlock_gray.png'}></Image>
             </HStack>
           </Tooltip>
         ) 
@@ -130,44 +131,61 @@ const VPositionCard = (props: CardProps) => {
   return (
           
           procesing ? (
-          <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={{base: '10px', md:'38px'}} m={{base:'2px', md:'11px'}} justify={'space-between'} minH={{base: '20px',md:'234px'}} minW={'330px'}>
+          <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={{base: '10px', md:'38px'}} m={{base:'2px', md:'11px'}} justify={'space-between'} minH={{base: '20px',md:'176px'}} minW={'330px'}>
             <Skeleton height={{base: '40px',md:'20px'}} />
             <Skeleton hidden={!isDesktop} height='20px' />
             <Skeleton hidden={!isDesktop} height='20px' />
           </Stack>) :
           ( isDesktop ? (
-            <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} minH={'234px'} minW={'330px'}>
+            <Stack  bg={'#F9F9FA'} 
+                    border={'2px solid #E5E5E5'} 
+                    borderRadius={"30px"} 
+                    px={'20px'} py={'20px'} m={'11px'} 
+                    justify={'space-between'} 
+                    minH={'176px'} h={'176px'} minW={'330px'}>
               {/* Card header */}
               <HStack align={'flex-start'} justify={'space-between'}>
-                <VStack spacing={0} align={'flex-start'}>
-                  <Text fontSize={'24px'} color={getColorVP(position)} fontWeight={700} fontFamily={'Meta Space'}>{vPower}</Text>
-                  <Text>Voting Power</Text>
-                </VStack>
-                <HStack>
-                  <Image
-                    boxSize="20px"
-                    objectFit="cover"
-                    src="/meta.png"
-                    alt="stnear"
-                  />
-                  <Text  fontWeight={700} fontSize={'18px'}>{amount}</Text>
-                </HStack>
+                  <VStack align={'flex-start'}>
+                    <HStack spacing={0}>
+                        { getStatusCircle(position, true) }
+                        <Text fontSize={'18px'} fontWeight={500}>{period} days</Text>
+                    </HStack>
+                    {
+                      getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING && (
+                        <HStack spacing={0} align={'flex-end'}>
+                          <Image mr={2} boxSize="15px" alt={'clock'} src={'./icons/clock_gray.png'}></Image>
+                          <Text fontSize={'14px'} lineHeight={1}>{getTimeRemaining(position)}</Text>
+                        </HStack>
+                      )
+                    }
+                  </VStack>              
+
+                  <VStack spacing={'8px'} align={'flex-end'}>
+                    <HStack align={'flex-end'}>
+                      <Text fontSize={'12px'} color={getColorVP(position)} fontWeight={700} >VP</Text>
+                      <Text fontSize={'24px'} color={getColorVP(position)} lineHeight={1.1} fontWeight={700} fontFamily={'Meta Space'}>{vPower}</Text>
+                    </HStack>
+                    <HStack>
+                      <Image
+                        opacity={0.5}
+                        boxSize="14px"
+                        objectFit="cover"
+                        src="/meta_gray.svg"
+                        alt="meta"
+                      />
+                      <Text opacity={0.5}  fontWeight={700} fontSize={'14px'}>{amount}</Text>
+                    </HStack>
+                  </VStack>
+                
               </HStack>
               <Box>
                 {/* Icons bar  */}
-              <HStack spacing={0} justify={'flex-start'}>
-                {getIconStatus(position)}
-              </HStack>
+              
               
               {/* Card Body */}
               <HStack justify={'space-between'}>
-                <HStack spacing={0}>
-                  {getStatusCircle(position, true)}
-                  {
-                    (getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING) ? 
-                    (<Text>{getTimeRemaining(position)}</Text>) :
-                    (<Text>{period} days</Text>)
-                  }
+                <HStack spacing={0} justify={'flex-start'}>
+                  {getIconStatus(position)}
                 </HStack>
                 <Box>
                   {getButtonbyStatus(position)}
