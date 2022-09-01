@@ -50,8 +50,11 @@ function App({ Component, pageProps }: AppProps) {
         <WalletSelectorContextProvider>
           <NextHead>
             <meta charSet="UTF-8" />
-            <title>  Meta Vote - Allow any project to bootstrap liquidity through staking
-              on Meta Pool.</title>
+            <title>
+              {" "}
+              Meta Vote - Allow any project to bootstrap liquidity through
+              staking on Meta Pool.
+            </title>
           </NextHead>
           <Header />
           <Component {...pageProps} />
@@ -73,7 +76,7 @@ function App({ Component, pageProps }: AppProps) {
               `}
               </Script>
             </>
-          )
+          )}
         </WalletSelectorContextProvider>
       </QueryClientProvider>
     </ChakraProvider>
