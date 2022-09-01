@@ -6,7 +6,7 @@ import "@fontsource/inter/variable.css";
 import theme from "../theme/theme";
 import { QueryClient, QueryClientProvider } from "react-query";
 import Router, { useRouter } from "next/router";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import * as gtag from "../lib/gtag";
 import NProgress from "nprogress";
 import NextHead from "next/head";
@@ -17,6 +17,7 @@ import Footer from "./components/Footer";
 import Fonts from "./components/Fonts";
 import { WalletSelectorContextProvider } from "../contexts/WalletSelectorContext";
 import "@near-wallet-selector/modal-ui/styles.css";
+import Script from "next/script";
 
 const isProduction = process.env.NODE_ENV === "production";
 function App({ Component, pageProps }: AppProps) {
@@ -56,7 +57,7 @@ function App({ Component, pageProps }: AppProps) {
           <Component {...pageProps} />
           <Footer />
           {/* enable analytics script only for production */}
-          { /*isProduction && (
+          {isProduction && (
             <>
               <Script
                 src={`https://www.googletagmanager.com/gtag/js?id=${gtag.GA_TRACKING_ID}`}
@@ -72,7 +73,7 @@ function App({ Component, pageProps }: AppProps) {
               `}
               </Script>
             </>
-          )*/}
+          )
         </WalletSelectorContextProvider>
       </QueryClientProvider>
     </ChakraProvider>

@@ -29,14 +29,13 @@ import {
 } from "./util";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
-export const NETWORK_ID =  process.env.NEXT_PUBLIC_NETWORK_ID || 'testnet';
+export const NETWORK_ID = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'mainnet' : 'testnet';
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
 export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 export const gas = new BN("70000000000000");
 export const GAS = "200000000000000";
 
-const env = 'development';
-
+const env = process.env.NEXT_PUBLIC_VERCEL_ENV || 'production';
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 

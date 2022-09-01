@@ -18,6 +18,7 @@ export const getConfig = (env: string)  => {
       };
     case "development":
     case "testnet":
+    case "preview":
       return {
         networkId: "testnet",
         nodeUrl: "https://rpc.testnet.near.org",
