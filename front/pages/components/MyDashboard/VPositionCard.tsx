@@ -27,6 +27,7 @@ import { ACTION_TYPE } from "../../../constants";
 import { prepareDataForValidation } from "formik";
 
 type CardProps = {
+  availableVPower: any,
   position: any
   vPower: any,
   amount: any,
@@ -38,6 +39,7 @@ type CardProps = {
 
 const VPositionCard = (props: CardProps) => {
   const {
+    availableVPower,
     position,
     vPower,
     amount,
@@ -65,9 +67,6 @@ const VPositionCard = (props: CardProps) => {
   const getTimeRemaining = (position: any): string => {
     const timeUnlockingStartAt = moment(position.unlocking_started_at);
     const unlockingFinishedTime = timeUnlockingStartAt.add(position.locking_period, 'day');
-
-
-
     return getLockinPositionStatus(position) === POSITION_STATUS.UNLOKING ? timeLeftTo(unlockingFinishedTime) : getLockinPositionStatus(position) === POSITION_STATUS.UNLOCKED ? '0 days' : '-'
   }
 
@@ -86,13 +85,13 @@ const VPositionCard = (props: CardProps) => {
     const status = getLockinPositionStatus(position); 
     switch (status) {
       case POSITION_STATUS.LOCKED:
-        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK)}>Start unlock</Button> )
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary}  w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.UNLOCK, vPower)}>Start unlock</Button> )
 
       case POSITION_STATUS.UNLOCKED:
-        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW)}>Withdraw</Button>)
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.WITHDRAW, vPower)}>Withdraw</Button>)
 
       case POSITION_STATUS.UNLOKING:
-        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, position.locking_period, position.amount)}>Relock</Button> ) 
+        return ( <Button borderRadius={100} disabled={procesing} fontSize={'16px'} px={'30px'} colorScheme={colors.primary} w={'100%'} onClick={()=> clickedAction(position.index, ACTION_TYPE.RELOCK, vPower, position.locking_period, position.amount)}>Relock</Button> ) 
     }
   }
   

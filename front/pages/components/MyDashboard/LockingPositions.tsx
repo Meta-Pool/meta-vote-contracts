@@ -33,7 +33,7 @@ import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { getAllLockingPositions, getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getNearConfig, getUnlockingBalance, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
-import { yton } from '../../../lib/util';
+import { ntoy, yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal, { InfoContent } from './InfoModal';
 import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
@@ -44,6 +44,7 @@ import { AddIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 import TxErrorHandler from '../TxErrorHandler';
 import { FinalExecutionOutcome } from 'near-api-js/lib/providers';
+import ErrorModal from './ErrorModal';
 
 type Props = {
 }
@@ -55,10 +56,14 @@ const LockingPosition = (props: Props) => {
   const [ procesingFlag, setProcessFlag] = useState(false); 
 
   const [ modalContent, setModalContent] = useState<InfoContent>({title: '', text:''}); 
+  const [ modalContentError, setModalContentError] = useState<InfoContent>({title: '', text:''}); 
+
   const { selector} = useWalletSelector();
 
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfoModal} = useDisclosure();
+  const { isOpen : errorIsOpen,  onClose : errorOnClose, onOpen: onOpenErrorModal} = useDisclosure();
+
   const [finalExecutionOutcome, setFinalExecutionOutcome] =
   useState<FinalExecutionOutcome | null>(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
@@ -172,24 +177,35 @@ const LockingPosition = (props: Props) => {
     infoOnClose();
   }
 
-  const clickedAction = (idPosition: string, type: ACTION_TYPE, period? :string, amount?: string) => {
+  const clickedAction = (idPosition: string, type: ACTION_TYPE, positionVPower: any, period? :string, amount?: string) => {
     switch (type) {
       case ACTION_TYPE.UNLOCK:
-        setModalContent(MODAL_TEXT.UNLOCK)
-        setActionCall(()=>()=> unlockPosition(idPosition))
-        break;
+        if (yton(voterData.votingPower) <  positionVPower) {
+          const content = {
+            title : MODAL_TEXT.UNLOCK.ERROR_NOT_ENOUGH.title,
+            text : MODAL_TEXT.UNLOCK.ERROR_NOT_ENOUGH.text.replace(':positionAmount', positionVPower ).replace(':votingPowerAvailable', yton(voterData.votingPower).toString())
+          };
+          setModalContentError(content);
+          onOpenErrorModal();
+        } else {
+          setModalContent(MODAL_TEXT.UNLOCK.CONFIRM)
+          setActionCall(()=>()=> unlockPosition(idPosition))
+          onOpenInfoModal();
+          break;
+        }
       case ACTION_TYPE.RELOCK:
-        setModalContent(MODAL_TEXT.RELOCK)
         if (period && amount ){
+          setModalContent(MODAL_TEXT.RELOCK)
           setActionCall(()=>()=> relockClicked(idPosition, period, amount))
+          onOpenInfoModal();
         }
         break;
       case ACTION_TYPE.WITHDRAW:
         setModalContent(MODAL_TEXT.WITHDRAW)
         setActionCall(()=>()=> withdrawCall(idPosition))
+        onOpenInfoModal();
         break;
     }
-    onOpenInfoModal();
   }
 
   useEffect(  () =>{
@@ -226,6 +242,7 @@ const LockingPosition = (props: Props) => {
                     return (
                         <VPositionCard 
                           key={index}
+                          availableVPower= {voterData.votingPower}
                           position={position}
                           vPower={yton(position.voting_power).toFixed(4)}
                           amount={yton(position.amount).toFixed(4)}
@@ -250,7 +267,7 @@ const LockingPosition = (props: Props) => {
               </Flex>
           )
         }
-
+      <ErrorModal content={modalContentError}  isOpen={errorIsOpen} onClose={errorOnClose}></ErrorModal>
       <InfoModal content={modalContent}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={actionCall} ></InfoModal>
       <LockModal isOpen={isOpen} onClose={onClose}></LockModal>
     </section>
