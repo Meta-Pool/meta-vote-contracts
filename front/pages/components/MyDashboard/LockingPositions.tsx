@@ -128,6 +128,13 @@ const LockingPosition = (props: Props) => {
         setTimeout(() => {
           getVotingPositions();  
           refreshHeaderData(); 
+          toast({
+            title: "Successful withdrawal.",
+            status: "success",
+            duration: 3000,
+            position: "top-right",
+            isClosable: true,
+          });
         }, waitingTime);
       }).catch((error)=>
       {
@@ -136,7 +143,7 @@ const LockingPosition = (props: Props) => {
           title: "Transaction error.",
           description: error,
           status: "error",
-          duration: 3000,
+          duration: 5000,
           position: "top-right",
           isClosable: true,
         });
@@ -164,7 +171,7 @@ const LockingPosition = (props: Props) => {
           title: "Transaction error.",
           description: error,
           status: "error",
-          duration: 3000,
+          duration: 5000,
           position: "top-right",
           isClosable: true,
         });
