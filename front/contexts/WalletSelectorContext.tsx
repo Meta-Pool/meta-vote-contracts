@@ -73,7 +73,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         // setupSender(),
         setupMathWallet(),
         // setupNightly(),
-        setupLedger(),
+        // setupLedger(),
         /* setupWalletConnect({
           projectId: "c4f79cc...",
           metadata: {
