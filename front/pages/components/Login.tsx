@@ -40,13 +40,13 @@ const LoginPage = (props: Props) => {
           <ListItem>Vote on projects in Meta Yield</ListItem>
         </UnorderedList>
       </Stack>
-      <Center w={{base: '100%', md: '50%'}}>
+      <Center p={20} w={{base: '100%', md: '50%'}}>
         <VStack 
           align={'flex-start'}
           justify={'center'}
           spacing={20}>
           <VStack align={'flex-start'}>
-            <Text color={colors.primary + '.900'} fontSize={'48px'} fontWeight={600}> Sign in with your wallet</Text>
+            <Text color={colors.primary + '.900'} fontSize={{base: '22px', md: '48px'}} fontWeight={600}> Sign in with your wallet</Text>
             <Text fontWeight={600}> User your wallet to access Meta Vote</Text>
           </VStack>
           <ButtonOnLogin color={colors.primary} variant='solid'/>

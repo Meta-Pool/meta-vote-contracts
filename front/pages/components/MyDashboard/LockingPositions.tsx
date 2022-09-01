@@ -26,11 +26,12 @@ import {
   Box,
   Stack,
   Tooltip,
-  Link
+  Link,
+  useToast
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAllLockingPositions, getNearConfig, relock, unlock, withdrawAPosition } from '../../../lib/near';
+import { getAllLockingPositions, getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getNearConfig, getUnlockingBalance, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
@@ -41,6 +42,8 @@ import ButtonOnLogin from '../ButtonLogin';
 import VPositionCard from './VPositionCard';
 import { AddIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
+import TxErrorHandler from '../TxErrorHandler';
+import { FinalExecutionOutcome } from 'near-api-js/lib/providers';
 
 type Props = {
 }
@@ -56,28 +59,54 @@ const LockingPosition = (props: Props) => {
 
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfoModal} = useDisclosure();
-
+  const [finalExecutionOutcome, setFinalExecutionOutcome] =
+  useState<FinalExecutionOutcome | null>(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
- 
+  const toast = useToast();
+
   const getVotingPositions = async ()=> {
     const newVoterData = voterData;
-    newVoterData.lockingPositions = [];
+    newVoterData.lockingPositions = voterData.lockingPositions;
     setVoterData(newVoterData);
     newVoterData.lockingPositions = await getAllLockingPositions();
     setVoterData(newVoterData);
+    setProcessFlag(false);
   }
 
-  const waitingTime = 500;
+  const refreshHeaderData = async ()=> {
+    const newVoterData = voterData;
+    newVoterData.votingPower = await getAvailableVotingPower();
+    newVoterData.inUseVPower = await getInUseVotingPower();
+    newVoterData.metaLocked = await getLockedBalance();
+    newVoterData.metaToWithdraw = await getBalanceMetaVote();
+    newVoterData.metaUnlocking = await getUnlockingBalance();
+    setVoterData(newVoterData);
+  }
+
+  const waitingTime = 2000;
 
   const unlockPosition = (idPosition: string) => {
     try {
       setProcessFlag(true);
-      unlock(idPosition).then(()=> {
+      unlock(idPosition).then((result)=> {
         // After the action I need to wait some async time to give the contract time to update the data. 
         // Withoud the setTiemout the get is not retrieving the updated data
         setTimeout(() => {
-          getVotingPositions();  
+          getVotingPositions(); 
+          refreshHeaderData(); 
         }, waitingTime);
+        setFinalExecutionOutcome(result);
+      }).catch((error)=>
+      {
+        console.log('error on catch', error)
+        toast({
+          title: "Transaction error.",
+          description: error,
+          status: "error",
+          duration: 3000,
+          position: "top-right",
+          isClosable: true,
+        });
         setProcessFlag(false);
       });
     } catch (error) {
@@ -85,7 +114,6 @@ const LockingPosition = (props: Props) => {
       console.error(error);
     }
     infoOnClose();
-
   }
 
   const withdrawCall =  (positionId: string) => {
@@ -94,9 +122,21 @@ const LockingPosition = (props: Props) => {
       withdrawAPosition(positionId).then(()=> {
         setTimeout(() => {
           getVotingPositions();  
+          refreshHeaderData(); 
         }, waitingTime);
+      }).catch((error)=>
+      {
+        console.log('error on catch', error)
+        toast({
+          title: "Transaction error.",
+          description: error,
+          status: "error",
+          duration: 3000,
+          position: "top-right",
+          isClosable: true,
+        });
         setProcessFlag(false);
-      }); 
+      });
     } catch (error) {
       setProcessFlag(false);
       console.error(error);
@@ -110,9 +150,21 @@ const LockingPosition = (props: Props) => {
       relock(positionIndex, period, amount).then(()=> {
         setTimeout(() => {
           getVotingPositions();  
+          refreshHeaderData(); 
         }, waitingTime);
+      }).catch((error)=>
+      {
+        console.log('error on catch', error)
+        toast({
+          title: "Transaction error.",
+          description: error,
+          status: "error",
+          duration: 3000,
+          position: "top-right",
+          isClosable: true,
+        });
         setProcessFlag(false);
-      }); 
+      });
     } catch (error) {
       setProcessFlag(false);
       console.error(error);
@@ -149,10 +201,11 @@ const LockingPosition = (props: Props) => {
   },[selector])
 
   return (
-    <section>        
+    <section>   
+        <TxErrorHandler finalExecutionOutcome={finalExecutionOutcome} />     
         { 
             voterData.lockingPositions.length === 0 ? (
-              <Stack minH={400} spacing={10} direction='column'  alignItems={'flex-start'} justifyContent={'flex-start'}>
+              <Stack minH={400} spacing={10} direction='column'  alignItems={'flex-start'}  justify={{base: 'center', md: 'flex-start'}}>
                 <Heading fontSize={'2xl'} >To get voting power, you need to lock $META.</Heading>
                 <ButtonOnLogin>
                   <HStack spacing={5}>
@@ -166,7 +219,6 @@ const LockingPosition = (props: Props) => {
                     </Button>
                   </HStack>
                 </ButtonOnLogin>
-                
               </Stack>
             ) : (
               <Flex flexWrap={'wrap'} justifyContent={'space-between'}>

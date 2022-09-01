@@ -15,7 +15,8 @@ import {
   AccordionPanel,
   useBreakpointValue,
   Circle,
-  Image
+  Image,
+  Skeleton
 } from "@chakra-ui/react";
 import { colors } from "../../../constants/colors";
 import { yton } from "../../../lib/util";
@@ -47,7 +48,12 @@ const VoteCard = (props: CardProps) => {
   }
 
   return (
-      
+    procesing ? (
+      <Stack borderRadius={"30px"} spacing={10} minH={{base: 'inherit',md:'234px'}} bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} maxH={'200px'} minW={'330px'}>
+        <Skeleton height='20px' />
+        <Skeleton hidden={!isDesktop} height='20px' />
+        <Skeleton hidden={!isDesktop} height='20px' />
+      </Stack>) :(
         isDesktop! ? (
           <Stack borderRadius={"30px"} spacing={10} minH={'234px'} bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} maxH={'200px'} minW={'330px'}>
             {/* Card header */}
@@ -110,7 +116,7 @@ const VoteCard = (props: CardProps) => {
             </AccordionItem>
           </Accordion>
         )
-      
+      )
     ) 
 };
 
