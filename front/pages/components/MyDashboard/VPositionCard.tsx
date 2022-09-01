@@ -131,7 +131,7 @@ const VPositionCard = (props: CardProps) => {
   return (
           
           procesing ? (
-          <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={{base: '10px', md:'38px'}} m={{base:'2px', md:'11px'}} justify={'space-between'} minH={{base: '20px',md:'234px'}} minW={'330px'}>
+          <Stack bg={'#F9F9FA'} borderRadius={"30px"} px={'20px'} py={{base: '10px', md:'38px'}} m={{base:'2px', md:'11px'}} justify={'space-between'} minH={{base: '20px',md:'176px'}} minW={'330px'}>
             <Skeleton height={{base: '40px',md:'20px'}} />
             <Skeleton hidden={!isDesktop} height='20px' />
             <Skeleton hidden={!isDesktop} height='20px' />
