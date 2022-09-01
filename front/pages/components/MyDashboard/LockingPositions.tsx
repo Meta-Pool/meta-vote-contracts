@@ -31,7 +31,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAllLockingPositions, getNearConfig, relock, unlock, withdrawAPosition } from '../../../lib/near';
+import { getAllLockingPositions, getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getNearConfig, getUnlockingBalance, relock, unlock, withdrawAPosition } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
@@ -73,6 +73,16 @@ const LockingPosition = (props: Props) => {
     setProcessFlag(false);
   }
 
+  const refreshHeaderData = async ()=> {
+    const newVoterData = voterData;
+    newVoterData.votingPower = await getAvailableVotingPower();
+    newVoterData.inUseVPower = await getInUseVotingPower();
+    newVoterData.metaLocked = await getLockedBalance();
+    newVoterData.metaToWithdraw = await getBalanceMetaVote();
+    newVoterData.metaUnlocking = await getUnlockingBalance();
+    setVoterData(newVoterData);
+  }
+
   const waitingTime = 2000;
 
   const unlockPosition = (idPosition: string) => {
@@ -82,7 +92,8 @@ const LockingPosition = (props: Props) => {
         // After the action I need to wait some async time to give the contract time to update the data. 
         // Withoud the setTiemout the get is not retrieving the updated data
         setTimeout(() => {
-          getVotingPositions();  
+          getVotingPositions(); 
+          refreshHeaderData(); 
         }, waitingTime);
         setFinalExecutionOutcome(result);
       }).catch((error)=>
@@ -103,7 +114,6 @@ const LockingPosition = (props: Props) => {
       console.error(error);
     }
     infoOnClose();
-
   }
 
   const withdrawCall =  (positionId: string) => {
@@ -112,6 +122,7 @@ const LockingPosition = (props: Props) => {
       withdrawAPosition(positionId).then(()=> {
         setTimeout(() => {
           getVotingPositions();  
+          refreshHeaderData(); 
         }, waitingTime);
       }).catch((error)=>
       {
@@ -139,6 +150,7 @@ const LockingPosition = (props: Props) => {
       relock(positionIndex, period, amount).then(()=> {
         setTimeout(() => {
           getVotingPositions();  
+          refreshHeaderData(); 
         }, waitingTime);
       }).catch((error)=>
       {

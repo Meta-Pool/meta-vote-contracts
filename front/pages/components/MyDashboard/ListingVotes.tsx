@@ -9,7 +9,7 @@ import {
   useToast
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { getNearConfig, getVotesByVoter, unvoteProject } from '../../../lib/near';
+import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getNearConfig, getUnlockingBalance, getVotesByVoter, unvoteProject } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
@@ -37,12 +37,21 @@ const ListingVotes = () => {
     setVoterData(newVoterData);
   }
 
+  const refreshHeaderData = async ()=> {
+    const newVoterData = voterData;
+    newVoterData.votingPower = await getAvailableVotingPower();
+    newVoterData.inUseVPower = await getInUseVotingPower();
+    newVoterData.metaLocked = await getLockedBalance();
+    newVoterData.metaToWithdraw = await getBalanceMetaVote();
+    newVoterData.metaUnlocking = await getUnlockingBalance();
+    setVoterData(newVoterData);
+  }
+
   const unvote = (id: any)=> {
       try {
         setProcessFlag(true);
         infoOnClose();
         unvoteProject(id, contract).then(()=>{
-          getVotes();
           toast({
             title: "Unvote success.",
             status: "success",
@@ -52,6 +61,7 @@ const ListingVotes = () => {
           });
           setTimeout(()=>{
             getVotes();
+            refreshHeaderData();
             setProcessFlag(false);
           }, 2000)
         }).catch((error)=>
