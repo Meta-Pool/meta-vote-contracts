@@ -88,7 +88,7 @@ const ListingVotes = () => {
   return (
     <section>
         { 
-          <Flex>
+          <Flex >
               {  
                   voterData.votingResults.length > 0 && voterData.votingResults.map((position: any, index: number)=> {
                     return (
@@ -101,7 +101,7 @@ const ListingVotes = () => {
               }      
               {
                 voterData.votingResults.length === 0 && (
-                  <VStack  spacing={10} alignItems={'flex-start'} justify={'flex-start'}  w={'100%'}>
+                  <VStack m={10} spacing={10} alignItems={'flex-start'}   w={'100%'}>
                     <Heading fontSize={'2xl'} > You didn’t vote anything yet.</Heading>
                     <Button  borderRadius={100}  fontSize={{ base: "md", md: "md" }}   colorScheme={colors.primary}>
                       <Link href={getNearConfig().metayieldUrl} isExternal>Browser projects at MetaYield</Link>

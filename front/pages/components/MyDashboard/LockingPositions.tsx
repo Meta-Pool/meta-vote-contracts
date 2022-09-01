@@ -182,7 +182,7 @@ const LockingPosition = (props: Props) => {
     <section>        
         { 
             voterData.lockingPositions.length === 0 ? (
-              <Stack minH={400} spacing={10} direction='column'  alignItems={'flex-start'} justifyContent={'flex-start'}>
+              <Stack minH={400} spacing={10} direction='column'  alignItems={'flex-start'}  justify={{base: 'center', md: 'flex-start'}}>
                 <Heading fontSize={'2xl'} >To get voting power, you need to lock $META.</Heading>
                 <ButtonOnLogin>
                   <HStack spacing={5}>
