@@ -86,7 +86,7 @@ const LockingPosition = (props: Props) => {
         toast({
           title: "Transaction error.",
           status: "error",
-          duration: 9000,
+          duration: 3000,
           position: "top-right",
           isClosable: true,
         });
@@ -112,7 +112,7 @@ const LockingPosition = (props: Props) => {
         toast({
           title: "Transaction error.",
           status: "error",
-          duration: 9000,
+          duration: 3000,
           position: "top-right",
           isClosable: true,
         });
@@ -137,7 +137,7 @@ const LockingPosition = (props: Props) => {
         toast({
           title: "Transaction error.",
           status: "error",
-          duration: 9000,
+          duration: 3000,
           position: "top-right",
           isClosable: true,
         });
@@ -196,7 +196,6 @@ const LockingPosition = (props: Props) => {
                     </Button>
                   </HStack>
                 </ButtonOnLogin>
-                
               </Stack>
             ) : (
               <Flex flexWrap={'wrap'} justifyContent={'space-between'}>

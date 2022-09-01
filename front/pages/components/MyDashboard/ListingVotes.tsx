@@ -5,7 +5,8 @@ import {
   Center,
   Button,
   Link,
-  VStack
+  VStack,
+  useToast
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { getNearConfig, getVotesByVoter, unvoteProject } from '../../../lib/near';
@@ -26,6 +27,7 @@ const ListingVotes = () => {
   const { selector } = useWalletSelector();
   const [ procesingFlag, setProcessFlag] = useState(false); 
 
+  const toast = useToast();
 
   const contract = CONTRACT_ADDRESS ? CONTRACT_ADDRESS : '';
 
@@ -38,12 +40,34 @@ const ListingVotes = () => {
   const unvote = (id: any)=> {
       try {
         setProcessFlag(true);
+        infoOnClose();
         unvoteProject(id, contract).then(()=>{
           getVotes();
+          toast({
+            title: "Unvote success.",
+            status: "success",
+            duration: 3000,
+            position: "top-right",
+            isClosable: true,
+          });
+          setTimeout(()=>{
+            getVotes();
+            setProcessFlag(false);
+          }, 2000)
+        }).catch(()=>
+        {
+          toast({
+            title: "Transaction error.",
+            status: "error",
+            duration: 3000,
+            position: "top-right",
+            isClosable: true,
+          });
           setProcessFlag(false);
         });
       } catch (error) {
         setProcessFlag(false);
+        infoOnClose();
         console.error(error);
       }
   }
