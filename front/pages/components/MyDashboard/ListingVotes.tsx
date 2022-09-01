@@ -5,10 +5,11 @@ import {
   Center,
   Button,
   Link,
-  VStack
+  VStack,
+  useToast
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { getNearConfig, getVotesByVoter, unvoteProject } from '../../../lib/near';
+import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getNearConfig, getUnlockingBalance, getVotesByVoter, unvoteProject } from '../../../lib/near';
 import { useStore as useVoter } from "../../../stores/voter";
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
@@ -26,6 +27,7 @@ const ListingVotes = () => {
   const { selector } = useWalletSelector();
   const [ procesingFlag, setProcessFlag] = useState(false); 
 
+  const toast = useToast();
 
   const contract = CONTRACT_ADDRESS ? CONTRACT_ADDRESS : '';
 
@@ -35,16 +37,48 @@ const ListingVotes = () => {
     setVoterData(newVoterData);
   }
 
+  const refreshHeaderData = async ()=> {
+    const newVoterData = voterData;
+    newVoterData.votingPower = await getAvailableVotingPower();
+    newVoterData.inUseVPower = await getInUseVotingPower();
+    newVoterData.metaLocked = await getLockedBalance();
+    newVoterData.metaToWithdraw = await getBalanceMetaVote();
+    newVoterData.metaUnlocking = await getUnlockingBalance();
+    setVoterData(newVoterData);
+  }
+
   const unvote = (id: any)=> {
       try {
         setProcessFlag(true);
+        infoOnClose();
         unvoteProject(id, contract).then(()=>{
-          getVotes();
+          toast({
+            title: "Unvote success.",
+            status: "success",
+            duration: 3000,
+            position: "top-right",
+            isClosable: true,
+          });
+          setTimeout(()=>{
+            getVotes();
+            refreshHeaderData();
+            setProcessFlag(false);
+          }, 2000)
+        }).catch((error)=>
+        {
+          toast({
+            title: "Transaction error.",
+            description: error,
+            status: "error",
+            duration: 3000,
+            position: "top-right",
+            isClosable: true,
+          });
           setProcessFlag(false);
         });
       } catch (error) {
         setProcessFlag(false);
-        console.error(error);
+        infoOnClose();
       }
   }
 
@@ -64,7 +98,7 @@ const ListingVotes = () => {
   return (
     <section>
         { 
-          <Flex>
+          <Flex direction={{base: 'column', md: 'row'}}>
               {  
                   voterData.votingResults.length > 0 && voterData.votingResults.map((position: any, index: number)=> {
                     return (
@@ -77,7 +111,7 @@ const ListingVotes = () => {
               }      
               {
                 voterData.votingResults.length === 0 && (
-                  <VStack  spacing={10} alignItems={'flex-start'} justify={'flex-start'}  w={'100%'}>
+                  <VStack m={10} spacing={10} alignItems={'flex-start'}   w={'100%'}>
                     <Heading fontSize={'2xl'} > You didn’t vote anything yet.</Heading>
                     <Button  borderRadius={100}  fontSize={{ base: "md", md: "md" }}   colorScheme={colors.primary}>
                       <Link href={getNearConfig().metayieldUrl} isExternal>Browser projects at MetaYield</Link>

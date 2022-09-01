@@ -51,7 +51,6 @@ const Header: React.FC<ButtonProps> = (props) => {
     const wallet = await selector.wallet();
 
     wallet.signOut().catch((err: any) => {
-      console.log("Failed to sign out");
       console.error(err);
     });
   };
@@ -70,7 +69,7 @@ const Header: React.FC<ButtonProps> = (props) => {
     setInterval(async () => {
       try {
         if (selector.isSignedIn() && accountId) {
-          // setBalance(await getMetaBalance());
+          setBalance(await getMetaBalance());
         }
       } catch (e) {
         console.error(e);

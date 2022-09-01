@@ -73,7 +73,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         // setupSender(),
         setupMathWallet(),
         // setupNightly(),
-        setupLedger(),
+        // setupLedger(),
         /* setupWalletConnect({
           projectId: "c4f79cc...",
           metadata: {
@@ -129,8 +129,6 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         distinctUntilChanged()
       )
       .subscribe((nextAccounts) => {
-        console.log("Accounts Update", nextAccounts);
-
         setAccounts(nextAccounts);
       });
 

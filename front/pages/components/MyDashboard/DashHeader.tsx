@@ -7,11 +7,12 @@ import {
   Tooltip, 
   useBreakpointValue, 
   useDisclosure,
+  useToast,
   VStack, 
 } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
-import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, withdrawAll } from '../../../lib/near';
+import { getAllLockingPositions, getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLockedBalance, getUnlockingBalance, withdrawAll } from '../../../lib/near';
 
 import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
@@ -32,12 +33,16 @@ const DashboardHeader = () => {
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const { selector } = useWalletSelector();
+  const [ procesingFlag, setProcessFlag] = useState(false); 
+  const toast = useToast();
 
   const padding = '24px';
+  const waitingTime = 500;
 
   const initMyData = async ()=> {
     const newVoterData = voterData;
     newVoterData.votingPower = await getAvailableVotingPower();
+    newVoterData.lockingPositions = await getAllLockingPositions();
     newVoterData.inUseVPower = await getInUseVotingPower();
     newVoterData.metaLocked = await getLockedBalance();
     newVoterData.metaToWithdraw = await getBalanceMetaVote();
@@ -46,7 +51,46 @@ const DashboardHeader = () => {
   }
 
   const withdrawClicked = async ()=> {
-       withdrawAll(); 
+       // withdrawAll(); 
+       onOpenInfo();
+  }
+
+  const refresh = async () => {
+    initMyData();
+  }
+
+  const withdrawCall =  () => {
+    try {
+      setProcessFlag(true);
+      withdrawAll().then(()=> {
+        toast({
+          title: "Transaction success.",
+          status: "success",
+          duration: 9000,
+          position: "top-right",
+          isClosable: true,
+        });
+        setTimeout(() => {
+          initMyData();  
+        }, waitingTime);
+        setProcessFlag(false);
+      }).catch((error)=>
+      {
+        toast({
+          title: "Transaction error.",
+          description: error,
+          status: "error",
+          duration: 3000,
+          position: "top-right",
+          isClosable: true,
+        });
+        setProcessFlag(false);
+      });
+    } catch (error) {
+      setProcessFlag(false);
+      console.error(error);
+    }
+    infoOnClose();
   }
 
   useEffect(  () =>{
@@ -75,10 +119,8 @@ const DashboardHeader = () => {
             <HStack position={'relative'} spacing={2}>
               <VStack align={'flex-start'}>
               <Text hidden={!isDesktop} opacity={1} color={"#F9F9FA"} fontSize={'20px'} p={'8px'}>My Voting Power</Text>
-
                 <HStack spacing={10}>
                   <Text fontSize={{base: '32px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
-
                   <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
                     <Button leftIcon={<AddIcon />} hidden={!isDesktop} fontSize={'16px'} fontWeight={500} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> Add Voting Power</Button>
                   </Tooltip>
@@ -88,9 +130,10 @@ const DashboardHeader = () => {
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>
               <ButtonOnLogin>
-                <Button borderRadius={100}  color={colors.primary} bg={'white'} fontSize={{ base: "xs", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
-                  Lock more $META
+                <Button borderRadius={100} leftIcon={<AddIcon />} fontSize={{ base: "xs", md: "xl" }}  onClick={onOpen} colorScheme={colors.primary}>
+                  Add Voting Power
                 </Button>
+
               </ButtonOnLogin>
             </Stack>
           </Stack>
@@ -104,20 +147,20 @@ const DashboardHeader = () => {
               <Box hidden={!isDesktop}><DashboardCard   title='$META unlocking' iconSrc={'./icons/unlock_white.svg'} number={yton(voterData.metaUnlocking)}></DashboardCard></Box>
               <Box hidden={!isDesktop} position={'relative'}>
                 <DashboardCard  title='$META to withdraw' iconSrc={'./icons/withdraw_white.svg'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-                <Button minWidth= {'176px'} position={'absolute'} bottom={'-55px'}  fontSize={'md'} fontWeight={700} px={6} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
+                <Button disabled={procesingFlag ||  parseInt(voterData.metaToWithdraw)<=0}  minWidth= {'176px'} position={'absolute'} bottom={'-55px'}  fontSize={'md'} fontWeight={700} px={6} borderRadius={100}  onClick={()=> withdrawClicked()} color={colors.primary} bg={'white'} >
                   Withdraw
                 </Button>
               </Box>
             </HStack>
-          </Stack>
+          </Stack> 
           <LockModal isOpen={isOpen} onClose={onClose} ></LockModal>
-          <InfoModal content={MODAL_TEXT.UNLOCK} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawClicked()} ></InfoModal>
+          <InfoModal content={MODAL_TEXT.WITHDRAW} isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => withdrawCall()} ></InfoModal>
         </Stack>
         <Box  hidden={isDesktop}>
           <DashboardCard horizontal={true} title='$META locked' iconSrc={'./icons/lock_bold.png'} number={yton(voterData.metaLocked)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META unlocking' iconSrc={'./icons/unlock_bold.png'} number={yton(voterData.metaUnlocking)}></DashboardCard>
           <DashboardCard horizontal={true} title='$META to withdraw' iconSrc={'./icons/withdraw_bold.png'} number={yton(voterData.metaToWithdraw)}></DashboardCard>
-          <Button ml={'100px'} mt={5} p={{base: '10px' ,md:'32px'}} px={{base: '20px', md: '32px'}} fontSize={{base: 'md' ,md:'10px'}} borderRadius={100} disabled={ parseInt(voterData.metaToWithdraw)<=0}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
+          <Button disabled={ procesingFlag || parseInt(voterData.metaToWithdraw)<=0}  ml={'100px'} mt={5} p={{base: '10px' ,md:'32px'}} px={{base: '20px', md: '32px'}} fontSize={{base: 'md' ,md:'10px'}} borderRadius={100}  onClick={()=> withdrawClicked()} colorScheme={colors.primary} >
             Withdraw
           </Button>
         </Box>
@@ -126,4 +169,3 @@ const DashboardHeader = () => {
 };
 
 export default DashboardHeader;
- 

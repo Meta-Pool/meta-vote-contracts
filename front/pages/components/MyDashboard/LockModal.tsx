@@ -156,9 +156,7 @@ const LockModal = (props: Props) => {
                   </Stack>
                 )
               }
-              
               <StackDivider></StackDivider >
-              
               <Stack spacing={5} w={'100%'} direction={{base:'column', md:'column'}} justify={'space-between'}>
                 <HStack align={{base:'flex-start', md:'flex-end'}} justify={'space-between'}>
                   <HStack>
