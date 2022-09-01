@@ -111,9 +111,9 @@ const ListingVotes = () => {
               }      
               {
                 voterData.votingResults.length === 0 && (
-                  <VStack m={10} spacing={10} alignItems={'flex-start'}   w={'100%'}>
-                    <Heading fontSize={'2xl'} > You didn’t vote anything yet.</Heading>
-                    <Button  borderRadius={100}  fontSize={{ base: "md", md: "md" }}   colorScheme={colors.primary}>
+                  <VStack m={10} spacing={10} alignItems={'flex-start'}   w={{base: 'inherit', md: '100%'}}>
+                    <Heading fontSize={{ base: "sm", md: "2xl" }} > You didn’t vote anything yet.</Heading>
+                    <Button  borderRadius={100}  fontSize={{ base: "sm", md: "md" }}   colorScheme={colors.primary}>
                       <Link href={getNearConfig().metayieldUrl} isExternal>Browser projects at MetaYield</Link>
                     </Button>
                   </VStack>
