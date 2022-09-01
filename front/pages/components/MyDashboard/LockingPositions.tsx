@@ -81,7 +81,7 @@ const LockingPosition = (props: Props) => {
         setTimeout(() => {
           getVotingPositions();  
         }, waitingTime);
-      }).catch(()=>
+      }).catch((error)=>
       {
         toast({
           title: "Transaction error.",

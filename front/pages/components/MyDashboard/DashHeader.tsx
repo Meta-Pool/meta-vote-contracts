@@ -129,9 +129,10 @@ const DashboardHeader = () => {
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>
               <ButtonOnLogin>
-                <Button borderRadius={100}  color={colors.primary} bg={'white'} fontSize={{ base: "xs", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
-                  Lock more $META
+                <Button borderRadius={100} leftIcon={<AddIcon />} fontSize={{ base: "xs", md: "xl" }}  onClick={onOpen} colorScheme={colors.primary}>
+                  Add Voting Power
                 </Button>
+
               </ButtonOnLogin>
             </Stack>
           </Stack>

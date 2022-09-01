@@ -44,6 +44,13 @@ const customTheme = extendTheme(
         }
       })
     },
+    breakpoints: {
+      sm: '30em',
+      md: '72em',
+      lg: '62em',
+      xl: '80em',
+      '2xl': '96em',
+    },    
     fonts: {
       heading: "Inter",
       body: "Inter",
