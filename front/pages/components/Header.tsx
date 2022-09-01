@@ -51,7 +51,6 @@ const Header: React.FC<ButtonProps> = (props) => {
     const wallet = await selector.wallet();
 
     wallet.signOut().catch((err: any) => {
-      console.log("Failed to sign out");
       console.error(err);
     });
   };

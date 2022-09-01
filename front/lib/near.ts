@@ -146,8 +146,6 @@ export const getMetapoolAccountInfo = async () => {
 };
 
 export const getMetaTokenAccountInfo = async () => {
-  console.log("getMetaTokenAccountInfo", window);
-
   const account_id = window.account_id;
   return callViewMetaTokenMethod( metaTokenMethods.getMetas, {
     account_id: account_id,
@@ -155,13 +153,11 @@ export const getMetaTokenAccountInfo = async () => {
 };
 
 export const getMetaBalance = async (): Promise<number> => {
-  console.log("getMetaBalance");
   const accountInfo = await getMetaTokenAccountInfo();
   return yton(accountInfo);
 };
 
 export const getBalance = async (): Promise<number> => {
-  console.log("getBalance");
   const accountInfo = await getMetapoolAccountInfo();
   return yton(accountInfo.st_near);
 };
@@ -233,7 +229,6 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
 }; */
 
 const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string) => {
-  console.log("callChangeMetavoteMethod", method, args)
   const wallet = window.wallet;
   const account_id = window.account_id;
   const result = wallet!
@@ -252,7 +247,7 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
       ],
     })
     .catch((err) => {
-      console.log(`Failed to call katherine contract -- method: ${method}`);
+      console.error(`Failed to call katherine contract -- method: ${method}`);
       throw err;
     });
   return result;
@@ -328,8 +323,6 @@ export const getBalanceOfTokenForSupporter = async (
 
 
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
-  console.log("callChangeMetaTokenMethod", method, args)
-
   const wallet = window.wallet;
   const account_id = window.account_id;
   const result = wallet!
@@ -349,7 +342,7 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
       ],
     })
     .catch((err) => {
-      console.log(`Failed to call katherine contract -- method: ${method}`);
+      console.error(`Failed to call katherine contract -- method: ${method}`);
       throw err;
     });
   return result;
