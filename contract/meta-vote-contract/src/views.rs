@@ -7,6 +7,38 @@ use near_sdk::json_types::U128;
 /**********************/
 
 impl MetaVoteContract {
+    pub fn get_balance(&self, voter_id: VoterId) -> U128 {
+        let voter = self.internal_get_voter(&voter_id);
+        let balance = voter.balance + voter.sum_unlocked();
+        U128::from(balance)
+    }
+
+    pub fn get_locked_balance(&self, voter_id: VoterId) -> U128 {
+        let voter = self.internal_get_voter(&voter_id);
+        U128::from(voter.sum_locked())
+    }
+
+    pub fn get_unlocking_balance(&self, voter_id: VoterId) -> U128 {
+        let voter = self.internal_get_voter(&voter_id);
+        U128::from(voter.sum_unlocking())
+    }
+
+    pub fn get_available_voting_power(&self, voter_id: VoterId) -> U128 {
+        let voter = self.internal_get_voter(&voter_id);
+        U128::from(voter.voting_power)
+    }
+
+    pub fn get_used_voting_power(&self, voter_id: VoterId) -> U128 {
+        let voter = self.internal_get_voter(&voter_id);
+        U128::from(voter.sum_used_votes())
+    }
+
+    pub fn get_locking_period(&self) -> (Days, Days) {
+        (self.min_locking_period, self.max_locking_period)
+    } 
+}
+
+impl MetaVoteContract {
     pub fn get_all_locking_positions(
         &self,
         voter_id: VoterId
@@ -33,32 +65,6 @@ impl MetaVoteContract {
             Some(locking_position) => Some(locking_position.to_json(Some(index))),
             None => None,
         }
-    }
-
-    pub fn get_balance(&self, voter_id: VoterId) -> U128 {
-        let voter = self.internal_get_voter(&voter_id);
-        let balance = voter.balance + voter.sum_unlocked();
-        U128::from(balance)
-    }
-
-    pub fn get_locked_balance(&self, voter_id: VoterId) -> U128 {
-        let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.sum_locked())
-    }
-
-    pub fn get_unlocking_balance(&self, voter_id: VoterId) -> U128 {
-        let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.sum_unlocking())
-    }
-
-    pub fn get_available_voting_power(&self, voter_id: VoterId) -> U128 {
-        let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.voting_power)
-    }
-
-    pub fn get_used_voting_power(&self, voter_id: VoterId) -> U128 {
-        let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.sum_used_votes())
     }
 
     pub fn get_total_votes(
