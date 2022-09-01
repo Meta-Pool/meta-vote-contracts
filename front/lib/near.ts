@@ -9,6 +9,7 @@ import {
 import {
   getTransactionLastResult,
 } from "near-api-js/lib/providers";
+import { FinalExecutionOutcome } from "near-api-js/lib/providers";
 import { AccountView } from "near-api-js/lib/providers/provider";
 const BN = require("bn.js");
 import { getConfig } from "../config";
@@ -24,6 +25,7 @@ import {
   decodeJsonRpcData,
   encodeJsonRpcData,
   getPanicError,
+  getPanicErrorFromText,
   getTxFunctionCallMethod,
   yton,
 } from "./util";
@@ -228,10 +230,10 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return response;
 }; */
 
-const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string) => {
+const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<FinalExecutionOutcome | null> => {
   const wallet = window.wallet;
   const account_id = window.account_id;
-  const result = wallet!
+  const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
       actions: [
@@ -248,9 +250,12 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
     })
     .catch((err) => {
       console.error(`Failed to call katherine contract -- method: ${method}`);
-      throw err;
+      throw getPanicErrorFromText(err.message);
     });
-  return result;
+    if (result instanceof Object) {
+      return result;
+    }
+  return null;
 };
 
 const callPublicMetapoolMethod = async (method: string, args: any) => {

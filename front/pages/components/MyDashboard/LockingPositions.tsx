@@ -42,6 +42,8 @@ import ButtonOnLogin from '../ButtonLogin';
 import VPositionCard from './VPositionCard';
 import { AddIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
+import TxErrorHandler from '../TxErrorHandler';
+import { FinalExecutionOutcome } from 'near-api-js/lib/providers';
 
 type Props = {
 }
@@ -57,7 +59,8 @@ const LockingPosition = (props: Props) => {
 
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfoModal} = useDisclosure();
-
+  const [finalExecutionOutcome, setFinalExecutionOutcome] =
+  useState<FinalExecutionOutcome | null>(null);
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const toast = useToast();
 
@@ -75,16 +78,19 @@ const LockingPosition = (props: Props) => {
   const unlockPosition = (idPosition: string) => {
     try {
       setProcessFlag(true);
-      unlock(idPosition).then(()=> {
+      unlock(idPosition).then((result)=> {
         // After the action I need to wait some async time to give the contract time to update the data. 
         // Withoud the setTiemout the get is not retrieving the updated data
         setTimeout(() => {
           getVotingPositions();  
         }, waitingTime);
+        setFinalExecutionOutcome(result);
       }).catch((error)=>
       {
+        console.log('error on catch', error)
         toast({
           title: "Transaction error.",
+          description: error,
           status: "error",
           duration: 3000,
           position: "top-right",
@@ -107,17 +113,19 @@ const LockingPosition = (props: Props) => {
         setTimeout(() => {
           getVotingPositions();  
         }, waitingTime);
-      }).catch(()=>
+      }).catch((error)=>
       {
+        console.log('error on catch', error)
         toast({
           title: "Transaction error.",
+          description: error,
           status: "error",
           duration: 3000,
           position: "top-right",
           isClosable: true,
         });
         setProcessFlag(false);
-      }); 
+      });
     } catch (error) {
       setProcessFlag(false);
       console.error(error);
@@ -132,17 +140,19 @@ const LockingPosition = (props: Props) => {
         setTimeout(() => {
           getVotingPositions();  
         }, waitingTime);
-      }).catch(()=>
+      }).catch((error)=>
       {
+        console.log('error on catch', error)
         toast({
           title: "Transaction error.",
+          description: error,
           status: "error",
           duration: 3000,
           position: "top-right",
           isClosable: true,
         });
         setProcessFlag(false);
-      })
+      });
     } catch (error) {
       setProcessFlag(false);
       console.error(error);
@@ -179,7 +189,8 @@ const LockingPosition = (props: Props) => {
   },[selector])
 
   return (
-    <section>        
+    <section>   
+        <TxErrorHandler finalExecutionOutcome={finalExecutionOutcome} />     
         { 
             voterData.lockingPositions.length === 0 ? (
               <Stack minH={400} spacing={10} direction='column'  alignItems={'flex-start'}  justify={{base: 'center', md: 'flex-start'}}>

@@ -69,7 +69,7 @@ const Header: React.FC<ButtonProps> = (props) => {
     setInterval(async () => {
       try {
         if (selector.isSignedIn() && accountId) {
-          // setBalance(await getMetaBalance());
+          setBalance(await getMetaBalance());
         }
       } catch (e) {
         console.error(e);

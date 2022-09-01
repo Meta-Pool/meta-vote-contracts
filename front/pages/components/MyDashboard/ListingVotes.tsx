@@ -54,10 +54,11 @@ const ListingVotes = () => {
             getVotes();
             setProcessFlag(false);
           }, 2000)
-        }).catch(()=>
+        }).catch((error)=>
         {
           toast({
             title: "Transaction error.",
+            description: error,
             status: "error",
             duration: 3000,
             position: "top-right",
@@ -68,7 +69,6 @@ const ListingVotes = () => {
       } catch (error) {
         setProcessFlag(false);
         infoOnClose();
-        console.error(error);
       }
   }
 
@@ -88,7 +88,7 @@ const ListingVotes = () => {
   return (
     <section>
         { 
-          <Flex >
+          <Flex direction={{base: 'column', md: 'row'}}>
               {  
                   voterData.votingResults.length > 0 && voterData.votingResults.map((position: any, index: number)=> {
                     return (

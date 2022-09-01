@@ -74,17 +74,18 @@ const DashboardHeader = () => {
           initMyData();  
         }, waitingTime);
         setProcessFlag(false);
-      }).catch(()=>
+      }).catch((error)=>
       {
         toast({
           title: "Transaction error.",
+          description: error,
           status: "error",
-          duration: 9000,
+          duration: 3000,
           position: "top-right",
           isClosable: true,
         });
         setProcessFlag(false);
-      }); 
+      });
     } catch (error) {
       setProcessFlag(false);
       console.error(error);
