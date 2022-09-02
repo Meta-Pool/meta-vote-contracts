@@ -13,7 +13,7 @@ export const MODAL_TEXT = {
     UNLOCK: {
       CONFIRM: {
         title: `Start unlocking`,
-        text: `Are you sure you want to start unlocking this position? Your tokens will be releases when the locking period ends.`
+        text: `Are you sure you want to start unlocking this position? Your tokens will be released when the locking period ends.`
       },
       ERROR_NOT_ENOUGH: {
         title: `Not Enough Available Voting Power`,
