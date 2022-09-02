@@ -17,7 +17,7 @@ Cargo.lock
 .*.sw?
 .vscode
 *.bak
-contract/res/*.wasm
+contract/res
 
 # dev-deploy keys
 contract/neardev
