@@ -249,7 +249,7 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
       ],
     })
     .catch((err) => {
-      console.error(`Failed to call katherine contract -- method: ${method}`);
+      console.error(`Failed to call metavote contract -- method: ${method}`);
       throw getPanicErrorFromText(err.message);
     });
     if (result instanceof Object) {
@@ -347,7 +347,7 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
       ],
     })
     .catch((err) => {
-      console.error(`Failed to call katherine contract -- method: ${method}`);
+      console.error(`Failed to call metavote contract -- method: ${method}`);
       throw err;
     });
   return result;
