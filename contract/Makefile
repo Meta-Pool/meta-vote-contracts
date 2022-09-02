@@ -35,7 +35,6 @@ install:
 	cp target/release/libcfdi.so /usr/local/lib64/
 
 test:
-	# TODO: create container for database
 	RUST_BACKTRACE=1 cargo test -- --color always --nocapture
 
 format:
