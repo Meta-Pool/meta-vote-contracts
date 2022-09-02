@@ -1,7 +1,13 @@
+use crate::utils::{days_to_millis, millis_to_days};
+use crate::{constants::*, locking_position::*};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::Vector;
 use near_sdk::collections::unordered_map::UnorderedMap;
+use near_sdk::json_types::U128;
 use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault, require};
+use types::*;
+use utils::{generate_hash_id, get_current_epoch_millis};
+use voter::Voter;
 
 mod constants;
 mod deposit;
@@ -9,15 +15,10 @@ mod internal;
 mod locking_position;
 mod types;
 mod utils;
+mod views;
 mod voter;
 mod withdraw;
-pub mod interface;
-
-use types::*;
-use utils::{generate_hash_id, get_current_epoch_millis};
-use voter::Voter;
-use crate::utils::{days_to_millis, millis_to_days};
-use crate::{constants::*, locking_position::*};
+mod interface;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -40,7 +41,7 @@ impl MetaVoteContract {
         owner_id: AccountId,
         min_locking_period: Days,
         max_locking_period: Days,
-        min_deposit_amount: MetaJSON,
+        min_deposit_amount: U128,
         max_locking_positions: u8,
         max_voting_positions: u8,
         meta_token_contract_address: ContractAddress,
@@ -58,20 +59,6 @@ impl MetaVoteContract {
             max_voting_positions,
             meta_token_contract_address,
         }
-    }
-
-    // *******************
-    // * Testing Methods *
-    // *******************
-
-    pub fn update_token_contract(&mut self, new_contract: ContractAddress) {
-        self.assert_only_owner();
-        self.meta_token_contract_address = new_contract;
-    }
-
-    pub fn update_min_locking_period(&mut self, new_period: Days) {
-        self.assert_only_owner();
-        self.min_locking_period = new_period;
     }
 
     // *************
@@ -101,7 +88,7 @@ impl MetaVoteContract {
         self.voters.insert(&voter_id, &voter);
     }
 
-    pub fn unlock_partial_position(&mut self, index: PositionIndex, amount: MetaJSON) {
+    pub fn unlock_partial_position(&mut self, index: PositionIndex, amount: U128) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let mut locking_position = voter.get_position(index);
@@ -159,7 +146,7 @@ impl MetaVoteContract {
         &mut self,
         index: PositionIndex,
         locking_period: Days,
-        amount_from_balance: MetaJSON
+        amount_from_balance: U128
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
@@ -211,9 +198,9 @@ impl MetaVoteContract {
     pub fn relock_partial_position(
         &mut self,
         index: PositionIndex,
-        amount_from_position: MetaJSON,
+        amount_from_position: U128,
         locking_period: Days,
-        amount_from_balance: MetaJSON
+        amount_from_balance: U128
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
@@ -287,7 +274,7 @@ impl MetaVoteContract {
     pub fn relock_from_balance(
         &mut self,
         locking_period: Days,
-        amount_from_balance: MetaJSON
+        amount_from_balance: U128
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
@@ -346,7 +333,7 @@ impl MetaVoteContract {
     pub fn withdraw(
         &mut self,
         position_index_list: Vec<PositionIndex>,
-        amount_from_balance: MetaJSON
+        amount_from_balance: U128
     ) {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter(&voter_id);
@@ -407,7 +394,7 @@ impl MetaVoteContract {
 
     pub fn vote(
         &mut self,
-        voting_power: VotingPowerJSON,
+        voting_power: U128,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId
     ) {
@@ -452,7 +439,7 @@ impl MetaVoteContract {
 
     pub fn rebalance(
         &mut self,
-        voting_power: VotingPowerJSON,
+        voting_power: U128,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId
     ) {
@@ -556,134 +543,13 @@ impl MetaVoteContract {
         );
     }
 
-    // ****************
-    // * View Methods *
-    // ****************
+    // *********
+    // * Admin *
+    // *********
 
-    pub fn get_all_locking_positions(
-        &self,
-        voter_id: VoterId
-    ) -> Vec<LockingPositionJSON> {
-        let mut result = Vec::new();
-        let voter = self.internal_get_voter(&voter_id);
-        for index in 0..voter.locking_positions.len() {
-            let locking_position = voter.locking_positions.get(index)
-                .expect("Locking position not found!");
-            result.push(
-                locking_position.to_json(Some(index))
-            );
-        }
-        result
-    }
-
-    pub fn get_locking_position(
-        &self,
-        index: PositionIndex,
-        voter_id: VoterId
-    ) -> Option<LockingPositionJSON> {
-        let voter = self.internal_get_voter(&voter_id);
-        match voter.locking_positions.get(index) {
-            Some(locking_position) => Some(locking_position.to_json(Some(index))),
-            None => None,
-        }
-    }
-
-    pub fn get_balance(&self, voter_id: VoterId) -> BalanceJSON {
-        let voter = self.internal_get_voter(&voter_id);
-        let balance = voter.balance + voter.sum_unlocked();
-        BalanceJSON::from(balance)
-    }
-
-    pub fn get_locked_balance(&self, voter_id: VoterId) -> BalanceJSON {
-        let voter = self.internal_get_voter(&voter_id);
-        BalanceJSON::from(voter.sum_locked())
-    }
-
-    pub fn get_unlocking_balance(&self, voter_id: VoterId) -> BalanceJSON {
-        let voter = self.internal_get_voter(&voter_id);
-        BalanceJSON::from(voter.sum_unlocking())
-    }
-
-    pub fn get_available_voting_power(&self, voter_id: VoterId) -> VotingPowerJSON {
-        let voter = self.internal_get_voter(&voter_id);
-        VotingPowerJSON::from(voter.voting_power)
-    }
-
-    pub fn get_used_voting_power(&self, voter_id: VoterId) -> VotingPowerJSON {
-        let voter = self.internal_get_voter(&voter_id);
-        VotingPowerJSON::from(voter.sum_used_votes())
-    }
-
-    pub fn get_total_votes(
-        &self,
-        contract_address: ContractAddress,
-        votable_object_id: VotableObjId
-    ) -> VotingPowerJSON {
-        let votes = match self.votes.get(&contract_address) {
-            Some(object) => {
-                object.get(&votable_object_id).unwrap_or(0_u128)
-            },
-            None => 0_u128,
-        };
-        VotingPowerJSON::from(votes)
-    }
-
-    pub fn get_votes_by_contract(
-        &self,
-        contract_address: ContractAddress
-    ) -> Vec<VotableObjectJSON> {
-        let objects = self.votes.get(&contract_address)
-            .expect("Contract Address not in Meta Vote.");
-        let mut results: Vec<VotableObjectJSON> = Vec::new();
-        for (id, voting_power) in objects.iter() {
-            results.push(
-                VotableObjectJSON {
-                    votable_contract: contract_address.to_string(),
-                    id,
-                    current_votes: VotingPowerJSON::from(voting_power)
-                }
-            )
-        }
-        results.sort_by_key(|v| v.current_votes.0);
-        results
-    }
-
-    pub fn get_votes_by_voter(
-        &self,
-        voter_id: VoterId
-    ) -> Vec<VotableObjectJSON> {
-        let mut results: Vec<VotableObjectJSON> = Vec::new();
-        let voter = self.internal_get_voter(&voter_id);
-        for contract_address in voter.vote_positions.keys_as_vector().iter() {
-            let votes_for_address = voter.vote_positions.get(&contract_address).unwrap();
-            for (id, voting_power) in votes_for_address.iter() {
-                results.push(
-                    VotableObjectJSON {
-                        votable_contract: contract_address.to_string(),
-                        id,
-                        current_votes: VotingPowerJSON::from(voting_power)
-                    }
-                )
-            }
-        }
-        results.sort_by_key(|v| v.current_votes.0);
-        results
-    }
-
-    pub fn get_votes_for_object(
-        &self,
-        voter_id: VoterId,
-        contract_address: ContractAddress,
-        votable_object_id: VotableObjId
-    ) -> VotingPowerJSON {
-        let voter = self.internal_get_voter(&voter_id);
-        let votes = match voter.vote_positions.get(&contract_address) {
-            Some(votes_for_address) => {
-                votes_for_address.get(&votable_object_id).unwrap_or(0_u128)
-            },
-            None => 0_u128,
-        };
-        VotingPowerJSON::from(votes)
+    pub fn update_min_locking_period(&mut self, new_period: Days) {
+        self.assert_only_owner();
+        self.min_locking_period = new_period;
     }
 }
 

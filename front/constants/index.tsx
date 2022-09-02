@@ -11,8 +11,14 @@ export const enum ACTION_TYPE {
 
 export const MODAL_TEXT = {
     UNLOCK: {
-      title: `Remove vote position`,
-      text: `Are you sure you want to remove this position? Your tokens will release when locking period ends.`
+      CONFIRM: {
+        title: `Start unlocking`,
+        text: `Are you sure you want to start unlocking this position? Your tokens will be releases when the locking period ends.`
+      },
+      ERROR_NOT_ENOUGH: {
+        title: `Not Enough Available Voting Power`,
+        text: `Your available voting power is not enough to unlock this position.<br><br> Your are trying to unlock <b> :positionAmount </b> and only have <b> :votingPowerAvailable </b> available.`
+      }
     },
     RELOCK: {
       title: `Confirmation`,
@@ -27,6 +33,8 @@ export const MODAL_TEXT = {
     VOTE: {
       title: `Confirmation`,
       text: `Are you sure you want to remove your vote
-      position? Tokens remain locked until finish.`
+      position?`
     }
   }
+
+  

@@ -51,7 +51,6 @@ const Header: React.FC<ButtonProps> = (props) => {
     const wallet = await selector.wallet();
 
     wallet.signOut().catch((err: any) => {
-      console.log("Failed to sign out");
       console.error(err);
     });
   };
@@ -70,7 +69,7 @@ const Header: React.FC<ButtonProps> = (props) => {
     setInterval(async () => {
       try {
         if (selector.isSignedIn() && accountId) {
-          // setBalance(await getMetaBalance());
+          setBalance(await getMetaBalance());
         }
       } catch (e) {
         console.error(e);
@@ -88,17 +87,17 @@ const Header: React.FC<ButtonProps> = (props) => {
 
           
             {selector?.isSignedIn() ? (
-              <HStack spacing={10}>
+              <HStack spacing={{base: 1, md: 10}}>
                 <HStack>
                   <Square minW="30px">
                     <Image
-                      boxSize="20px"
+                      boxSize={{base: "10px", md: "20px"}}
                       objectFit="cover"
                       src="/meta_white.png"
                       alt="stnear"
                     />
                   </Square>
-                  <Text fontFamily={'Meta Space'} fontSize={'18px'} fontWeight={500}>{formatToLocaleNear(balance)}</Text>
+                  <Text fontFamily={'Meta Space'} fontSize={{base:'10px',md:'18px'}} fontWeight={500}>{formatToLocaleNear(balance)}</Text>
                 </HStack>
 
                  {

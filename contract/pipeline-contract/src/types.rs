@@ -12,10 +12,6 @@ pub type VotableObjId = String;
 pub type EpochMillis = u64;
 pub type PositionIndex = u64;
 
-pub type BalanceJSON = U128;
-pub type MetaJSON = U128;
-pub type VotingPowerJSON = U128;
-
 construct_uint! {
     /// 256-bit unsigned integer.
     pub struct U256(4);

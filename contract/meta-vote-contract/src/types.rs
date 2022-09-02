@@ -12,11 +12,6 @@ pub type VotableObjId = String;
 pub type EpochMillis = u64;
 pub type PositionIndex = u64;
 
-pub type BalanceJSON = U128;
-pub type MetaJSON = U128;
-pub type VotingPowerJSON = U128;
-pub type ContractAddressJSON = String;
-
 construct_uint! {
     /// 256-bit unsigned integer.
     pub struct U256(4);
@@ -26,9 +21,9 @@ construct_uint! {
 #[serde(crate = "near_sdk::serde")]
 pub struct LockingPositionJSON {
     pub index: Option<PositionIndex>,
-    pub amount: MetaJSON,
+    pub amount: U128,
     pub locking_period: Days,
-    pub voting_power: VotingPowerJSON,
+    pub voting_power: U128,
     pub unlocking_started_at: Option<EpochMillis>,
     pub is_unlocked: bool,
     pub is_unlocking: bool,
@@ -38,7 +33,7 @@ pub struct LockingPositionJSON {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct VotableObjectJSON {
-    pub votable_contract: ContractAddressJSON,
+    pub votable_contract: String,
     pub id: VotableObjId,
-    pub current_votes: VotingPowerJSON
+    pub current_votes: U128
 }

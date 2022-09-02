@@ -9,6 +9,7 @@ import {
 import {
   getTransactionLastResult,
 } from "near-api-js/lib/providers";
+import { FinalExecutionOutcome } from "near-api-js/lib/providers";
 import { AccountView } from "near-api-js/lib/providers/provider";
 const BN = require("bn.js");
 import { getConfig } from "../config";
@@ -24,19 +25,19 @@ import {
   decodeJsonRpcData,
   encodeJsonRpcData,
   getPanicError,
+  getPanicErrorFromText,
   getTxFunctionCallMethod,
   yton,
 } from "./util";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID;
-export const NETWORK_ID =  process.env.NEXT_PUBLIC_NETWORK_ID || 'testnet';
+export const NETWORK_ID = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'mainnet' : 'testnet';
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID;
 export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID;
 export const gas = new BN("70000000000000");
 export const GAS = "200000000000000";
 
-const env = 'development';
-
+const env = process.env.NEXT_PUBLIC_VERCEL_ENV || 'production';
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 
@@ -147,8 +148,6 @@ export const getMetapoolAccountInfo = async () => {
 };
 
 export const getMetaTokenAccountInfo = async () => {
-  console.log("getMetaTokenAccountInfo", window);
-
   const account_id = window.account_id;
   return callViewMetaTokenMethod( metaTokenMethods.getMetas, {
     account_id: account_id,
@@ -156,13 +155,11 @@ export const getMetaTokenAccountInfo = async () => {
 };
 
 export const getMetaBalance = async (): Promise<number> => {
-  console.log("getMetaBalance");
   const accountInfo = await getMetaTokenAccountInfo();
   return yton(accountInfo);
 };
 
 export const getBalance = async (): Promise<number> => {
-  console.log("getBalance");
   const accountInfo = await getMetapoolAccountInfo();
   return yton(accountInfo.st_near);
 };
@@ -233,11 +230,10 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return response;
 }; */
 
-const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string) => {
-  console.log("callChangeMetavoteMethod", method, args)
+const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<FinalExecutionOutcome | null> => {
   const wallet = window.wallet;
   const account_id = window.account_id;
-  const result = wallet!
+  const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
       actions: [
@@ -253,10 +249,13 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
       ],
     })
     .catch((err) => {
-      console.log(`Failed to call katherine contract -- method: ${method}`);
-      throw err;
+      console.error(`Failed to call metavote contract -- method: ${method}`);
+      throw getPanicErrorFromText(err.message);
     });
-  return result;
+    if (result instanceof Object) {
+      return result;
+    }
+  return null;
 };
 
 const callPublicMetapoolMethod = async (method: string, args: any) => {
@@ -329,8 +328,6 @@ export const getBalanceOfTokenForSupporter = async (
 
 
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
-  console.log("callChangeMetaTokenMethod", method, args)
-
   const wallet = window.wallet;
   const account_id = window.account_id;
   const result = wallet!
@@ -350,7 +347,7 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
       ],
     })
     .catch((err) => {
-      console.log(`Failed to call katherine contract -- method: ${method}`);
+      console.error(`Failed to call metavote contract -- method: ${method}`);
       throw err;
     });
   return result;

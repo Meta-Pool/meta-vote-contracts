@@ -19,14 +19,7 @@ git clone https://github.com/Narwallets/meta-vote
 ```bash
 yarn
 ```
-4. open next.config.js and set the CONTRACT_ID env variable with the katherine fundraising smart contract and set METAPOOL_CONTRACT_ID en variable with the MetaPool smart contract.
-```json
-module.exports = {
-  reactStrictMode: true,
-  env: {
-    CONTRACT_ID: 'dev-1647362531405-23502905659580',
-  }
-}
+
 ````
 3. run the development server
 ```bash

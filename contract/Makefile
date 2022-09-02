@@ -15,7 +15,7 @@ lint:
 build:
 	RUSTFLAGS='-C link-arg=-s' cargo +stable build --all --target wasm32-unknown-unknown --release
 	cp target/wasm32-unknown-unknown/release/meta_vote_contract.wasm res/
-	cp target/wasm32-unknown-unknown/release/pipeline_contract.wasm res/
+#	cp target/wasm32-unknown-unknown/release/pipeline_contract.wasm res/
 	cp target/wasm32-unknown-unknown/release/test_meta_token.wasm res/
 
 publish-dev: build
@@ -35,7 +35,6 @@ install:
 	cp target/release/libcfdi.so /usr/local/lib64/
 
 test:
-	# TODO: create container for database
 	RUST_BACKTRACE=1 cargo test -- --color always --nocapture
 
 format:
