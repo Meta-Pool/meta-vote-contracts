@@ -16,8 +16,8 @@ export const MODAL_TEXT = {
         text: `Are you sure you want to start unlocking this position? Your tokens will be releases when the locking period ends.`
       },
       ERROR_NOT_ENOUGH: {
-        title: `Not Enough Available Voting`,
-        text: `Your available voting power is not enough to unlock this position.<br><br> Your are trying to unlock <b> :positionAmount </b> and only have <b> :votingPowerAvailable </b>.`
+        title: `Not Enough Available Voting Power`,
+        text: `Your available voting power is not enough to unlock this position.<br><br> Your are trying to unlock <b> :positionAmount </b> and only have <b> :votingPowerAvailable </b> available.`
       }
     },
     RELOCK: {
