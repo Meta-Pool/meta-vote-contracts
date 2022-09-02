@@ -19,7 +19,7 @@ import { WalletSelectorContextProvider } from "../contexts/WalletSelectorContext
 import "@near-wallet-selector/modal-ui/styles.css";
 import Script from "next/script";
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production';
 function App({ Component, pageProps }: AppProps) {
   const queryClient = new QueryClient();
   const router = useRouter();
