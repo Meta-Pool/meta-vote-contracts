@@ -9,7 +9,7 @@ Implementation of a general voting system using the $META token.
 The last version of the deployed contract, in Near `mainnet`, is in the `stable` branch.
 
 Current stable version: [**v0.1.0**](https://github.com/Narwallets/meta-vote/releases/tag/v0.1.0)
-Check all releases in [Katherine Releases](https://github.com/Narwallets/meta-vote/releases).
+Check all releases in [Meta Vote Releases](https://github.com/Narwallets/meta-vote/releases).
 
 To get the stable version, run the commands:
 
