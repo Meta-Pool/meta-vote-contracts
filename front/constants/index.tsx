@@ -1,5 +1,5 @@
 
- export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_METAVOTE;
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_METAVOTE||"metayield.app";
 
 export const enum ACTION_TYPE {
     RELOCK,
