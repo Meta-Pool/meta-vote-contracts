@@ -34,7 +34,7 @@ export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID||"metavote.testne
 const env = process.env.NEXT_PUBLIC_VERCEL_ENV || 'development';
 export const NETWORK_ID = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'mainnet' : 'testnet';
 export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID||"metavote.testnet";
-export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID||"meta-v2.pool.testnet";
+export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID||"token.meta.pool.testnet";
 export const gas = new BN("70000000000000");
 export const GAS = "200000000000000";
 
@@ -302,7 +302,7 @@ const callViewMetapoolMethod = async (method: string, args: any) => {
 }; */
 
 const callViewMetaTokenMethod = async (method: string, args: any) => {
-  console.log("view",META_CONTRACT_ID, JSON.stringify(args))
+  // console.log("view",META_CONTRACT_ID, JSON.stringify(args))
   const response: any = await provider.query({
     request_type: "call_function",
     finality: "optimistic",

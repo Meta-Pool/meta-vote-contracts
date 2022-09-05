@@ -94,7 +94,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                       boxSize={{base: "10px", md: "20px"}}
                       objectFit="cover"
                       src="/meta_white.png"
-                      alt="stnear"
+                      alt="meta"
                     />
                   </Square>
                   <Text fontFamily={'Meta Space'} fontSize={{base:'10px',md:'18px'}} fontWeight={500}>{formatToLocaleNear(balance)}</Text>
