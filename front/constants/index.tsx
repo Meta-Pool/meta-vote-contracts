@@ -1,3 +1,5 @@
+export const MIN_LOCK_DAYS = 30
+export const MAX_LOCK_DAYS = 300
 
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_METAVOTE||"metayield.app";
 
