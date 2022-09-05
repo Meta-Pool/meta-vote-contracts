@@ -51,9 +51,9 @@ fn test_single_deposit() {
 
     let voters = contract.get_voters(0, 10).unwrap();
     assert_eq!(voters.len(), 1);
-    let locking_position = json::parse(&voters.first().unwrap().locking_position).unwrap();
+    let locking_position = &voters.first().unwrap().locking_position;
     assert_eq!(locking_position.len(), 1);
-    let vote_position = json::parse(&voters.first().unwrap().vote_position).unwrap();
+    let vote_position = &voters.first().unwrap().vote_position;
     assert_eq!(vote_position.len(), 0);
 }
 
@@ -115,9 +115,9 @@ fn test_multiple_deposit_same_locking_period() {
 
     let voters = contract.get_voters(0, 10).unwrap();
     assert_eq!(voters.len(), 1);
-    let locking_position = json::parse(&voters.first().unwrap().locking_position).unwrap();
+    let locking_position = &voters.first().unwrap().locking_position;
     assert_eq!(locking_position.len(), 1);
-    let vote_position = json::parse(&voters.first().unwrap().vote_position).unwrap();
+    let vote_position = &voters.first().unwrap().vote_position;
     assert_eq!(vote_position.len(), 0);
 }
 
@@ -180,9 +180,9 @@ fn test_multiple_deposit_diff_locking_period() {
 
     let voters = contract.get_voters(0, 10).unwrap();
     assert_eq!(voters.len(), 1);
-    let locking_position = json::parse(&voters.first().unwrap().locking_position).unwrap();
+    let locking_position = &voters.first().unwrap().locking_position;
     assert_eq!(locking_position.len(), 2);
-    let vote_position = json::parse(&voters.first().unwrap().vote_position).unwrap();
+    let vote_position = &voters.first().unwrap().vote_position;
     assert_eq!(vote_position.len(), 0);
 }
 
@@ -771,9 +771,9 @@ fn test_clear_locking_position() {
 
     let voters = contract.get_voters(0, 10).unwrap();
     assert_eq!(voters.len(), 1);
-    let locking_position = json::parse(&voters.first().unwrap().locking_position).unwrap();
+    let locking_position = &voters.first().unwrap().locking_position;
     assert_eq!(locking_position.len(), 0);
-    let vote_position = json::parse(&voters.first().unwrap().vote_position).unwrap();
+    let vote_position = &voters.first().unwrap().vote_position;
     assert_eq!(vote_position.len(), 0);
 }
 
@@ -902,9 +902,9 @@ fn test_rebalance_increase_and_decrease() {
 
     let voters = contract.get_voters(0, 10).unwrap();
     assert_eq!(voters.len(), 1);
-    let locking_position = json::parse(&voters.first().unwrap().locking_position).unwrap();
+    let locking_position = &voters.first().unwrap().locking_position;
     assert_eq!(locking_position.len(), 1);
-    let vote_position = json::parse(&voters.first().unwrap().vote_position).unwrap();
+    let vote_position = &voters.first().unwrap().vote_position;
     assert_eq!(vote_position.len(), 1);
 }
 
@@ -1044,8 +1044,8 @@ fn test_multi_voter_contract() {
 
     let voters = contract.get_voters(0, 10).unwrap();
     assert_eq!(voters.len(), 4);
-    let locking_position = json::parse(&voters.first().unwrap().locking_position).unwrap();
+    let locking_position = &voters.first().unwrap().locking_position;
     assert_eq!(locking_position.len(), 1);
-    let vote_position = json::parse(&voters.first().unwrap().vote_position).unwrap();
+    let vote_position = &voters.first().unwrap().vote_position;
     assert_eq!(vote_position.len(), 1);
 }
