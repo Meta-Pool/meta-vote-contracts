@@ -1,5 +1,17 @@
 use crate::*;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::serde::{Deserialize, Serialize};
+use json::JsonValue;
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct VoterJSON {
+    pub voter_id: AccountId,
+    pub balance: U128,
+    pub locking_position: String,
+    pub voting_power: U128,
+    pub vote_position: String
+}
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Voter {
@@ -116,5 +128,36 @@ impl Voter {
             }
         }
         result
+    }
+
+    pub(crate) fn to_json(&self, voter_id: VoterId) -> VoterJSON {
+        let mut locking_positions = Vec::<JsonValue>::new();
+        for index in 0..self.locking_positions.len() {
+            let pos = self.locking_positions.get(index).unwrap();
+            locking_positions.push(
+                JsonValue::String(
+                    serde_json::to_string(&pos.to_json(Some(index))).unwrap()
+                )
+            );
+        }
+
+        let mut vote_positions = JsonValue::new_object();
+        for key in self.vote_positions.keys_as_vector().iter() {
+            let pos = self.vote_positions.get(&key).unwrap();
+            let mut to_insert = JsonValue::new_object();
+            for obj in pos.keys_as_vector().iter() {
+                let value = JsonValue::String(pos.get(&obj).unwrap().to_string());
+                let _ = to_insert.insert(&obj, value);
+            }
+            let _ = vote_positions.insert(&key.to_string(), to_insert);
+        }
+
+        VoterJSON {
+            voter_id,
+            balance: U128::from(self.balance),
+            locking_position: json::stringify(locking_positions),
+            voting_power: U128::from(self.voting_power),
+            vote_position: json::stringify(vote_positions)
+        }
     }
 }
