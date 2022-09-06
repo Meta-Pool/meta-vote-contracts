@@ -98,7 +98,7 @@ const ListingVotes = () => {
   return (
     <section>
         { 
-          <Flex direction={{base: 'column', md: 'row'}}>
+          <Flex direction={{base: 'column', md: 'row'}} flexWrap="wrap">
               {  
                   voterData.votingResults.length > 0 && voterData.votingResults.map((position: any, index: number)=> {
                     return (
