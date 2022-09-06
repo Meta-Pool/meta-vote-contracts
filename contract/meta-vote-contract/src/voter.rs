@@ -7,9 +7,9 @@ use near_sdk::serde::{Deserialize, Serialize};
 pub struct VoterJSON {
     pub voter_id: AccountId,
     pub balance: U128,
-    pub locking_position: Vec<LockingPositionJSON>,
+    pub locking_positions: Vec<LockingPositionJSON>,
     pub voting_power: U128,
-    pub vote_position: Vec<VotePositionJSON>
+    pub vote_positions: Vec<VotePositionJSON>
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -154,9 +154,9 @@ impl Voter {
         VoterJSON {
             voter_id,
             balance: U128::from(self.balance),
-            locking_position: locking_positions,
+            locking_positions,
             voting_power: U128::from(self.voting_power),
-            vote_position: vote_positions
+            vote_positions
         }
     }
 }
