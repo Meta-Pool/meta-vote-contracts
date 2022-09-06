@@ -6,7 +6,6 @@ use near_sdk::serde::{Deserialize, Serialize};
 #[serde(crate = "near_sdk::serde")]
 pub struct VoterJSON {
     pub voter_id: AccountId,
-    pub balance: U128,
     pub locking_positions: Vec<LockingPositionJSON>,
     pub voting_power: U128,
     pub vote_positions: Vec<VotePositionJSON>
@@ -153,7 +152,6 @@ impl Voter {
 
         VoterJSON {
             voter_id,
-            balance: U128::from(self.balance),
             locking_positions,
             voting_power: U128::from(self.voting_power),
             vote_positions

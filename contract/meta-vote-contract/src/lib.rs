@@ -555,25 +555,19 @@ impl MetaVoteContract {
     /*   View functions   */
     /**********************/
 
-    pub fn get_voters(&self, from_index: u32, limit: u32) -> Option<Vec<VoterJSON>> {
+    pub fn get_voters(&self, from_index: u32, limit: u32) -> Vec<VoterJSON> {
         let keys = self.voters.keys_as_vector();
         let voters_len = keys.len() as u64;
         let start = from_index as u64;
         let limit = limit as u64;
-        if start >= voters_len {
-            return None;
-        }
+
         let mut results = Vec::<VoterJSON>::new();
         for index in start..std::cmp::min(start + limit, voters_len) {
             let voter_id = keys.get(index).unwrap();
             let voter = self.voters.get(&voter_id).unwrap();
             results.push(voter.to_json(voter_id));
         }
-        if results.len() > 0 {
-            Some(results)
-        } else {
-            None
-        }
+        results
     }
 
     pub fn get_balance(&self, voter_id: VoterId) -> U128 {
