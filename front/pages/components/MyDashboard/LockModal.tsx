@@ -32,6 +32,7 @@ import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy } from '../../../lib/util';
 import { useStore as useBalance } from "../../../stores/balance";
+import { MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
 
 type Props = {
   isOpen: any, 
@@ -40,7 +41,7 @@ type Props = {
 
 const LockModal = (props: Props) => {
   const { isOpen, onClose} = props;
-  const [ sliderValue, setSliderValue] = useState(30);
+  const [ sliderValue, setSliderValue] = useState(MIN_LOCK_DAYS);
   const [ vPowerSim, setVPowerSim] = useState(0);
   const { balance } = useBalance();
 
@@ -75,11 +76,9 @@ const LockModal = (props: Props) => {
     setVPowerSim(vPower);
   }
 
-  const calculateVPower = (days: any, amount: any)=> {
-    const minLockPeriod = 1;
-    const maxLockPeriod = 300;
-    const multiplier = 1 + (4 * (days - minLockPeriod) / (maxLockPeriod - minLockPeriod))
-    return amount * multiplier;
+  const calculateVPower = (days: any, amount: any) => {
+    const multiplier = 1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS))
+    return Number((amount * multiplier).toFixed(8));
   }
 
   useEffect(() => {
@@ -137,7 +136,7 @@ const LockModal = (props: Props) => {
                         type="number"
                         bg={'#efefef'}
                         colorScheme={colors.primary} 
-                        value={formikLock.values.amount_lock}
+                        value={formikLock.values.amount_lock||""}
                         onPaste={(e)=> inputChange(e)}
                         onBlur={(e)=> inputChange(e, true)}
                         onChange={(e)=> inputChange(e)}
@@ -163,10 +162,10 @@ const LockModal = (props: Props) => {
                     <Image boxSize="16px" alt={'lock-icon'} src={'./icons/check_bold.png'}></Image>
                     <Text fontWeight={500} fontSize={'16px'}   > Voting Power</Text>
                   </HStack>
-                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(4)} </Text>
+                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(5)} </Text>
                 </HStack>
 
-                <Slider defaultValue={30} min={30} max={300} step={1} onChange={(val) => setSliderValue(val)}>
+                <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
                   <SliderTrack >
                     <Box position='relative' right={10} />
                     <SliderFilledTrack  bg={colors.primary +'.500'} />

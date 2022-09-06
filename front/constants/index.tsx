@@ -1,5 +1,7 @@
+export const MIN_LOCK_DAYS = 30
+export const MAX_LOCK_DAYS = 300
 
- export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_METAVOTE;
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_METAVOTE||"metayield.app";
 
 export const enum ACTION_TYPE {
     RELOCK,
@@ -13,7 +15,7 @@ export const MODAL_TEXT = {
     UNLOCK: {
       CONFIRM: {
         title: `Start unlocking`,
-        text: `Are you sure you want to start unlocking this position? Your tokens will be releases when the locking period ends.`
+        text: `Are you sure you want to start unlocking this position? Your tokens will be released when the locking period ends.`
       },
       ERROR_NOT_ENOUGH: {
         title: `Not Enough Available Voting Power`,
