@@ -67,6 +67,11 @@ pub fn new(
 ) -> Self;
 ```
 
+The best way to deploy Meta Vote is using the scripts for `mainnet` and `testnet`:
+
+- [main_deploy.sh](contract/scripts/main_deploy.sh)
+- [test_deploy.sh](contract/scripts/test_deploy.sh)
+
 ## Getting a list of paginated Voters
 
 Getting all the voters with pagination using `testnet`:
