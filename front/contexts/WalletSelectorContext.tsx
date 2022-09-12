@@ -13,6 +13,7 @@ import { setupMathWallet } from "@near-wallet-selector/math-wallet";
 import { setupLedger } from "@near-wallet-selector/ledger";
 import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near"
 import { getConfig } from "../config";
+import { setupWalletConnect } from "@near-wallet-selector/wallet-connect";
 declare global {
   interface Window {
     selector: WalletSelector;
@@ -76,8 +77,8 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         setupMathWallet(),
         // setupNightly(),
         // setupLedger(),
-        /* setupWalletConnect({
-          projectId: "c4f79cc...",
+        setupWalletConnect({
+          projectId: "3ec2226fd3f38b6fb82e789fcfc232bf",
           metadata: {
             name: "NEAR Wallet Selector",
             description: "Example dApp used by NEAR Wallet Selector",
