@@ -118,14 +118,14 @@ const DashboardHeader = () => {
           <Stack justify={'space-between'} wrap={{base: 'wrap'}} alignItems={'flex-start'} w={{ base: '100%'}}  spacing={10} p={padding} direction={'row'}>
             <HStack position={'relative'} spacing={2}>
               <VStack align={'flex-start'}>
-              <Text hidden={!isDesktop} opacity={1} color={"#F9F9FA"} fontSize={'20px'} p={'8px'}>My Voting Power</Text>
+              <Text hidden={!isDesktop} opacity={1} color={"#F9F9FA"} fontSize={'20px'} p={'8px'}>Available Voting Power</Text>
                 <HStack spacing={10}>
                   <Text fontSize={{base: '22px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
                   <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
                     <Button leftIcon={<AddIcon />} hidden={!isDesktop} fontSize={{base: '16px'}} fontWeight={500} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> Add Voting Power</Button>
                   </Tooltip>
                 </HStack>
-                <Text hidden={isDesktop}  fontSize={{md:'16px', base: '8px'}}  p={'8px'}>My Voting Power</Text>
+                <Text hidden={isDesktop}  fontSize={{md:'16px', base: '8px'}}  p={'8px'}>Available Voting Power</Text>
               </VStack>
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>

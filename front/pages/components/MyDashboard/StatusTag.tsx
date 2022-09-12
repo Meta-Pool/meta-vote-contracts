@@ -29,6 +29,7 @@ import { lock } from '../../../lib/near';
 import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy } from '../../../lib/util';
+import { MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
 
 
 type Props = {
@@ -40,7 +41,7 @@ type Props = {
 
 const StatusTag = (props: Props) => {
   const {wallet, isOpen, onClose, vPower} = props;
-  const [ sliderValue, setSliderValue] = useState(30);
+  const [ sliderValue, setSliderValue] = useState(MIN_LOCK_DAYS);
 
   const initialValuesDeposit: any = {
     amount_lock: 0
@@ -110,7 +111,7 @@ const StatusTag = (props: Props) => {
               </HStack>
               
               <StackDivider></StackDivider >
-              <Slider defaultValue={30} min={0} max={120} step={15} onChange={(val) => setSliderValue(val)}>
+              <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
                 <SliderTrack bg={colors.primary + '.200'}>
                   <Box position='relative' right={10} />
                   <SliderFilledTrack bg={colors.primary +'.500'} />
