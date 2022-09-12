@@ -67,9 +67,24 @@ pub fn new(
 ) -> Self;
 ```
 
+The best way to deploy Meta Vote is using the scripts for `mainnet` and `testnet`:
+
+- [main_deploy.sh](contract/scripts/main_deploy.sh)
+- [test_deploy.sh](contract/scripts/test_deploy.sh)
+
+## Getting a list of paginated Voters
+
+Getting all the voters with pagination using `testnet`:
+
+```rs
+NEAR_ENV=testnet near view metavote.testnet get_voters '{"from_index": 0, "limit": 100}'
+```
+
 ## View Contract Functions
 
 ```rs
+pub fn get_voters(&self, from_index: u32, limit: u32) -> Vec<VoterJSON>;
+
 pub fn get_balance(&self, voter_id: VoterId) -> U128;
 
 pub fn get_locked_balance(&self, voter_id: VoterId) -> U128;
