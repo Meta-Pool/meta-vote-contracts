@@ -73,11 +73,9 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
       debug: true,
       modules: [
         setupNearWalletCustom(),
-        // setupMyNearWallet(),
-        // setupSender(),
         setupMathWallet(),
         setupNightly(),
-        setupLedger(),
+        // setupLedger(),
         setupWalletConnect({
           projectId:
           process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
