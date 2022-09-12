@@ -11,8 +11,10 @@ import type { WalletSelectorModal } from "@near-wallet-selector/modal-ui";
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupMathWallet } from "@near-wallet-selector/math-wallet";
 import { setupLedger } from "@near-wallet-selector/ledger";
+import { setupNightly } from "@near-wallet-selector/nightly";
 import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near"
 import { getConfig } from "../config";
+import { setupWalletConnect } from "@near-wallet-selector/wallet-connect";
 declare global {
   interface Window {
     selector: WalletSelector;
@@ -74,14 +76,17 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         // setupMyNearWallet(),
         // setupSender(),
         setupMathWallet(),
-        // setupNightly(),
-        // setupLedger(),
-        /* setupWalletConnect({
-          projectId: "c4f79cc...",
+        setupNightly(),
+        setupLedger(),
+        setupWalletConnect({
+          projectId:
+          process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
+          "3ec2226fd3f38b6fb82e789fcfc232bf",
           metadata: {
-            name: "NEAR Wallet Selector",
-            description: "Example dApp used by NEAR Wallet Selector",
-            url: "https://github.com/near/wallet-selector",
+            name: "NEAR Wallet Selector for Meta Vote",
+            description:
+              "Wallet Connect integration on Wallet Selector for Meta Vote",
+            url: "https://metavote.app/",
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
           },
         }),
