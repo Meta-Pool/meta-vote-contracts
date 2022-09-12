@@ -6,8 +6,7 @@ const lockValidation = Yup.object().shape({
   amount_lock: Yup.number()
   .min(1, "The amount to lock should be greater than 1 META.")
   .max(
-    100000,
-    // Yup.ref("balance"),
+    Yup.ref("balance"),
     `You dont have enough META. Visit <a href='${getNearConfig().refFinance}' target="blank"> this Link </a> to get more.`
   ),
 });
