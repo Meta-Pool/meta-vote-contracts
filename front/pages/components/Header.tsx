@@ -55,12 +55,16 @@ const Header: React.FC<ButtonProps> = (props) => {
     });
   };
 
+  const updateBalance = async () => {
+    if (selector.isSignedIn() && accountId) {
+      setBalance(await getMetaBalance());
+    }
+  }
+
   useEffect(() => {
     (async () => {
       try {
-        if (selector.isSignedIn() && accountId) {
-          setBalance(await getMetaBalance());
-        }
+        updateBalance();
       } catch (e) {
         console.error(e);
       }
@@ -68,9 +72,7 @@ const Header: React.FC<ButtonProps> = (props) => {
 
     setInterval(async () => {
       try {
-        if (selector.isSignedIn() && accountId) {
-          setBalance(await getMetaBalance());
-        }
+       updateBalance();
       } catch (e) {
         console.error(e);
       }
