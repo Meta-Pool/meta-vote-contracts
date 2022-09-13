@@ -13,7 +13,7 @@ import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLo
 import { useStore as useVoter } from "../../../stores/voter";
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
-import { CONTRACT_ADDRESS, MODAL_TEXT } from '../../../constants';
+import { CONTRACT_ADDRESS, FETCH_VOTES_INTERVAL, MODAL_TEXT } from '../../../constants';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 import { colors } from '../../../constants/colors';
 import { Stack } from 'phosphor-react';
@@ -92,6 +92,9 @@ const ListingVotes = () => {
       if (selector && selector.isSignedIn()) {
         getVotes();
       }
+      setInterval(()=>{
+        getVotes();
+      },FETCH_VOTES_INTERVAL)
     })();
   },[selector])
 
