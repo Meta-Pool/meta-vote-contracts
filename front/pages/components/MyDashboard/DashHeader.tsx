@@ -18,7 +18,7 @@ import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal from './InfoModal';
-import { MODAL_TEXT } from '../../../constants';
+import { FETCH_VOTER_DATA_INTERVAL, MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
 import DashboardCard from './DashboardCard';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
@@ -39,7 +39,7 @@ const DashboardHeader = () => {
   const padding = '24px';
   const waitingTime = 500;
 
-  const initMyData = async ()=> {
+  const getMyData = async ()=> {
     const newVoterData = voterData;
     newVoterData.votingPower = await getAvailableVotingPower();
     newVoterData.lockingPositions = await getAllLockingPositions();
@@ -51,12 +51,7 @@ const DashboardHeader = () => {
   }
 
   const withdrawClicked = async ()=> {
-       // withdrawAll(); 
        onOpenInfo();
-  }
-
-  const refresh = async () => {
-    initMyData();
   }
 
   const withdrawCall =  () => {
@@ -71,7 +66,7 @@ const DashboardHeader = () => {
           isClosable: true,
         });
         setTimeout(() => {
-          initMyData();  
+          getMyData();  
         }, waitingTime);
         setProcessFlag(false);
       }).catch((error)=>
@@ -96,9 +91,12 @@ const DashboardHeader = () => {
   useEffect(  () =>{
     (async ()=> {
       if (selector && selector.isSignedIn()) {
-        initMyData()
+        getMyData()
       }
     })();
+    setInterval(()=>{
+      getMyData();
+    },FETCH_VOTER_DATA_INTERVAL)
   },[selector])
 
   return (
