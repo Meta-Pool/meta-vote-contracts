@@ -138,6 +138,7 @@ const LockModal = (props: Props) => {
                           </Square>
                     </InputLeftAddon>
                     <Input
+                        autoFocus={true}
                         id="amount_lock"
                         name="amount_lock"
                         type="number"
@@ -173,7 +174,7 @@ const LockModal = (props: Props) => {
                   <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(5)} </Text>
                 </HStack>
 
-                <Slider isDisabled={formikLock.values.amount_lock <= 0} defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
+                <Slider  defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
                   <SliderTrack >
                     <Box position='relative' right={10} />
                     <SliderFilledTrack  bg={colors.primary +'.500'} />
