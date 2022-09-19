@@ -77,8 +77,15 @@ const LockModal = (props: Props) => {
   }
 
   const calculateVPower = (days: any, amount: any) => {
-    const multiplier = 1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS))
+    const multiplier = getMultiplierPerDays(days);
     return Number((amount * multiplier).toFixed(8));
+  }
+
+  const getMultiplierPerDays = (days: number) => {
+    if(!days) {
+      return 1;
+    }
+    return  1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS));
   }
 
   useEffect(() => {
@@ -131,6 +138,7 @@ const LockModal = (props: Props) => {
                           </Square>
                     </InputLeftAddon>
                     <Input
+                        autoFocus={true}
                         id="amount_lock"
                         name="amount_lock"
                         type="number"
@@ -161,11 +169,12 @@ const LockModal = (props: Props) => {
                   <HStack>
                     <Image boxSize="16px" alt={'lock-icon'} src={'./icons/check_bold.png'}></Image>
                     <Text fontWeight={500} fontSize={'16px'}   > Voting Power</Text>
+
                   </HStack>
                   <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(5)} </Text>
                 </HStack>
 
-                <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
+                <Slider  defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
                   <SliderTrack >
                     <Box position='relative' right={10} />
                     <SliderFilledTrack  bg={colors.primary +'.500'} />
@@ -176,9 +185,13 @@ const LockModal = (props: Props) => {
                 <HStack align={{base:'flex-start', md:'flex-Start'}} justify={'space-between'}>
                   <HStack >
                     <Image boxSize="16px" alt={'lock-icon'} src={'./icons/lock_bold.png'}></Image>
-                    <Text fontWeight={500} fontSize={'16px'} >AutoLock days</Text> 
+                    <HStack>                    
+                      <Text fontWeight={500} fontSize={'16px'} >AutoLock days </Text> 
+                      <Text hidden={true} fontWeight={700} color={'green.500'}>( + {((getMultiplierPerDays(sliderValue) - 1)*100).toFixed(2)} % )</Text>
+
+                    </HStack>
                   </HStack>
-                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'} >{sliderValue}</Text> 
+                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'} >{sliderValue} days</Text> 
                 </HStack>
               </Stack>
             </VStack>

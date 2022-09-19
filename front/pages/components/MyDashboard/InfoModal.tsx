@@ -47,7 +47,7 @@ const InfoModal = (props: Props) => {
               <Button borderRadius={100} variant='outline'  m={1} onClick={onClose}>
                 Cancel
               </Button>
-              <Button borderRadius={100} colorScheme={colors.primary} px={20} onClick={onSubmit}  m={1}>Yep</Button>
+              <Button borderRadius={100} colorScheme={colors.primary} px={20} onClick={onSubmit}  m={1}>Yes</Button>
             </Flex>
           </ModalFooter>
         </ModalContent>
