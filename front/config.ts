@@ -12,7 +12,7 @@ export const getConfig = (env: string)  => {
         helperUrl: "https://helper.mainnet.near.org",
         explorerUrl: "https://explorer.mainnet.near.org",
         metapoolUrl: "https://metapool.app/dapp/mainnet/meta",
-        refFinance: "https://www.ref.finance/",
+        refFinance: "https://app.ref.finance/#meta-pool.near%7Cmeta-token.near",
         metayieldUrl: "https://metayield.app" 
 
       };
@@ -27,7 +27,7 @@ export const getConfig = (env: string)  => {
         helperUrl: "https://helper.testnet.near.org",
         explorerUrl: "https://explorer.testnet.near.org",
         metapoolUrl: "https://metapool.app/dapp/testnet/meta",
-        refFinance: "https://www.ref.finance/",
+        refFinance: "https://app.ref.finance/#meta-pool.near%7Cmeta-token.near",
         metayieldUrl: "https://metayield.app" 
       };
     case "betanet":
@@ -39,7 +39,7 @@ export const getConfig = (env: string)  => {
         helperUrl: "https://helper.betanet.near.org",
         explorerUrl: "https://explorer.betanet.near.org",
         metapoolUrl: "https://metapool.app/dapp/testnet/meta",
-        refFinance: "https://www.ref.finance/",
+        refFinance: "https://app.ref.finance/#meta-pool.near%7Cmeta-token.near",
         metayieldUrl: "https://metayield.app" 
       };
     case "local":
@@ -49,7 +49,7 @@ export const getConfig = (env: string)  => {
         keyPath: `${process.env.HOME}/.near/validator_key.json`,
         walletUrl: "http://localhost:4000/wallet",
         metapoolUrl: "https://metapool.app/dapp/testnet/meta",
-        refFinance: "https://www.ref.finance/",
+        refFinance: "https://app.ref.finance/#meta-pool.near%7Cmeta-token.near",
         contractName: CONTRACT_NAME,
         metayieldUrl: "https://metayield.app" 
       };
