@@ -332,7 +332,7 @@ export const getBalanceOfTokenForSupporter = async (
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
   const wallet = window.wallet;
   const account_id = window.account_id;
-  const result = wallet!
+  const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
       receiverId: META_CONTRACT_ID,
@@ -350,9 +350,12 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
     })
     .catch((err) => {
       console.error(`Failed to call metavote contract -- method: ${method}`);
-      throw err;
+      throw getPanicErrorFromText(err.message);
     });
-  return result;
+    if (result instanceof Object) {
+      return result;
+    }
+  return null;
 };
 
 /* const callChangeMetaTokenMethod = async (
