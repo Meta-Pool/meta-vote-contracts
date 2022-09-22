@@ -12,9 +12,10 @@ import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupMathWallet } from "@near-wallet-selector/math-wallet";
 import { setupLedger } from "@near-wallet-selector/ledger";
 import { setupNightly } from "@near-wallet-selector/nightly";
-import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near"
+import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near";
 import { getConfig } from "../config";
 import { setupWalletConnect } from "@near-wallet-selector/wallet-connect";
+import { setupNearWallet } from "@near-wallet-selector/near-wallet";
 declare global {
   interface Window {
     selector: WalletSelector;
@@ -41,45 +42,23 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
   const [modal, setModal] = useState<WalletSelectorModal | null>(null);
   const [accounts, setAccounts] = useState<Array<AccountState>>([]);
 
-  const setupNearWalletCustom = () => {
-    return async (options: any) => {
-      const wallet = await setupMyNearWallet({
-        walletUrl: nearConfig.walletUrl,
-        iconUrl: "./assets/near-wallet-iconx.png",
-      })(options);
-
-      if (!wallet) {
-        return null;
-      }
-
-      return {
-        ...wallet,
-        id: "near-wallet",
-        metadata: {
-          ...wallet.metadata,
-          name: "NEAR Wallet",
-          description: null,
-          iconUrl: "./assets/near-wallet-icon.png",
-          deprecated: false,
-          available: true,
-        },
-      };
-    };
-  };
-
   const init = useCallback(async () => {
     const _selector = await setupWalletSelector({
       network: NETWORK_ID as NetworkId,
       debug: true,
       modules: [
-        setupNearWalletCustom(),
+        setupNearWallet({
+          walletUrl: nearConfig.walletUrl,
+          iconUrl: "/assets/near-wallet-icon.png",
+        }),
+        setupMyNearWallet(),
         setupMathWallet(),
         setupNightly(),
         // setupLedger(),
         setupWalletConnect({
           projectId:
-          process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
-          "3ec2226fd3f38b6fb82e789fcfc232bf",
+            process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
+            "3ec2226fd3f38b6fb82e789fcfc232bf",
           metadata: {
             name: "NEAR Wallet Selector for Meta Vote",
             description:
@@ -100,7 +79,6 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
       ],
     });
 
-  
     const _modal = setupModal(_selector, { contractId: CONTRACT_ID || "" });
     const state = _selector.store.getState();
     setAccounts(state.accounts);
