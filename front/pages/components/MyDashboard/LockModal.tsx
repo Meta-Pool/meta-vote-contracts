@@ -32,7 +32,7 @@ import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy } from '../../../lib/util';
 import { useStore as useBalance } from "../../../stores/balance";
-import { MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
+import { DEFAULT_LOCK_DAYS, MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
 
 type Props = {
   isOpen: any, 
@@ -41,7 +41,7 @@ type Props = {
 
 const LockModal = (props: Props) => {
   const { isOpen, onClose} = props;
-  const [ sliderValue, setSliderValue] = useState(MIN_LOCK_DAYS);
+  const [ sliderValue, setSliderValue] = useState(DEFAULT_LOCK_DAYS);
   const [ vPowerSim, setVPowerSim] = useState(0);
   const { balance } = useBalance();
 
