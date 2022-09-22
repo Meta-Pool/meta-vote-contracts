@@ -7,4 +7,8 @@ export const WHITELIST_SITES = [
         platform: 'metapool.app',
         isologo: 'metapool_iso.png'
     },
+    {
+        platform: 'metastaking.app',
+        isologo: 'metapool_iso.png'
+    },
 ]
