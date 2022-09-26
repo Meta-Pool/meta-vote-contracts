@@ -20,8 +20,9 @@ import "@near-wallet-selector/modal-ui/styles.css";
 import Script from "next/script";
 
 const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production';
+const queryClient = new QueryClient();
 function App({ Component, pageProps }: AppProps) {
-  const queryClient = new QueryClient();
+
   const router = useRouter();
 
   useEffect(() => {
