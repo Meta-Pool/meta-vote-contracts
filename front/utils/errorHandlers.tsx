@@ -1,3 +1,4 @@
+import { MODAL_DURATION } from "../constants";
 import { getTxStatus } from "../lib/near";
 
 export const ErrorHashHandler = async (router: any, toast: any) => {
@@ -25,7 +26,7 @@ export const handleTransactionOutcome = async (
       toast({
         title: "Transaction success.",
         status: "success",
-        duration: 9000,
+        duration: MODAL_DURATION.LONG,
         position: "top-right",
         isClosable: true,
       });
@@ -34,7 +35,7 @@ export const handleTransactionOutcome = async (
         title: "Transaction error.",
         description: result?.errorMessage,
         status: "error",
-        duration: 9000,
+        duration: MODAL_DURATION.LONG,
         position: "top-right",
         isClosable: true,
       });

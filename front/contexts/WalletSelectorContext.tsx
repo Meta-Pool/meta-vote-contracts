@@ -112,6 +112,9 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         distinctUntilChanged()
       )
       .subscribe((nextAccounts) => {
+        window.account_id = nextAccounts.find(
+          (account) => account.active
+        )?.accountId!;
         setAccounts(nextAccounts);
       });
 

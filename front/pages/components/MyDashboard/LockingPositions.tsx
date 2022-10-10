@@ -36,7 +36,7 @@ import { useStore as useVoter } from "../../../stores/voter";
 import { ntoy, yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal, { InfoContent } from './InfoModal';
-import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
+import { ACTION_TYPE, MODAL_DURATION, MODAL_TEXT } from '../../../constants';
 
 import ButtonOnLogin from '../ButtonLogin';
 import VPositionCard from './VPositionCard';
@@ -108,7 +108,7 @@ const LockingPosition = (props: Props) => {
           title: "Transaction error.",
           description: error,
           status: "error",
-          duration: 3000,
+          duration: MODAL_DURATION.ERROR,
           position: "top-right",
           isClosable: true,
         });
@@ -131,7 +131,7 @@ const LockingPosition = (props: Props) => {
           toast({
             title: "Successful withdrawal.",
             status: "success",
-            duration: 3000,
+            duration: MODAL_DURATION.SUCCESS,
             position: "top-right",
             isClosable: true,
           });
@@ -143,7 +143,7 @@ const LockingPosition = (props: Props) => {
           title: "Transaction error.",
           description: error,
           status: "error",
-          duration: 5000,
+          duration: MODAL_DURATION.ERROR,
           position: "top-right",
           isClosable: true,
         });
@@ -171,7 +171,7 @@ const LockingPosition = (props: Props) => {
           title: "Transaction error.",
           description: error,
           status: "error",
-          duration: 5000,
+          duration: MODAL_DURATION.ERROR,
           position: "top-right",
           isClosable: true,
         });
