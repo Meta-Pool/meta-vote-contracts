@@ -31,6 +31,8 @@ import {
   getTxFunctionCallMethod,
   yton,
 } from "./util";
+import { blockerStore } from "../stores/pageBlocker";
+import { Wallet } from "@near-wallet-selector/core";
 
 export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID||"metavote.testnet";
 const env = process.env.NEXT_PUBLIC_VERCEL_ENV || 'development';
@@ -51,26 +53,16 @@ export const getNearConfig = () => {
   return nearConfig;
 };
 
-export const getWallet = async () => {
-  const connectConfig: ConnectConfig = {
-    ...nearConfig,
-    headers: {},
-    keyStore: new keyStores.BrowserLocalStorageKeyStore(),
-  };
-  const near = await connect(connectConfig);
-  const wallet = new WalletConnection(near, "metavote");
-  return wallet;
-};
-
-export const signInWallet = async () => {
-  const wallet = await getWallet();
-  wallet.requestSignIn(METAPOOL_CONTRACT_ID, "Metapool contract");
-  return wallet;
-};
-
-export const signOutWallet = async () => {
-  const wallet = await getWallet();
-  wallet!.signOut();
+export const signOutWallet = async (wallet: Wallet) => {
+  blockerStore.setState({isActive: true})
+  wallet
+    .signOut()
+    .catch((err) => {
+      console.log("Failed to sign out");
+      console.error(err);
+    }).finally(()=> {
+      blockerStore.setState({isActive: false})
+    });
 };
 
 export const getConnection = async () => {
@@ -82,21 +74,6 @@ export const getConnection = async () => {
   const nearConnection = await connect(connectConfig);
   return  nearConnection;
 }
-
-/* export const getAccount = async () => {
-  const accountId = window.account_id;
-  const account = provider
-    .query<Account>({
-      request_type: "view_account",
-      finality: "final",
-      account_id: accountId,
-    })
-    .then((data) => ({
-      ...data,
-      account_id: accountId,
-    }));
-  return account;
-}; */
 
 export const getAccount = async () => {
   const accountId = window.account_id;
@@ -112,31 +89,6 @@ export const getAccount = async () => {
     }));
   return account;
 };
-
-/* export const getContract = async () => {
-    const account = await getAccount();
-  return new Contract(account, CONTRACT_ID!, {
-    viewMethods: Object.values(metavoteViewMethods),
-    changeMethods: Object.values(metavoteChangeMethods),
-  });
-}; */
-
-/* export const getMetapoolContract = async () => {
-  const account = await getAccount();
-  return new Contract(account, METAPOOL_CONTRACT_ID!, {
-    viewMethods: Object.values(metaPoolMethods),
-    changeMethods: ["ft_transfer_call"],
-  });
-}; 
-
-export const getMetaTokenContract = async () => {
-  const account = await getAccount();
-  return new Contract(account, META_CONTRACT_ID!, {
-    viewMethods: Object.values(metaTokenMethods),
-    changeMethods: ["ft_transfer_call"],
-  });
-}; */
-
 
 export const getStNearPrice = async () => {
   return callPublicMetapoolMethod(metaPoolMethods.getStNearPrice, {});
@@ -222,20 +174,10 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
-/*const callChangeMetavoteMethod = async ( args: any, method: string, deposit?: string) => {
-  const contract = await getContract(); 
-  let response;
-  if (deposit) {
-    response = (contract as any)[method](args, "200000000000000", deposit);
-  } else {
-    response = (contract as any)[method](args, "200000000000000");
-  }
-  return response;
-}; */
-
 const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<FinalExecutionOutcome | null> => {
   const wallet = window.wallet;
   const account_id = window.account_id;
+  blockerStore.setState({isActive: true});
   const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
@@ -254,7 +196,10 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
     .catch((err) => {
       console.error(`Failed to call metavote contract -- method: ${method}`);
       throw getPanicErrorFromText(err.message);
-    });
+    }).
+    finally(()=> {
+      blockerStore.setState({isActive: false});
+    });;
     if (result instanceof Object) {
       return result;
     }
@@ -273,16 +218,6 @@ const callPublicMetapoolMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
-
-
-/* const callViewMetapoolMethod = async (
-  method: string,
-  args: any
-) => {
-  const contract = await getMetapoolContract();
-  return (contract as any)[method](args);
-}; */
-
 const callViewMetapoolMethod = async (method: string, args: any) => {
   const response: any = await provider.query({
     request_type: "call_function",
@@ -295,16 +230,7 @@ const callViewMetapoolMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
-/* const callViewMetaTokenMethod = async (
-  method: string,
-  args: any
-) => {
-  const contract = await getMetaTokenContract();
-  return (contract as any)[method](args);
-}; */
-
 const callViewMetaTokenMethod = async (method: string, args: any) => {
-  // console.log("view",META_CONTRACT_ID, JSON.stringify(args))
   const response: any = await provider.query({
     request_type: "call_function",
     finality: "optimistic",
@@ -334,6 +260,7 @@ export const getBalanceOfTokenForSupporter = async (
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
   const wallet = window.wallet;
   const account_id = window.account_id;
+  blockerStore.setState({isActive: true});
   const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
@@ -356,15 +283,6 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
     }
   return null;
 };
-
-/* const callChangeMetaTokenMethod = async (
-  method: string,
-  args: any
-) => {
-  const contract = await getMetaTokenContract();
-  return (contract as any)[method](args, "300000000000000", "1");
-}; */
-
 
 /*********** METAVOTE VIEW METHODS *************/
 

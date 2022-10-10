@@ -76,6 +76,25 @@
     "@babel/helper-validator-identifier" "^7.18.6"
     to-fast-properties "^2.0.0"
 
+"@carbon/icon-helpers@^10.34.0":
+  version "10.34.0"
+  resolved "https://registry.yarnpkg.com/@carbon/icon-helpers/-/icon-helpers-10.34.0.tgz#04b2957d07e0a98bb66c97c6b71430a955243887"
+  integrity sha512-Ov9EBc1tR/DDrMI0pN1drj2jb27ISmYFBLdDji+aivVJkLPy8R/jikJOsOBgIq2kUjQJYNN199k2acHKjZdYIg==
+
+"@carbon/icons-react@^11.9.0":
+  version "11.9.0"
+  resolved "https://registry.yarnpkg.com/@carbon/icons-react/-/icons-react-11.9.0.tgz#9f74e041f3d5c0382ce35c43fa8b86d71db71484"
+  integrity sha512-T8itc4VMRPWeDjt48WXME63INhYswixMTFiJ+9qN95o2k/+L3/RCJeg1E5zUS2RXJXeZ+vqpEhNqhZ3uTmwB5g==
+  dependencies:
+    "@carbon/icon-helpers" "^10.34.0"
+    "@carbon/telemetry" "0.1.0"
+    prop-types "^15.7.2"
+
+"@carbon/telemetry@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@carbon/telemetry/-/telemetry-0.1.0.tgz#57b331cd5a855b4abbf55457456da8211624d879"
+  integrity sha512-kNWt0bkgPwGW0i5h7HFuljbKRXPvIhsKbB+1tEURAYLXoJg9iJLF1eGvWN5iVoFCS2zje4GR3OGOsvvKVe7Hlg==
+
 "@chakra-ui/accordion@1.4.11":
   version "1.4.11"
   resolved "https://registry.yarnpkg.com/@chakra-ui/accordion/-/accordion-1.4.11.tgz#31c0f17cd7b7c92f784307b87de73d8a8c4cf9f7"
@@ -884,6 +903,16 @@
   version "6.10.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.10.0.tgz#c012c1ecc1a0e53d50e6af381618dca5268461c1"
   integrity sha512-lLseUPEhSFUXYTKj6q7s2O3s2vW2ebgA11vMAlKodXGf5AFw4zUoEbTz9CoFOC9jS6xY4Qr8BmRnxP/odT4Uuw==
+
+"@meta-pool-apps/meta-shared-components@^0.1.0":
+  version "0.1.0"
+  resolved "https://npm.pkg.github.com/download/@meta-pool-apps/meta-shared-components/0.1.0/9cda3967a2a0235147d97866dd77ec1326ef1759#9cda3967a2a0235147d97866dd77ec1326ef1759"
+  integrity sha512-feOMeJ8lZeJKpazvyQldFrn0jgpcfuaG+oyYEgbhslTsGN/oRMgiZ1A8AbJguE+c7jDsn+NFVC+pFu+AAYewbg==
+  dependencies:
+    "@carbon/icons-react" "^11.9.0"
+    "@chakra-ui/react" "^1.8.6"
+    "@emotion/styled" "^11.8.1"
+    "@fontsource/inter" "^4.5.5"
 
 "@motionone/animation@^10.12.0":
   version "10.13.2"
