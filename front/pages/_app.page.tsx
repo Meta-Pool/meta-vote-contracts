@@ -6,7 +6,7 @@ import "@fontsource/inter/variable.css";
 import theme from "../theme/theme";
 import { QueryClient, QueryClientProvider } from "react-query";
 import Router, { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as gtag from "../lib/gtag";
 import NProgress from "nprogress";
 import NextHead from "next/head";
@@ -18,13 +18,30 @@ import Fonts from "./components/Fonts";
 import { WalletSelectorContextProvider } from "../contexts/WalletSelectorContext";
 import "@near-wallet-selector/modal-ui/styles.css";
 import Script from "next/script";
+import {
+  PageBlocker,
+  PageBlockerState,
+} from "@meta-pool-apps/meta-shared-components";
+import { blockerStore } from "../stores/pageBlocker";
 
 const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production';
 const queryClient = new QueryClient();
 function App({ Component, pageProps }: AppProps) {
-
   const router = useRouter();
-
+  const [pageBlocerState, setPageBlockerState] = useState<PageBlockerState>({
+    isActive: false,
+    message: "",
+  });
+  useEffect(
+    () =>
+      blockerStore.subscribe((state) => {
+        setPageBlockerState({
+          isActive: state.isActive,
+          message: state.message,
+        });
+      }),
+    []
+  );
   useEffect(() => {
     const handleRouteChange = (url: URL) => {
       /* invoke analytics function only for production */
@@ -57,6 +74,7 @@ function App({ Component, pageProps }: AppProps) {
               staking on Meta Pool.
             </title>
           </NextHead>
+          <PageBlocker isActive={pageBlocerState.isActive} message={pageBlocerState.message} />
           <Header />
           <Component {...pageProps} />
           <Footer />
