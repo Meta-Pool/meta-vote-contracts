@@ -18,7 +18,7 @@ import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal from './InfoModal';
-import { FETCH_VOTER_DATA_INTERVAL, MODAL_TEXT } from '../../../constants';
+import { FETCH_VOTER_DATA_INTERVAL, MODAL_DURATION, MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
 import DashboardCard from './DashboardCard';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
@@ -61,7 +61,7 @@ const DashboardHeader = () => {
         toast({
           title: "Transaction success.",
           status: "success",
-          duration: 9000,
+          duration: MODAL_DURATION.LONG,
           position: "top-right",
           isClosable: true,
         });
@@ -75,7 +75,7 @@ const DashboardHeader = () => {
           title: "Transaction error.",
           description: error,
           status: "error",
-          duration: 3000,
+          duration: MODAL_DURATION.ERROR,
           position: "top-right",
           isClosable: true,
         });

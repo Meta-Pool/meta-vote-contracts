@@ -22,8 +22,10 @@ import {
   projectTokenViewMethods,
 } from "./methods";
 import {
+  checkPanicError,
   decodeJsonRpcData,
   encodeJsonRpcData,
+  getLogsAndErrorsFromReceipts,
   getPanicError,
   getPanicErrorFromText,
   getTxFunctionCallMethod,
@@ -348,10 +350,7 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
         },
       ],
     })
-    .catch((err) => {
-      console.error(`Failed to call metavote contract -- method: ${method}`);
-      throw getPanicErrorFromText(err.message);
-    });
+    checkPanicError(result);
     if (result instanceof Object) {
       return result;
     }

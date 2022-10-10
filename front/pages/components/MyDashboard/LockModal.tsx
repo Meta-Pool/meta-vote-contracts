@@ -23,7 +23,8 @@ import {
   Square,
   Image,
   Flex,
-  Stack
+  Stack,
+  useToast
 } from '@chakra-ui/react';
 import React, {  useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -32,7 +33,7 @@ import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy } from '../../../lib/util';
 import { useStore as useBalance } from "../../../stores/balance";
-import { DEFAULT_LOCK_DAYS, MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
+import { DEFAULT_LOCK_DAYS, MAX_LOCK_DAYS, MIN_LOCK_DAYS, MODAL_DURATION } from '../../../constants';
 
 type Props = {
   isOpen: any, 
@@ -44,6 +45,7 @@ const LockModal = (props: Props) => {
   const [ sliderValue, setSliderValue] = useState(DEFAULT_LOCK_DAYS);
   const [ vPowerSim, setVPowerSim] = useState(0);
   const { balance } = useBalance();
+  const toast = useToast();
 
   const initialValuesDeposit: any = {
     amount_lock: 0,
@@ -109,12 +111,28 @@ const LockModal = (props: Props) => {
   }
   
   const lockMetas = (values: any)=> {
-    try {
-      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock));
-    }
-    catch (error) {
-      console.error(error);
-    } 
+      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock))
+        .then((val)=>{
+          toast({
+            title: "Lock success.",
+            status: "success",
+            duration: MODAL_DURATION.SUCCESS,
+            position: "top-right",
+            isClosable: true,
+          });
+          onClose();
+        })
+        .catch((error)=>
+          {
+            toast({
+              title: "Transaction error.",
+              description: error.message,
+              status: "error",
+              duration: MODAL_DURATION.ERROR,
+              position: "top-right",
+              isClosable: true,
+            });
+          });
   }
 
   return (
