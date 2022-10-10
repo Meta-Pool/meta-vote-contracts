@@ -54,19 +54,17 @@ const LockModal = (props: Props) => {
 
   const formikLock = useFormik({
     initialValues: initialValuesDeposit,
-    // validationSchema: lockValidation,
+    validationSchema: lockValidation,
     validateOnMount: true,
     enableReinitialize: true,
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values: any) => {
-      lockMetas(values);
-
-      /*if (values.amount_lock < 1) {
+      if (values.amount_lock < 1) {
         // show toast error
       } else {
         lockMetas(values);
-      }*/
+      }
     }
   });
 
@@ -114,7 +112,7 @@ const LockModal = (props: Props) => {
   
   const lockMetas = (values: any)=> {
       lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock))
-        .then(()=>{
+        .then((val)=>{
           toast({
             title: "Lock success.",
             status: "success",
@@ -126,10 +124,9 @@ const LockModal = (props: Props) => {
         })
         .catch((error)=>
           {
-            console.log(error)
             toast({
               title: "Transaction error.",
-              description: error,
+              description: error.message,
               status: "error",
               duration: MODAL_DURATION.ERROR,
               position: "top-right",
