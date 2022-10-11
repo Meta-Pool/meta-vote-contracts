@@ -278,6 +278,7 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
       ],
     })
     checkPanicError(result);
+    blockerStore.setState({isActive: false});
     if (result instanceof Object) {
       return result;
     }
