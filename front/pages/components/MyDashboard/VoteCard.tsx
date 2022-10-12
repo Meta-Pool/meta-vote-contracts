@@ -61,7 +61,7 @@ const VoteCard = (props: CardProps) => {
               <VStack align={'flex-start'}>
                 <HStack>
                   <Circle mr={5} size={4} bg={colors.states.success}/>
-                  <Text fontSize={'24px'} fontWeight={700}>{getProjectName(position?.id)} </Text>
+                  <Text noOfLines={1} maxW={'180px'} fontSize={'24px'} fontWeight={700}>{getProjectName(position?.id)} </Text>
                 </HStack>
                 <HStack fontSize={'16px'}>
                   <Text ml={'45px'}  fontWeight={700} fontFamily={'Meta Space'}>{yton(position?.current_votes).toFixed(4)}</Text>

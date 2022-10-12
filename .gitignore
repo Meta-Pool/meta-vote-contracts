@@ -65,3 +65,4 @@ front/.vercel
 
 # typescript
 front/*.tsbuildinfo
+.npmrc
