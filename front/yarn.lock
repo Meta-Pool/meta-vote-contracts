@@ -974,6 +974,22 @@
   dependencies:
     rxjs "^7.5.5"
 
+"@near-wallet-selector/core@7.1.0":
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/@near-wallet-selector/core/-/core-7.1.0.tgz#158b64c63e1f179f91cf953befa7816ae277b5f3"
+  integrity sha512-QUL6hwsqHMHEejJQuhrE9AzIJwwCZWOIDNvsH723zDDicscy4bxydUxL3BmTZqBEK09IqPVtpA5Us8dEReGljQ==
+  dependencies:
+    rxjs "^7.5.5"
+
+"@near-wallet-selector/here-wallet@^7.1.0":
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/@near-wallet-selector/here-wallet/-/here-wallet-7.1.0.tgz#5ef34ce7c69fa7ed5231aac32bb7c147d0e94f3c"
+  integrity sha512-Wg+Rjlat5t03LwObvboGhHpCVsOy5+Yt19rH1YjLRjeGORTkIreGbbS0Aptk1qNMKi6DkOAiLRxhzOn7zx/VvQ==
+  dependencies:
+    "@near-wallet-selector/core" "7.1.0"
+    "@near-wallet-selector/wallet-utils" "7.1.0"
+    bn.js "^5.2.0"
+
 "@near-wallet-selector/ledger@^7.0.3":
   version "7.0.3"
   resolved "https://registry.yarnpkg.com/@near-wallet-selector/ledger/-/ledger-7.0.3.tgz#6949f762622b8e2a3d11fcafc08502a7c2cd5ce8"
@@ -1045,6 +1061,14 @@
   integrity sha512-ghkaqTkO4xmTLaBQSPoWciSMExIjav5fKalvyG+VNLfCrkRLglczdOk4J5mM5ozaQSi6iknGaSiVaX0wkMdkEw==
   dependencies:
     "@near-wallet-selector/core" "7.0.3"
+    bn.js "^5.2.0"
+
+"@near-wallet-selector/wallet-utils@7.1.0":
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/@near-wallet-selector/wallet-utils/-/wallet-utils-7.1.0.tgz#b5b66fe67b5825586ec3e0cda8e7e3b63b2011bd"
+  integrity sha512-fqK0vNJrNBFoWm3Atm2aD2j60ek4tBD+BtLJSkHLdLVZg3U4FEi0X7phDkEslUl+iCHQM/lWg/nQG58KC9Mvuw==
+  dependencies:
+    "@near-wallet-selector/core" "7.1.0"
     bn.js "^5.2.0"
 
 "@next/env@12.1.0":
