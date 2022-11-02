@@ -23,7 +23,7 @@ const ListingVotes = () => {
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
 
   const { voterData, setVoterData } = useVoter();
-  const [ positionSelected, setPositionSel ] = useState('')
+  const [ positionSelected, setPositionSel ] = useState({voteId: '', votableObj: ''})
   const { selector } = useWalletSelector();
   const [ procesingFlag, setProcessFlag] = useState(false); 
 
@@ -47,11 +47,11 @@ const ListingVotes = () => {
     setVoterData(newVoterData);
   }
 
-  const unvote = (id: any)=> {
+  const unvote = (id: any, votableObj: string)=> {
       try {
         setProcessFlag(true);
         infoOnClose();
-        unvoteProject(id, contract).then(()=>{
+        unvoteProject(id, votableObj).then(()=>{
           toast({
             title: "Unvote success.",
             status: "success",
@@ -82,8 +82,8 @@ const ListingVotes = () => {
       }
   }
 
-  const unvotedClicked = (voteId: string) => {
-    setPositionSel(voteId);
+  const unvotedClicked = (voteId: string, votableObj: string) => {
+    setPositionSel({voteId, votableObj});
     onOpenInfo();
   }
 
@@ -109,7 +109,7 @@ const ListingVotes = () => {
                           key={index}
                           position={position}
                           procesing={procesingFlag}
-                          unvoteAction={()=>{unvotedClicked(position.id)}}/>
+                          unvoteAction={()=>{unvotedClicked(position.id, position.votable_contract)}}/>
                 )})
               }      
               {
@@ -125,7 +125,7 @@ const ListingVotes = () => {
           </Flex>
         }
 
-      <InfoModal content={{title :MODAL_TEXT.VOTE.title, text:MODAL_TEXT.VOTE.text}}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => unvote(positionSelected)} ></InfoModal>
+      <InfoModal content={{title :MODAL_TEXT.VOTE.title, text:MODAL_TEXT.VOTE.text}}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => unvote(positionSelected?.voteId, positionSelected?.votableObj)} ></InfoModal>
     </section>
   );
 };

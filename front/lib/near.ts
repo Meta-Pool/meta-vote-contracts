@@ -346,9 +346,9 @@ export const voteProject = async (id: string, contractName: string, votingPower:
   return  callChangeMetavoteMethod( metavoteChangeMethods.vote, args, );
 };
 
-export const unvoteProject = async (id: string, contractNameId: string ) => {
+export const unvoteProject = async (id: string, votableObjAddress: string ) => {
   const args = {
-    contract_address: contractNameId,
+    contract_address: votableObjAddress,
     votable_object_id: id
   }
   return  callChangeMetavoteMethod( metavoteChangeMethods.unvote, args);
