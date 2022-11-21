@@ -1,5 +1,5 @@
 import create from "zustand/vanilla";
-import { PageBlockerState } from "@meta-pool-apps/meta-shared-components";
+import { PageBlockerState } from "../pages/components/PageBlocker";
 
 export const blockerStore = create<PageBlockerState>(() => ({
   message: "Confirm this action in your wallet",

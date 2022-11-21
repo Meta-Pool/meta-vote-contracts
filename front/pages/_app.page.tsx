@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, useToast } from "@chakra-ui/react";
 import "@fontsource/inter/variable.css";
 
 import theme from "../theme/theme";
@@ -18,30 +18,27 @@ import Fonts from "./components/Fonts";
 import { WalletSelectorContextProvider } from "../contexts/WalletSelectorContext";
 import "@near-wallet-selector/modal-ui/styles.css";
 import Script from "next/script";
-import {
-  PageBlocker,
-  PageBlockerState,
-} from "@meta-pool-apps/meta-shared-components";
+
 import { blockerStore } from "../stores/pageBlocker";
+import PageBlocker from "./components/PageBlocker";
 
 const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production';
 const queryClient = new QueryClient();
 function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const [pageBlocerState, setPageBlockerState] = useState<PageBlockerState>({
-    isActive: false,
-    message: "",
-  });
-  useEffect(
-    () =>
-      blockerStore.subscribe((state) => {
-        setPageBlockerState({
-          isActive: state.isActive,
-          message: state.message,
-        });
-      }),
-    []
-  );
+
+  const [isActive, setIsActive] = useState(false);
+  const [message, setMessage] = useState("");
+  const state = blockerStore.getState();
+  
+ useEffect(
+  () =>
+    blockerStore.subscribe((state) => {
+      setIsActive(state.isActive);
+      setMessage(state.message);
+    }),
+  []
+);
   useEffect(() => {
     const handleRouteChange = (url: URL) => {
       /* invoke analytics function only for production */
@@ -74,7 +71,7 @@ function App({ Component, pageProps }: AppProps) {
               staking on Meta Pool.
             </title>
           </NextHead>
-          <PageBlocker isActive={pageBlocerState.isActive} message={pageBlocerState.message} />
+          <PageBlocker isActive={isActive} message={message} />
           <Header />
           <Component {...pageProps} />
           <Footer />
