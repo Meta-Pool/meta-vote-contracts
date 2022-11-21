@@ -54,7 +54,7 @@ const Header: React.FC<ButtonProps> = (props) => {
   };
 
   const updateBalance = async () => {
-    if (selector.isSignedIn() && accountId) {
+    if (selector.isSignedIn() && window.account_id) {
       setBalance(await getMetaBalance());
     }
   }

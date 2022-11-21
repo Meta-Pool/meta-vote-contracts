@@ -199,7 +199,7 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
     }).
     finally(()=> {
       blockerStore.setState({isActive: false});
-    });;
+    });
     if (result instanceof Object) {
       return result;
     }
@@ -261,6 +261,7 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
   const wallet = window.wallet;
   const account_id = window.account_id;
   blockerStore.setState({isActive: true});
+  console.log("Wallet", wallet)
   const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
@@ -276,9 +277,13 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
           },
         },
       ],
+    }).catch((err) => {
+      console.error(`Failed to call metavote contract -- method: ${method}`);
+      throw getPanicErrorFromText(err.message);
+    }).finally(()=> {
+      blockerStore.setState({isActive: false});
     })
     checkPanicError(result);
-    blockerStore.setState({isActive: false});
     if (result instanceof Object) {
       return result;
     }

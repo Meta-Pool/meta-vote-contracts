@@ -967,6 +967,15 @@
     hey-listen "^1.0.8"
     tslib "^2.3.1"
 
+"@near-wallet-selector/coin98-wallet@^7.1.0":
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/@near-wallet-selector/coin98-wallet/-/coin98-wallet-7.1.0.tgz#ed92a17280c2ccb7ea71a3961e5e5cae6ada0daa"
+  integrity sha512-eDICsc2XfROcg8hNYTF0zVUyNxC57g/FziU40OW4vDGkd/Z9Q+3nuCuwSG8eY417juuISzAjChoQq6zfLHQEwA==
+  dependencies:
+    "@near-wallet-selector/core" "7.1.0"
+    "@near-wallet-selector/wallet-utils" "7.1.0"
+    is-mobile "^3.1.1"
+
 "@near-wallet-selector/core@7.0.3", "@near-wallet-selector/core@^7.0.3":
   version "7.0.3"
   resolved "https://registry.yarnpkg.com/@near-wallet-selector/core/-/core-7.0.3.tgz#bf2df9f4709f47c9afc7a4bc56261f2d624d5d73"
