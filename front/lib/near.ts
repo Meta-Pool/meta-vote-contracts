@@ -175,7 +175,7 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
 };
 
 const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<FinalExecutionOutcome | null> => {
-  const wallet = window.wallet;
+  const wallet = window.wallet || await window.selector.wallet();
   const account_id = window.account_id;
   blockerStore.setState({isActive: true});
   const result = await wallet!
@@ -258,10 +258,9 @@ export const getBalanceOfTokenForSupporter = async (
 
 
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
-  const wallet = window.wallet;
+  let wallet = window.wallet || await window.selector.wallet();
   const account_id = window.account_id;
   blockerStore.setState({isActive: true});
-  console.log("Wallet", wallet)
   const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
