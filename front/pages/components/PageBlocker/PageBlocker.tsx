@@ -1,6 +1,6 @@
 import { Box, Spinner, Stack } from "@chakra-ui/react";
 import React from "react";
-import type { PageBlockerState } from './pageblocker.types'
+import type { PageBlockerState } from '../../../types/pageblocker.types'
 
 const PageBlocker = ({ message, isActive }: PageBlockerState) => {
   return (
