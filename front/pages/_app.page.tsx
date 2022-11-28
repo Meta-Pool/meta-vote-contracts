@@ -1,12 +1,12 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, useToast } from "@chakra-ui/react";
 import "@fontsource/inter/variable.css";
 
 import theme from "../theme/theme";
 import { QueryClient, QueryClientProvider } from "react-query";
 import Router, { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as gtag from "../lib/gtag";
 import NProgress from "nprogress";
 import NextHead from "next/head";
@@ -19,12 +19,26 @@ import { WalletSelectorContextProvider } from "../contexts/WalletSelectorContext
 import "@near-wallet-selector/modal-ui/styles.css";
 import Script from "next/script";
 
+import { blockerStore } from "../stores/pageBlocker";
+import PageBlocker from "./components/PageBlocker";
+
 const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production';
 const queryClient = new QueryClient();
 function App({ Component, pageProps }: AppProps) {
-
   const router = useRouter();
 
+  const [isActive, setIsActive] = useState(false);
+  const [message, setMessage] = useState("");
+  const state = blockerStore.getState();
+  
+ useEffect(
+  () =>
+    blockerStore.subscribe((state) => {
+      setIsActive(state.isActive);
+      setMessage(state.message);
+    }),
+  []
+);
   useEffect(() => {
     const handleRouteChange = (url: URL) => {
       /* invoke analytics function only for production */
@@ -57,6 +71,7 @@ function App({ Component, pageProps }: AppProps) {
               staking on Meta Pool.
             </title>
           </NextHead>
+          <PageBlocker isActive={isActive} message={message} />
           <Header />
           <Component {...pageProps} />
           <Footer />

@@ -16,6 +16,7 @@ import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near";
 import { getConfig } from "../config";
 import { setupWalletConnect } from "@near-wallet-selector/wallet-connect";
 import { setupNearWallet } from "@near-wallet-selector/near-wallet";
+import { setupHereWallet } from "@near-wallet-selector/here-wallet";
 declare global {
   interface Window {
     selector: WalletSelector;
@@ -67,6 +68,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
             icons: ["https://avatars.githubusercontent.com/u/37784886"],
           },
         }),
+        setupHereWallet()
         /* setupNightlyConnect({
           url: "wss://ncproxy.nightly.app/app",
           appMetadata: {
@@ -112,7 +114,13 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         distinctUntilChanged()
       )
       .subscribe((nextAccounts) => {
+        window.account_id = nextAccounts.find(
+          (account) => account.active
+        )?.accountId!;
         setAccounts(nextAccounts);
+        window.account_id = nextAccounts.find(
+          (account) => account.active
+        )?.accountId!;
       });
 
     return () => subscription.unsubscribe();

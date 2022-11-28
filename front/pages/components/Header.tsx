@@ -22,6 +22,7 @@ import {  ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
   getMetaBalance,
   getNearConfig,
+  signOutWallet,
 } from "../../lib/near";
 import { colors } from "../../constants/colors";
 import { useStore as useBalance } from "../../stores/balance";
@@ -49,10 +50,7 @@ const Header: React.FC<ButtonProps> = (props) => {
 
   const handleSignOut = async () => {
     const wallet = await selector.wallet();
-
-    wallet.signOut().catch((err: any) => {
-      console.error(err);
-    });
+    signOutWallet(wallet);
   };
 
   const updateBalance = async () => {

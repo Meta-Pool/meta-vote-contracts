@@ -148,6 +148,14 @@ export const getPanicError = (txResult: any) => {
   }
 };
 
+
+export const checkPanicError = ( txResult: any) => { 
+  const error = getPanicError(txResult);
+   if(error) {
+      throw new Error(error);
+   }
+}
+
 export const getPanicErrorFromText  = (text: string) => {
   let result = text;
   const KEY = "panicked at ";
