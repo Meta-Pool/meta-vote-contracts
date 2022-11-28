@@ -13,7 +13,7 @@ const nextConfig = {
   env: {
     MINIMUM_AMOUNT_DEPOSIT: 1
   },
-  pageExtensions: ["page.tsx", "ts", "tsx"],
+  pageExtensions: ["page.tsx", "tsx"],
 };
 
 module.exports = nextConfig;
