@@ -38,15 +38,12 @@ const TokenBalance = ({ currency, ...props }: Props) => {
   const [balance, setBalance] = useState<number | undefined>();
 
   useEffect(() => {
-    console.log("currency change", currency);
     if (currency) {
       if (isNearDenomination(currency)) {
         refetchNearBalance();
       } else if (isStNearDenomination(currency)) {
-        console.log("refetching stnear balance");
         refetchStNearBalance();
       } else {
-        console.log("refetching token balance", currency);
         refetchTokenBalance();
       }
     }
@@ -54,7 +51,6 @@ const TokenBalance = ({ currency, ...props }: Props) => {
 
   useEffect(() => {
     if (currency) {
-      console.log("getting balance for ", currency);
       if (!isDenominationACurrency(currency)) {
         setBalance(yton(tokenBalance));
       }

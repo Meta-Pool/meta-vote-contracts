@@ -13,5 +13,5 @@ export const isNearDenomination = (denomination: any): boolean=> {
 };
 
 export const isStNearDenomination = (denomination: any) : boolean => {
-  return IS_PRODUCTION ? denomination == METAPOOL_CONTRACT_ID : denomination == METAPOOL_TESTNET_CONTRACT_ID;
+  return denomination == METAPOOL_CONTRACT_ID;
 }
