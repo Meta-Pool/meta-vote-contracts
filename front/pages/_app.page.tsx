@@ -2,7 +2,7 @@ import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { ChakraProvider } from "@chakra-ui/react";
 import "@fontsource/inter/variable.css";
-
+import { ReactQueryDevtools } from "react-query/devtools";
 import theme from "../theme/theme";
 import { QueryClient, QueryClientProvider } from "react-query";
 import Router, { useRouter } from "next/router";
@@ -13,7 +13,6 @@ import NextHead from "next/head";
 
 import "../styles/nprogress.css";
 import Header from "./components/Header";
-import Footer from "./components/Footer";
 import Fonts from "./components/Fonts";
 import { WalletSelectorContextProvider } from "../contexts/WalletSelectorContext";
 import "@near-wallet-selector/modal-ui/styles.css";
@@ -24,7 +23,7 @@ import {
 } from "@meta-pool-apps/meta-shared-components";
 import { blockerStore } from "../stores/pageBlocker";
 
-const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production';
+const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == "production";
 const queryClient = new QueryClient();
 function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -74,10 +73,13 @@ function App({ Component, pageProps }: AppProps) {
               staking on Meta Pool.
             </title>
           </NextHead>
-          <PageBlocker isActive={pageBlocerState.isActive} message={pageBlocerState.message} />
+          <PageBlocker
+            isActive={pageBlocerState.isActive}
+            message={pageBlocerState.message}
+          />
           <Header />
           <Component {...pageProps} />
-          <Footer />
+          {/* <Footer /> */}
           {/* enable analytics script only for production */}
           {isProduction && (
             <>
@@ -97,6 +99,7 @@ function App({ Component, pageProps }: AppProps) {
             </>
           )}
         </WalletSelectorContextProvider>
+        {!isProduction ? <ReactQueryDevtools initialIsOpen={false} /> : null}
       </QueryClientProvider>
     </ChakraProvider>
   );

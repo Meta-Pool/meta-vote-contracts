@@ -6,9 +6,7 @@ import {
   providers,
   ConnectConfig,
 } from "near-api-js";
-import {
-  getTransactionLastResult,
-} from "near-api-js/lib/providers";
+import { getTransactionLastResult } from "near-api-js/lib/providers";
 import { FinalExecutionOutcome } from "near-api-js/lib/providers";
 import { AccountView } from "near-api-js/lib/providers/provider";
 const BN = require("bn.js");
@@ -20,6 +18,8 @@ import {
   metaPoolMethods,
   metaTokenMethods,
   projectTokenViewMethods,
+  getMetaViewMethods,
+  getMetaChangeMethods,
 } from "./methods";
 import {
   checkPanicError,
@@ -33,15 +33,24 @@ import {
 } from "./util";
 import { blockerStore } from "../stores/pageBlocker";
 import { Wallet } from "@near-wallet-selector/core";
+import { MetapoolContractState } from "../types/metapool.types";
 
-export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID||"metavote.testnet";
-const env = process.env.NEXT_PUBLIC_VERCEL_ENV || 'development';
-export const NETWORK_ID = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'mainnet' : 'testnet';
-export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID||"metavote.testnet";
-export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID||"token.meta.pool.testnet";
+export const CONTRACT_ID =
+  process.env.NEXT_PUBLIC_CONTRACT_ID || "metavote.testnet";
+const env = process.env.NEXT_PUBLIC_VERCEL_ENV || "development";
+export const NETWORK_ID =
+  process.env.NEXT_PUBLIC_VERCEL_ENV == "production" ? "mainnet" : "testnet";
+export const IS_PRODUCTION = NETWORK_ID == "mainnet";
+export const METAPOOL_CONTRACT_ID =
+  process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID || "meta-v2.pool.testnet";
+  export const METAPOOL_TESTNET_CONTRACT_ID =
+  process.env.NEXT_PUBLIC_METAPOOL_TESTNET_CONTRACT_ID;
+export const META_CONTRACT_ID =
+  process.env.NEXT_PUBLIC_META_CONTRACT_ID || "token.meta.pool.testnet";
+export const GET_META_CONTRACT_ID = process.env.NEXT_PUBLIC_GET_META_CONTRACT;
 export const gas = new BN("70000000000000");
 export const GAS = "200000000000000";
-
+export const TRANSFER_CALL_DEPOSIT = "1";
 const nearConfig = getConfig(env);
 const provider = new providers.JsonRpcProvider({ url: nearConfig.nodeUrl });
 
@@ -54,14 +63,15 @@ export const getNearConfig = () => {
 };
 
 export const signOutWallet = async (wallet: Wallet) => {
-  blockerStore.setState({isActive: true})
+  blockerStore.setState({ isActive: true });
   wallet
     .signOut()
     .catch((err) => {
       console.log("Failed to sign out");
       console.error(err);
-    }).finally(()=> {
-      blockerStore.setState({isActive: false})
+    })
+    .finally(() => {
+      blockerStore.setState({ isActive: false });
     });
 };
 
@@ -72,8 +82,8 @@ export const getConnection = async () => {
     keyStore: new keyStores.BrowserLocalStorageKeyStore(),
   };
   const nearConnection = await connect(connectConfig);
-  return  nearConnection;
-}
+  return nearConnection;
+};
 
 export const getAccount = async () => {
   const accountId = window.account_id;
@@ -96,15 +106,20 @@ export const getStNearPrice = async () => {
 
 export const getMetapoolAccountInfo = async () => {
   const account_id = window.account_id;
-  return callViewMetapoolMethod( metaPoolMethods.getAccountInfo, {
+  return callViewMetapoolMethod(metaPoolMethods.getAccountInfo, {
     account_id: account_id,
   });
 };
 
+export const getMetapoolContractState =
+  async (): Promise<MetapoolContractState> => {
+    return callViewMetapoolMethod(metaPoolMethods.getContractState, {});
+  };
+
 export const getMetaTokenAccountInfo = async () => {
   const account_id = window.account_id;
   if (!account_id) return 0;
-  return callViewMetaTokenMethod( metaTokenMethods.getMetas, {
+  return callViewMetaTokenMethod(metaTokenMethods.getMetas, {
     account_id: account_id,
   });
 };
@@ -114,9 +129,9 @@ export const getMetaBalance = async (): Promise<number> => {
   return yton(accountInfo);
 };
 
-export const getBalance = async (): Promise<number> => {
+export const getBalanceStNear = async (): Promise<string> => {
   const accountInfo = await getMetapoolAccountInfo();
-  return yton(accountInfo.st_near);
+  return accountInfo.st_near;
 };
 
 export const getTxStatus = async (
@@ -161,7 +176,6 @@ export const getContractMetadata = async (contract: string) => {
   return decodeJsonRpcData(response.result);
 };
 
-
 const callPublicMetavoteMethod = async (method: string, args: any) => {
   const response: any = await provider.query({
     request_type: "call_function",
@@ -174,10 +188,14 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
-const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<FinalExecutionOutcome | null> => {
+const callChangeMetavoteMethod = async (
+  method: string,
+  args: any,
+  deposit?: string
+): Promise<FinalExecutionOutcome | null> => {
   const wallet = window.wallet;
   const account_id = window.account_id;
-  blockerStore.setState({isActive: true});
+  blockerStore.setState({ isActive: true });
   const result = await wallet!
     .signAndSendTransaction({
       signerId: account_id!,
@@ -188,7 +206,7 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
             methodName: method,
             args: args,
             gas: GAS,
-            deposit: deposit ? deposit : '',
+            deposit: deposit ? deposit : "",
           },
         },
       ],
@@ -196,13 +214,13 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
     .catch((err) => {
       console.error(`Failed to call metavote contract -- method: ${method}`);
       throw getPanicErrorFromText(err.message);
-    }).
-    finally(()=> {
-      blockerStore.setState({isActive: false});
-    });;
-    if (result instanceof Object) {
-      return result;
-    }
+    })
+    .finally(() => {
+      blockerStore.setState({ isActive: false });
+    });
+  if (result instanceof Object) {
+    return result;
+  }
   return null;
 };
 
@@ -242,6 +260,18 @@ const callViewMetaTokenMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
+const callViewGetMetaMethod = async (method: string, args: any) => {
+  const response: any = await provider.query({
+    request_type: "call_function",
+    finality: "optimistic",
+    account_id: GET_META_CONTRACT_ID,
+    method_name: method,
+    args_base64: encodeJsonRpcData(args),
+  });
+
+  return decodeJsonRpcData(response.result);
+};
+
 export const getBalanceOfTokenForSupporter = async (
   tokenContractAddress: string
 ) => {
@@ -256,71 +286,75 @@ export const getBalanceOfTokenForSupporter = async (
   return decodeJsonRpcData(response.result);
 };
 
-
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
   const wallet = window.wallet;
   const account_id = window.account_id;
-  blockerStore.setState({isActive: true});
-  const result = await wallet!
-    .signAndSendTransaction({
-      signerId: account_id!,
-      receiverId: META_CONTRACT_ID,
-      actions: [
-        {
-          type: "FunctionCall",
-          params: {
-            methodName: method,
-            args: args,
-            gas: GAS,
-            deposit: '1',
-          },
+  blockerStore.setState({ isActive: true });
+  const result = await wallet!.signAndSendTransaction({
+    signerId: account_id!,
+    receiverId: META_CONTRACT_ID,
+    actions: [
+      {
+        type: "FunctionCall",
+        params: {
+          methodName: method,
+          args: args,
+          gas: GAS,
+          deposit: "1",
         },
-      ],
-    })
-    checkPanicError(result);
-    blockerStore.setState({isActive: false});
-    if (result instanceof Object) {
-      return result;
-    }
+      },
+    ],
+  });
+  checkPanicError(result);
+  blockerStore.setState({ isActive: false });
+  if (result instanceof Object) {
+    return result;
+  }
   return null;
 };
 
 /*********** METAVOTE VIEW METHODS *************/
 
 export const getAvailableVotingPower = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {
+    voter_id: window.account_id,
+  });
 };
 
 export const getInUseVotingPower = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getUsedVotingPower, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getUsedVotingPower, {
+    voter_id: window.account_id,
+  });
 };
 
 export const getAllLockingPositions = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getAllLockingPositions, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getAllLockingPositions, {
+    voter_id: window.account_id,
+  });
 };
 
 export const getBalanceMetaVote = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getBalance, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getBalance, {
+    voter_id: window.account_id,
+  });
 };
 
 export const getLockedBalance = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getLockedBalance, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getLockedBalance, {
+    voter_id: window.account_id,
+  });
 };
 
 export const getUnlockingBalance = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {
+    voter_id: window.account_id,
+  });
 };
 
 export const getVotes = async (id: string, contract: string) => {
   return callPublicMetavoteMethod(metavoteViewMethods.getTotalVotes, {
     contract_address: contract,
-    votable_object_id: id
+    votable_object_id: id,
   });
 };
 
@@ -332,62 +366,196 @@ export const getVotesByContract = async (contract: string) => {
 
 export const getVotesByVoter = async () => {
   return callPublicMetavoteMethod(metavoteViewMethods.getVotesByVoter, {
-    voter_id: window.account_id
+    voter_id: window.account_id,
   });
 };
 
 /*********** METAVOTE CHANGE METHODS *************/
-export const voteProject = async (id: string, contractName: string, votingPower: string) => {
+export const voteProject = async (
+  id: string,
+  contractName: string,
+  votingPower: string
+) => {
   const args = {
     voting_power: votingPower,
     contract_address: contractName,
-    votable_object_id: id
-  }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.vote, args, );
+    votable_object_id: id,
+  };
+  return callChangeMetavoteMethod(metavoteChangeMethods.vote, args);
 };
 
-export const unvoteProject = async (id: string, votableObjAddress: string ) => {
+export const unvoteProject = async (id: string, votableObjAddress: string) => {
   const args = {
     contract_address: votableObjAddress,
-    votable_object_id: id
-  }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.unvote, args);
+    votable_object_id: id,
+  };
+  return callChangeMetavoteMethod(metavoteChangeMethods.unvote, args);
 };
 
-export const lock = async (days: string, amount: string ) => {
+export const lock = async (days: string, amount: string) => {
   const args = {
     receiver_id: CONTRACT_ID,
     amount: amount,
-    msg: days
-  }
-  return  callChangeMetaTokenMethod( "ft_transfer_call", args);
+    msg: days,
+  };
+  return callChangeMetaTokenMethod("ft_transfer_call", args);
 };
 
-export const unlock = async (positionId: string ) => {
+export const unlock = async (positionId: string) => {
   const args = {
-    index: positionId
-  }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.unlockPosition, args );
+    index: positionId,
+  };
+  return callChangeMetavoteMethod(metavoteChangeMethods.unlockPosition, args);
 };
 
 export const withdrawAPosition = async (positionId: string) => {
   const args = {
-    position_index_list: positionId ? [positionId] : [], 
-    amount_from_balance: '0'
-  }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.withdraw, args );
+    position_index_list: positionId ? [positionId] : [],
+    amount_from_balance: "0",
+  };
+  return callChangeMetavoteMethod(metavoteChangeMethods.withdraw, args);
 };
 
 export const withdrawAll = async () => {
-  const args = {}
-  return  callChangeMetavoteMethod( metavoteChangeMethods.withdrawAll, args);
+  const args = {};
+  return callChangeMetavoteMethod(metavoteChangeMethods.withdrawAll, args);
 };
 
-export const relock = async (positionIndex: string, period: string, amount: string  ) => {
+export const relock = async (
+  positionIndex: string,
+  period: string,
+  amount: string
+) => {
   const args = {
     index: positionIndex,
     locking_period: period,
-    amount_from_balance: '0'
+    amount_from_balance: "0",
+  };
+  return callChangeMetavoteMethod(metavoteChangeMethods.relock, args);
+};
+
+/*********** GETMETA METHODS *************/
+export const getWhitelistedTokens = async () => {
+  return callViewGetMetaMethod(getMetaViewMethods.getWhitelistedTokens, {});
+};
+
+export const computeMetaAmountOnReturn = async (
+  token_contract_address: string,
+  token_amount: string
+) => {
+  return callViewGetMetaMethod(getMetaViewMethods.computeMetaAmountOnReturn, {
+    token_contract_address,
+    token_amount,
+  });
+};
+
+export const getTokenBalanceOf = async (
+  tokenContractAddress: string,
+  accountId: string
+) => {
+  if (!accountId) return 0;
+
+  const response: any = await provider.query({
+    request_type: "call_function",
+    finality: "final",
+    account_id: tokenContractAddress,
+    method_name: projectTokenViewMethods.balanceOf,
+    args_base64: encodeJsonRpcData({ account_id: accountId }),
+  });
+  return decodeJsonRpcData(response.result);
+};
+
+export const getNearBalance = async (accountId: string) => {
+  const response: any = await provider.query({
+    request_type: "view_account",
+    finality: "final",
+    account_id: accountId,
+  });
+
+  return response ? response.amount : response.error.data;
+};
+
+export const getMetaContractFee = async () => {
+  return callViewGetMetaMethod(getMetaViewMethods.getMetaFee, {});
+}
+
+export const depositToken = async (
+  tokenContracId: string,
+  amount: string,
+  minMetaAmountExpected: string
+) => {
+  const wallet = window.wallet;
+  const account_id = window.account_id;
+  const args = {
+    amount: amount,
+    receiver_id: GET_META_CONTRACT_ID,
+    msg: minMetaAmountExpected
+  };
+  const result = await wallet!
+    .signAndSendTransaction({
+      signerId: account_id!,
+      receiverId: tokenContracId,
+      actions: [
+        {
+          type: "FunctionCall",
+          params: {
+            methodName: getMetaChangeMethods.depositToken,
+            args: args,
+            gas: GAS,
+            deposit: TRANSFER_CALL_DEPOSIT,
+          },
+        },
+      ],
+    })
+    .catch((err) => {
+      console.log("Failed to fund to kickstarter");
+
+      throw getPanicErrorFromText(err.message);
+    })
+    .finally(() => {
+      blockerStore.setState({ isActive: false });
+    });
+  if (result instanceof Object) {
+    return result;
   }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.relock, args );
+  return null;
+};
+
+export const depositNear = async (
+  amount: string,
+  minMetaAmountExpected: string
+) => {
+  const wallet = window.wallet;
+  const account_id = window.account_id;
+  const args = {
+    min_amount_expected: minMetaAmountExpected
+  };
+  const result = await wallet!
+    .signAndSendTransaction({
+      signerId: account_id!,
+      receiverId: GET_META_CONTRACT_ID,
+      actions: [
+        {
+          type: "FunctionCall",
+          params: {
+            methodName: getMetaChangeMethods.depositNear,
+            args: args,
+            gas: GAS,
+            deposit: amount,
+          },
+        },
+      ],
+    })
+    .catch((err) => {
+      console.log("Failed to fund to kickstarter");
+
+      throw getPanicErrorFromText(err.message);
+    })
+    .finally(() => {
+      blockerStore.setState({ isActive: false });
+    });
+  if (result instanceof Object) {
+    return result;
+  }
+  return null;
 };
