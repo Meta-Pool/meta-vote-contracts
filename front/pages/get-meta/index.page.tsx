@@ -152,7 +152,6 @@ export default function GetMeta() {
       >
         <Stack
           borderRadius={"8px"}
-          bg={useColorModeValue("transparent", "indigo.400")}
           boxShadow={"2xl"}
           padding={{ base: "16px", md: "30px" }}
         >

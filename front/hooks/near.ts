@@ -3,7 +3,7 @@ import {
   FETCH_NEAR_PRICE_INTERVAL,
   FETCH_TOKEN_BALANCE_INTERVAL,
 } from "../constants";
-import { getBalanceStNear, getContractMetadata, getNearBalance, getTokenBalanceOf } from "../lib/near";
+import { getContractMetadata, getNearBalance, getTokenBalanceOf } from "../lib/near";
 import { isDenominationACurrency } from "../pages/get-meta/TokenIcon/util";
 import { getNearDollarPrice } from "../queries/near";
 

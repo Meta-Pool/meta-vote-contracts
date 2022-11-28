@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 import { FETCH_METAPOOL_STATE_INTERVAL, FETCH_TOKEN_BALANCE_INTERVAL } from "../constants";
-import { getMetapoolContractState } from "../lib/near";
+import { getBalanceStNear, getMetapoolContractState } from "../lib/near";
 
 export const useGetMetapoolContractState = () => {
   return useQuery("metapoolContractState", () => getMetapoolContractState(), {
