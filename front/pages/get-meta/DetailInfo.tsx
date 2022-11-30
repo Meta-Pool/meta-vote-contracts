@@ -7,7 +7,7 @@ interface Props extends StackProps {
 }
 const DetailInfo = ({ name, children, ...props }: Props) => {
   return (
-    <HStack justifyContent="space-between"spacing={10} w="full" {...props}>
+    <HStack justifyContent="space-between" spacing={10} w="full" {...props}>
       <Stack w="max-content" align="flex-end">
         <Text
           fontSize={"xs"}
@@ -22,7 +22,7 @@ const DetailInfo = ({ name, children, ...props }: Props) => {
         <Text
           fontSize={"xs"}
           lineHeight={3}
-          color={"gray.400"}
+          color={colors.white}
           letterSpacing="wide"
         >
           {children}

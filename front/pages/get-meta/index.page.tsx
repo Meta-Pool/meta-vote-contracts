@@ -1,4 +1,4 @@
-import { SettingsAdjust } from "@carbon/icons-react";
+import { Settings } from "@carbon/icons-react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import {
   useToast,
@@ -51,15 +51,14 @@ export default function GetMeta() {
   const [minAmountExpected, setMinAmountExpected] = useState<number>(0);
   const [metaOnReturn, setMetaOnReturn] = useState<number>(0);
   const [slippage, setSlippage] = useState<number>(GET_META_DEFAULT_SLIPPAGE);
+  const [amountError, setAmountError] = useState<string| undefined>(undefined);
   const {
     isOpen: isOpenModal,
     onClose: onCloseModal,
     onOpen: onOpenModal,
   } = useDisclosure();
   const onChangeToken = (tokenContractId: string) => {
-    setTokenSelected(tokenContractId);
-    // queryClient.refetchQueries();
-   
+    setTokenSelected(tokenContractId);   
   };
 
   useEffect(() => {
@@ -80,6 +79,7 @@ export default function GetMeta() {
       setMinAmountExpected(0);
     }
   }, [tokenSelected, amount, slippage]);
+  
   const onGetMetaClick = () => {
     if (tokenSelected && amount > 0) {
       console.log(`calling deposit ${tokenSelected} for ${ntoy(amount)}`);
@@ -160,15 +160,7 @@ export default function GetMeta() {
               Get $META
             </Text>
             <VStack align="flex-end" justify="flex-end">
-              <SettingsAdjust cursor="pointer" onClick={onOpenModal} />
-              <Text
-                fontSize={"xs"}
-                lineHeight={3}
-                color={"gray.400"}
-                letterSpacing="wide"
-              >
-                Slippage: {slippage}%
-              </Text>
+              <Settings size="24" cursor="pointer" onClick={onOpenModal} />
             </VStack>
           </HStack>
 
@@ -221,17 +213,18 @@ export default function GetMeta() {
                 currency={tokenSelected}
                 amount={amount}
                 setAmount={setAmount}
+                setAmountError={setAmountError}
               />
             </HStack>
             {tokenSelected && amount > 0 ? (
               <VStack pt={5} spacing={"3"} w="100%">
-                <DetailInfo name={"Minimum received"}>
+                <DetailInfo name={`Minimum received after slippage (${slippage}%)`}>
                   {`${formatToLocaleNear(minAmountExpected)} $META`}
                 </DetailInfo>
                 <DetailInfo
-                  fontSize={"xs"}
+             
                   lineHeight={3}
-                  color={"gray.400"}
+              
                   letterSpacing="wide"
                   name={"Rate"}
                 >
@@ -252,8 +245,9 @@ export default function GetMeta() {
               w={"100%"}
               colorScheme={colors.primary}
               onClick={onGetMetaClick}
+              disabled={!!amountError}
             >
-              Buy
+              {!amountError ? "Buy" : amountError}
             </Button>
           </ButtonOnLogin>
         </Stack>

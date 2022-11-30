@@ -11,13 +11,3 @@ export const useGetMetapoolContractState = () => {
     staleTime: FETCH_METAPOOL_STATE_INTERVAL,
   });
 };
-
-export const useGetStNearBalance = (accountId: string) => {
-  return useQuery<string>(["stnearBalance", accountId], () => getBalanceStNear(), {
-    onError: (err) => {
-      console.error(err);
-    },
-    refetchInterval: FETCH_TOKEN_BALANCE_INTERVAL,
-    staleTime: FETCH_TOKEN_BALANCE_INTERVAL
-  });
-}

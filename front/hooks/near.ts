@@ -3,8 +3,17 @@ import {
   FETCH_NEAR_PRICE_INTERVAL,
   FETCH_TOKEN_BALANCE_INTERVAL,
 } from "../constants";
-import { getContractMetadata, getNearBalance, getTokenBalanceOf } from "../lib/near";
-import { isDenominationACurrency } from "../pages/get-meta/TokenIcon/util";
+import {
+  getBalanceStNear,
+  getContractMetadata,
+  getNearBalance,
+  getTokenBalanceOf,
+} from "../lib/near";
+import {
+  isDenominationACurrency,
+  isNearDenomination,
+  isStNearDenomination,
+} from "../pages/get-meta/TokenIcon/util";
 import { getNearDollarPrice } from "../queries/near";
 
 export const useGetTokenMetadata = (tokenContract: string) => {
@@ -16,7 +25,7 @@ export const useGetTokenMetadata = (tokenContract: string) => {
         console.error(err);
       },
       cacheTime: Infinity,
-      enabled: !isDenominationACurrency(tokenContract)
+      enabled: !isDenominationACurrency(tokenContract),
     }
   );
 };
@@ -31,30 +40,24 @@ export const useGetNearDollarPrice = () => {
   });
 };
 
-export const useGetTokenBalanceOf = (
-  tokenContractAddress: string,
-  accountId: string
-) => {
+export const useGetBalance = (accountId: string, currency?: string) => {
   return useQuery(
-    ["tokenBalance", tokenContractAddress, accountId],
-    () => getTokenBalanceOf(tokenContractAddress, accountId),
+    ["balance", currency, accountId],
+    () => {
+      if (isNearDenomination(currency)) {
+        return getNearBalance(accountId!);
+      } else if (isStNearDenomination(currency)) {
+        return getBalanceStNear();
+      }
+      return getTokenBalanceOf(currency!, accountId!);
+    },
     {
       onError: (err) => {
         console.error(err);
       },
       refetchInterval: FETCH_TOKEN_BALANCE_INTERVAL,
       staleTime: FETCH_TOKEN_BALANCE_INTERVAL,
-      enabled: !isDenominationACurrency(tokenContractAddress)
+      enabled: !!currency && !!accountId && currency !== null
     }
   );
 };
-
-export const useGetNearBalance = (accountId: string) => {
-  return useQuery<string>(["nearBalance", accountId], () => getNearBalance(accountId), {
-    onError: (err) => {
-      console.error(err);
-    },
-    refetchInterval: FETCH_TOKEN_BALANCE_INTERVAL,
-    staleTime: FETCH_TOKEN_BALANCE_INTERVAL
-  });
-}

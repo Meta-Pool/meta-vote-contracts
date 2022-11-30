@@ -43,8 +43,8 @@ export const NETWORK_ID =
 export const IS_PRODUCTION = NETWORK_ID == "mainnet";
 export const METAPOOL_CONTRACT_ID =
   process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID || "meta-v2.pool.testnet";
-  export const METAPOOL_TESTNET_CONTRACT_ID =
-  process.env.NEXT_PUBLIC_METAPOOL_TESTNET_CONTRACT_ID;
+export const METAPOOL_DEV_CONTRACT_ID =
+  process.env.NEXT_PUBLIC_METAPOOL_DEV_CONTRACT_ID;
 export const META_CONTRACT_ID =
   process.env.NEXT_PUBLIC_META_CONTRACT_ID || "token.meta.pool.testnet";
 export const GET_META_CONTRACT_ID = process.env.NEXT_PUBLIC_GET_META_CONTRACT;
@@ -130,8 +130,12 @@ export const getMetaBalance = async (): Promise<number> => {
 };
 
 export const getBalanceStNear = async (): Promise<string> => {
-  const accountInfo = await getMetapoolAccountInfo();
-  return accountInfo.st_near;
+  if (IS_PRODUCTION) {
+    const accountInfo = await getMetapoolAccountInfo();
+    return accountInfo.st_near;
+  }
+  const account_id = window.account_id;
+  return getTokenBalanceOf(METAPOOL_DEV_CONTRACT_ID!, account_id!);
 };
 
 export const getTxStatus = async (
@@ -471,13 +475,12 @@ export const getNearBalance = async (accountId: string) => {
     finality: "final",
     account_id: accountId,
   });
-
-  return response ? response.amount : response.error.data;
+  return response.amount;
 };
 
 export const getMetaContractFee = async () => {
   return callViewGetMetaMethod(getMetaViewMethods.getMetaFee, {});
-}
+};
 
 export const depositToken = async (
   tokenContracId: string,
@@ -489,7 +492,7 @@ export const depositToken = async (
   const args = {
     amount: amount,
     receiver_id: GET_META_CONTRACT_ID,
-    msg: minMetaAmountExpected
+    msg: minMetaAmountExpected,
   };
   const result = await wallet!
     .signAndSendTransaction({
@@ -528,7 +531,7 @@ export const depositNear = async (
   const wallet = window.wallet;
   const account_id = window.account_id;
   const args = {
-    min_amount_expected: minMetaAmountExpected
+    min_amount_expected: minMetaAmountExpected,
   };
   const result = await wallet!
     .signAndSendTransaction({
