@@ -631,8 +631,9 @@ impl MetaVoteContract {
         &self,
         contract_address: ContractAddress
     ) -> Vec<VotableObjectJSON> {
-        let objects = self.votes.get(&contract_address)
-            .expect("Contract Address not in Meta Vote.");
+       let objects = self.votes.get(&contract_address)
+        .unwrap_or(UnorderedMap::new(StorageKey::Votes));
+
         let mut results: Vec<VotableObjectJSON> = Vec::new();
         for (id, voting_power) in objects.iter() {
             results.push(
