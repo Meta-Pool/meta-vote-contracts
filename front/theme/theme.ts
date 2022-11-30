@@ -54,6 +54,7 @@ const customTheme = extendTheme(
     fonts: {
       heading: "Inter",
       body: "Inter",
+      meta: "Meta Space"
     },
   },
   proTheme
