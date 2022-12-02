@@ -28,6 +28,7 @@ import { formatToLocaleNear } from "../../lib/util";
 import { useStore as useVoter } from "../../stores/voter";
 import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 import ButtonOnLogin from "./ButtonLogin";
+import { GET_META_ENABLED } from "../../constants";
 
 const Header: React.FC<ButtonProps> = (props) => {
   const { balance, setBalance } = useBalance();
@@ -84,7 +85,7 @@ const Header: React.FC<ButtonProps> = (props) => {
             <Spacer />
 
             {selector?.isSignedIn() ? (
-              <HStack spacing={{ base: 1, md: 10 }}>
+              <HStack spacing={{ base: 1, md: 6 }}>
                 <HStack>
                   <Square minW="30px">
                     <Image
@@ -103,26 +104,38 @@ const Header: React.FC<ButtonProps> = (props) => {
                   </Text>
                 </HStack>
 
-                {isDesktop && (
+                {isDesktop && !GET_META_ENABLED && (
+                  <HStack
+                    cursor="pointer"
+                    alignItems="center"
+                    p={"5px 16px"}
+                    borderRadius={100}
+                    backgroundColor={colors.primary + ".900"}
+                  >
+                    <Link
+                      fontWeight={500}
+                      href={nearConfig.refFinance}
+                      isExternal
+                    >
+                      Get more $META
+                    </Link>
+                    <ExternalLinkIcon></ExternalLinkIcon>
+                  </HStack>
+                )}
+                {isDesktop && GET_META_ENABLED && (
                   <ButtonOnLogin>
                     <Button
-                      leftIcon={
-                        <Image
-                          boxSize={{ base: "10px", md: "20px" }}
-                          objectFit="cover"
-                          src="/meta_white.png"
-                          alt="meta"
-                        />
-                      }
                       borderRadius={100}
                       fontSize={{ base: "md", md: "md" }}
+                      variant={"outline"}
+                      colorScheme={colors.primary}
                       onClick={() => router.push("/get-meta")}
-                      backgroundColor={colors.primary + ".900"}
                     >
-                      Get $META
+                      Get more $META
                     </Button>
                   </ButtonOnLogin>
                 )}
+
                 {isDesktop && selector?.isSignedIn() && (
                   <Link
                     href={`${nearConfig.explorerUrl}/accounts/${accountId}`}

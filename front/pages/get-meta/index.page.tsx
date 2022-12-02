@@ -14,10 +14,12 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
+import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useQueryClient } from "react-query";
 import {
   GET_META_DEFAULT_SLIPPAGE,
+  GET_META_ENABLED,
   GET_META_MIN_SLIPPAGE,
   MODAL_DURATION,
 } from "../../constants";
@@ -33,6 +35,7 @@ import {
 } from "../../lib/near";
 import { formatToLocaleNear, ntoy, yton } from "../../lib/util";
 import ButtonOnLogin from "../components/ButtonLogin";
+import FeatureComingSoon from "../components/coming-soon";
 import PageLoading from "../components/PageLoading";
 import DetailInfo from "./DetailInfo";
 import SlippageSettingsModal from "./SlippageSettingsModal";
@@ -130,7 +133,11 @@ export default function GetMeta() {
   };
 
   const onSetSlippage = () => {};
+  const router = useRouter();
   if (isLoading) return <PageLoading />;
+  if (!GET_META_ENABLED) {
+    return (<FeatureComingSoon />)
+  }
   return (
     <>
       <SlippageSettingsModal

@@ -18,6 +18,7 @@ export const FETCH_TOKEN_BALANCE_INTERVAL = 5000;
 
 export const GET_META_DEFAULT_SLIPPAGE = 0.3;
 export const GET_META_MIN_SLIPPAGE = 0.01;
+export const GET_META_ENABLED =  (process.env.NEXT_PUBLIC_ENABLE_GET_META && process.env.NEXT_PUBLIC_ENABLE_GET_META == "true") || false;
 
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_METAVOTE||"metayield.app";
 
