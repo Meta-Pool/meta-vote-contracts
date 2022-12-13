@@ -38,8 +38,19 @@ const VoteCard = (props: CardProps) => {
     return project && project.substring(project.indexOf('|') + 1)
   }
 
-  const getProjectId = (project: string)=>{
-    return project && project.substring(0,project.indexOf('|'))
+  const getProjectId = (project: string, platform: string)=>{
+    switch (platform) {
+      //'metayield.app'
+      case WHITELIST_SITES[0].platform:
+        return project && project.substring(0,project.indexOf('|'));
+        break;
+      
+      //'metastakingvote'
+      case WHITELIST_SITES[1].platform:
+      default:
+        return project;
+        break;
+    }
   }
 
   const getProjectLogoUrl = (platform: string) => {
@@ -47,6 +58,10 @@ const VoteCard = (props: CardProps) => {
     return platformData ? platformData.isologo : '';
   }
 
+  const getProjectHref = (platform: string) => {
+    const platformData = WHITELIST_SITES.find((site: any)=> site.platform === platform);
+    return platformData ? platformData.url : WHITELIST_SITES[0].url;
+  }
   return (
     procesing ? (
       <Stack borderRadius={"30px"} spacing={10} minH={{base: 'inherit',md:'234px'}} bg={'#F9F9FA'} px={'20px'} py={'38px'} m={'11px'} justify={'space-between'} maxH={'200px'} minW={'330px'}>
@@ -67,14 +82,14 @@ const VoteCard = (props: CardProps) => {
                   <Text ml={'45px'}  fontWeight={700} fontFamily={'Meta Space'}>{yton(position?.current_votes).toFixed(4)}</Text>
                   <Text>Voting Power</Text> </HStack>
               </VStack>
-              <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal><ExternalLinkIcon boxSize={6}></ExternalLinkIcon></Link>
+              <Link href={getProjectHref(position?.votable_contract) + getProjectId(position?.id, position?.votable_contract)} isExternal><ExternalLinkIcon boxSize={6}></ExternalLinkIcon></Link>
             </HStack>
             <Box>
     
             {/* Card Body */}
             <HStack justify={'space-between'}>
               <HStack spacing={0}>
-                <Link href={'https://' + position?.votable_contract + '/vote/' + getProjectId(position?.id)} isExternal>
+                <Link href={getProjectHref(position?.votable_contract) + getProjectId(position?.id, position?.votable_contract)} isExternal>
                   <Image src={getProjectLogoUrl(position?.votable_contract)} alt={'logo'}></Image>
                 </Link>
               </HStack>
