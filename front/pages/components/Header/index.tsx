@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState } from "react";
 import { useEffect } from "react";
 import {
   Button,
@@ -18,23 +18,32 @@ import {
   IconButton,
   useBreakpointValue,
   useDisclosure,
+  VStack,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
-import { getMetaBalance, getNearConfig, signOutWallet } from "../../lib/near";
-import { colors } from "../../constants/colors";
-import { useStore as useBalance } from "../../stores/balance";
+import {
+  getMetaBalance,
+  getNearConfig,
+  getVestingInfo,
+  signOutWallet,
+} from "../../../lib/near";
+import { colors } from "../../../constants/colors";
+import { useStore as useBalance } from "../../../stores/balance";
 import { useRouter } from "next/router";
-import { formatToLocaleNear } from "../../lib/util";
-import { useStore as useVoter } from "../../stores/voter";
-import { useWalletSelector } from "../../contexts/WalletSelectorContext";
-import ButtonOnLogin from "./ButtonLogin";
-import { GET_META_ENABLED } from "../../constants";
+import { formatToLocaleNear } from "../../../lib/util";
+import { useStore as useVoter } from "../../../stores/voter";
+import { useWalletSelector } from "../../../contexts/WalletSelectorContext";
+import ButtonOnLogin from "../ButtonLogin";
+import { GET_META_ENABLED } from "../../../constants";
+import VestingTooltip, { VestingInfoProps } from "./VestingTooltip";
 
 const Header: React.FC<ButtonProps> = (props) => {
   const { balance, setBalance } = useBalance();
+  const [vestingInfo, setVestingInfo] = useState<VestingInfoProps | undefined>();
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const { selector, modal, accounts, accountId } = useWalletSelector();
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const router = useRouter();
   const nearConfig = getNearConfig();
@@ -58,10 +67,23 @@ const Header: React.FC<ButtonProps> = (props) => {
     }
   };
 
+  const updateVestingInfo = async () => {
+    if (selector.isSignedIn() && accountId) {
+      try{
+      setVestingInfo(await getVestingInfo());
+      }
+      catch(e) {
+        console.log(e);
+        setVestingInfo(undefined)
+      }
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
         updateBalance();
+        updateVestingInfo();
       } catch (e) {
         console.error(e);
       }
@@ -70,6 +92,7 @@ const Header: React.FC<ButtonProps> = (props) => {
     setInterval(async () => {
       try {
         updateBalance();
+        updateVestingInfo();
       } catch (e) {
         console.error(e);
       }
@@ -95,13 +118,15 @@ const Header: React.FC<ButtonProps> = (props) => {
                       alt="meta"
                     />
                   </Square>
-                  <Text
-                    fontFamily={"Meta Space"}
-                    fontSize={{ base: "10px", md: "18px" }}
-                    fontWeight={500}
-                  >
-                    {formatToLocaleNear(balance)}
-                  </Text>
+                   <VestingTooltip vestingInfo={vestingInfo}>
+                    <Text
+                      fontFamily={"Meta Space"}
+                      fontSize={{ base: "10px", md: "18px" }}
+                      fontWeight={500}
+                    >
+                      {formatToLocaleNear(balance)}
+                    </Text>
+                  </VestingTooltip>
                 </HStack>
 
                 {isDesktop && !GET_META_ENABLED && (

@@ -124,6 +124,13 @@ export const getMetaTokenAccountInfo = async () => {
   });
 };
 
+export const getVestingInfo = async () => {
+  const account_id = window.account_id;
+  return callViewMetaTokenMethod(metaTokenMethods.getVestingInfo, {
+    account_id: account_id,
+  });
+}
+
 export const getMetaBalance = async (): Promise<number> => {
   const accountInfo = await getMetaTokenAccountInfo();
   return yton(accountInfo);
