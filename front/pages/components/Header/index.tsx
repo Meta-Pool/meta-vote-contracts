@@ -118,7 +118,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                       alt="meta"
                     />
                   </Square>
-                   <VestingTooltip vestingInfo={vestingInfo}>
+                   <VestingTooltip vestingInfo={vestingInfo} balance={balance}>
                     <Text
                       fontFamily={"Meta Space"}
                       fontSize={{ base: "10px", md: "18px" }}
