@@ -13,7 +13,7 @@ import { getAvailableVotingPower, getBalanceMetaVote, getInUseVotingPower, getLo
 import { useStore as useVoter } from "../../../stores/voter";
 import VoteCard from './VoteCard';
 import InfoModal from './InfoModal';
-import { CONTRACT_ADDRESS, FETCH_VOTES_INTERVAL, MODAL_TEXT } from '../../../constants';
+import { CONTRACT_ADDRESS, FETCH_VOTES_INTERVAL, MODAL_DURATION, MODAL_TEXT } from '../../../constants';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
 import { colors } from '../../../constants/colors';
 import { Stack } from 'phosphor-react';
@@ -23,7 +23,7 @@ const ListingVotes = () => {
   const { isOpen : infoIsOpen,  onClose : infoOnClose, onOpen: onOpenInfo} = useDisclosure();
 
   const { voterData, setVoterData } = useVoter();
-  const [ positionSelected, setPositionSel ] = useState('')
+  const [ positionSelected, setPositionSel ] = useState({voteId: '', votableObj: ''})
   const { selector } = useWalletSelector();
   const [ procesingFlag, setProcessFlag] = useState(false); 
 
@@ -47,15 +47,15 @@ const ListingVotes = () => {
     setVoterData(newVoterData);
   }
 
-  const unvote = (id: any)=> {
+  const unvote = (id: any, votableObj: string)=> {
       try {
         setProcessFlag(true);
         infoOnClose();
-        unvoteProject(id, contract).then(()=>{
+        unvoteProject(id, votableObj).then(()=>{
           toast({
             title: "Unvote success.",
             status: "success",
-            duration: 3000,
+            duration: MODAL_DURATION.SUCCESS,
             position: "top-right",
             isClosable: true,
           });
@@ -70,7 +70,7 @@ const ListingVotes = () => {
             title: "Transaction error.",
             description: error,
             status: "error",
-            duration: 3000,
+            duration: MODAL_DURATION.ERROR,
             position: "top-right",
             isClosable: true,
           });
@@ -82,8 +82,8 @@ const ListingVotes = () => {
       }
   }
 
-  const unvotedClicked = (voteId: string) => {
-    setPositionSel(voteId);
+  const unvotedClicked = (voteId: string, votableObj: string) => {
+    setPositionSel({voteId, votableObj});
     onOpenInfo();
   }
 
@@ -109,7 +109,7 @@ const ListingVotes = () => {
                           key={index}
                           position={position}
                           procesing={procesingFlag}
-                          unvoteAction={()=>{unvotedClicked(position.id)}}/>
+                          unvoteAction={()=>{unvotedClicked(position.id, position.votable_contract)}}/>
                 )})
               }      
               {
@@ -125,7 +125,7 @@ const ListingVotes = () => {
           </Flex>
         }
 
-      <InfoModal content={{title :MODAL_TEXT.VOTE.title, text:MODAL_TEXT.VOTE.text}}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => unvote(positionSelected)} ></InfoModal>
+      <InfoModal content={{title :MODAL_TEXT.VOTE.title, text:MODAL_TEXT.VOTE.text}}  isOpen={infoIsOpen} onClose={infoOnClose} onSubmit={() => unvote(positionSelected?.voteId, positionSelected?.votableObj)} ></InfoModal>
     </section>
   );
 };
