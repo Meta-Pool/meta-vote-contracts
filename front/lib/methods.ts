@@ -37,6 +37,7 @@ export const metaPoolMethods = {
 
 export const metaTokenMethods = {
   getMetas: "ft_balance_of",
+  getVestingInfo: "get_vesting_info",
   getAccountInfo: "ft_metadata"
 };
 
