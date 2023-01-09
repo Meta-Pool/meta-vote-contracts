@@ -7,7 +7,7 @@ use near_sdk::json_types::U128;
 use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault, require};
 use types::*;
 use utils::{generate_hash_id, get_current_epoch_millis};
-use voter::Voter;
+use voter::{Voter, VoterJSON};
 
 mod constants;
 mod deposit;
@@ -555,6 +555,21 @@ impl MetaVoteContract {
     /*   View functions   */
     /**********************/
 
+    pub fn get_voters(&self, from_index: u32, limit: u32) -> Vec<VoterJSON> {
+        let keys = self.voters.keys_as_vector();
+        let voters_len = keys.len() as u64;
+        let start = from_index as u64;
+        let limit = limit as u64;
+
+        let mut results = Vec::<VoterJSON>::new();
+        for index in start..std::cmp::min(start + limit, voters_len) {
+            let voter_id = keys.get(index).unwrap();
+            let voter = self.voters.get(&voter_id).unwrap();
+            results.push(voter.to_json(voter_id));
+        }
+        results
+    }
+
     pub fn get_balance(&self, voter_id: VoterId) -> U128 {
         let voter = self.internal_get_voter(&voter_id);
         let balance = voter.balance + voter.sum_unlocked();
@@ -631,8 +646,9 @@ impl MetaVoteContract {
         &self,
         contract_address: ContractAddress
     ) -> Vec<VotableObjectJSON> {
-        let objects = self.votes.get(&contract_address)
-            .expect("Contract Address not in Meta Vote.");
+       let objects = self.votes.get(&contract_address)
+        .unwrap_or(UnorderedMap::new(StorageKey::Votes));
+
         let mut results: Vec<VotableObjectJSON> = Vec::new();
         for (id, voting_power) in objects.iter() {
             results.push(

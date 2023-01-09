@@ -31,20 +31,37 @@ export const metavoteChangeMethods = {
 
 export const metaPoolMethods = {
   getStNearPrice: "get_st_near_price",
-  getAccountInfo: "get_account_info"
+  getAccountInfo: "get_account_info",
+  getContractState: "get_contract_state"
 };
 
 export const metaTokenMethods = {
   getMetas: "ft_balance_of",
+  getVestingInfo: "get_vesting_info",
   getAccountInfo: "ft_metadata"
 };
 
 export const projectTokenViewMethods = {
   storageBalanceOf: "storage_balance_of",
+  balanceOf: "ft_balance_of",
   metadata: "ft_metadata",
   storageBalanceBounds: "storage_balance_bounds"
 }
 
 export const projectTokenChangeMethods = {
   storageDeposit: "storage_deposit"
+}
+
+export const getMetaViewMethods = {
+  isTokenWhitelisted: "is_token_whitelisted",
+  getMetaBalance: "get_meta_balance",
+  getTokenBalance: "get_token_balance",
+  getWhitelistedTokens: "get_whitelisted_tokens",
+  computeMetaAmountOnReturn: "compute_meta_amount_on_return",
+  getMetaFee: "get_meta_fee"
+}
+
+export const getMetaChangeMethods = {
+  depositToken: "ft_transfer_call",
+  depositNear: "deposit_near"
 }

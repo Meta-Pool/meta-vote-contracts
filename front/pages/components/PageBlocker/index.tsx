@@ -1,3 +1,3 @@
-export type { PageBlockerState } from "./pageblocker.types";
+export type { PageBlockerState } from "../../../types/pageblocker.types";
 
 export { default } from "./PageBlocker";

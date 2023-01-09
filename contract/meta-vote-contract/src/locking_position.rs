@@ -56,7 +56,7 @@ impl LockingPosition {
             unlocking_started_at: self.unlocking_started_at,
             is_unlocked: self.is_unlocked(),
             is_unlocking: self.is_unlocking(),
-            is_locked: self.is_locked(),
+            is_locked: self.is_locked()
         }
     }
 }

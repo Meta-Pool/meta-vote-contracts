@@ -48,6 +48,13 @@ fn test_single_deposit() {
         msg.parse::<Days>().unwrap()
     );
     assert_eq!(vote_power, voter.voting_power, "Incorrect voting power calculation!");
+
+    let voters = contract.get_voters(0, 10);
+    assert_eq!(voters.len(), 1);
+    let locking_position = &voters.first().unwrap().locking_positions;
+    assert_eq!(locking_position.len(), 1);
+    let vote_position = &voters.first().unwrap().vote_positions;
+    assert_eq!(vote_position.len(), 0);
 }
 
 #[test]
@@ -105,6 +112,13 @@ fn test_multiple_deposit_same_locking_period() {
         contract.get_balance(sender_id.clone()),
         "Incorrect balance!"
     );
+
+    let voters = contract.get_voters(0, 10);
+    assert_eq!(voters.len(), 1);
+    let locking_position = &voters.first().unwrap().locking_positions;
+    assert_eq!(locking_position.len(), 1);
+    let vote_position = &voters.first().unwrap().vote_positions;
+    assert_eq!(vote_position.len(), 0);
 }
 
 #[test]
@@ -147,7 +161,6 @@ fn test_multiple_deposit_diff_locking_period() {
     );
     testing_env!(context.clone());
     assert_eq!(
-
         U128::from(total_vote_power),
         contract.get_available_voting_power(sender_id.clone()),
         "Incorrect voting power calculation!"
@@ -164,6 +177,13 @@ fn test_multiple_deposit_diff_locking_period() {
         contract.get_balance(sender_id.clone()),
         "Incorrect balance!"
     );
+
+    let voters = contract.get_voters(0, 10);
+    assert_eq!(voters.len(), 1);
+    let locking_position = &voters.first().unwrap().locking_positions;
+    assert_eq!(locking_position.len(), 2);
+    let vote_position = &voters.first().unwrap().vote_positions;
+    assert_eq!(vote_position.len(), 0);
 }
 
 #[test]
@@ -748,10 +768,16 @@ fn test_clear_locking_position() {
         Meta::from(contract.get_balance(sender_id.clone())),
         "Incorrect balance!"
     );
+
+    let voters = contract.get_voters(0, 10);
+    assert_eq!(voters.len(), 1);
+    let locking_position = &voters.first().unwrap().locking_positions;
+    assert_eq!(locking_position.len(), 0);
+    let vote_position = &voters.first().unwrap().vote_positions;
+    assert_eq!(vote_position.len(), 0);
 }
 
 #[test]
-
 #[should_panic(expected="Not enough free voting power to unlock! You have 0, required 20370370370370370370370370.")]
 fn test_unlock_position_without_voting_power() {
     const LOCKING_PERIOD: u64 = 100;
@@ -873,6 +899,13 @@ fn test_rebalance_increase_and_decrease() {
     let votes_for_address = voter.get_votes_for_address(&sender_id, &contract_address);
     let votes = votes_for_address.get(&votable_object_id).unwrap();
     assert_eq!(votes, u128::from(additional_votes), "Incorrect Voting Power calculation.");
+
+    let voters = contract.get_voters(0, 10);
+    assert_eq!(voters.len(), 1);
+    let locking_position = &voters.first().unwrap().locking_positions;
+    assert_eq!(locking_position.len(), 1);
+    let vote_position = &voters.first().unwrap().vote_positions;
+    assert_eq!(vote_position.len(), 1);
 }
 
 #[test]
@@ -1009,4 +1042,10 @@ fn test_multi_voter_contract() {
         "Incorrect vote count for project 2, object 1."
     );
 
+    let voters = contract.get_voters(0, 10);
+    assert_eq!(voters.len(), 4);
+    let locking_position = &voters.first().unwrap().locking_positions;
+    assert_eq!(locking_position.len(), 1);
+    let vote_position = &voters.first().unwrap().vote_positions;
+    assert_eq!(vote_position.len(), 1);
 }

@@ -17,7 +17,7 @@ construct_uint! {
     pub struct U256(4);
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LockingPositionJSON {
     pub index: Option<PositionIndex>,
@@ -36,4 +36,12 @@ pub struct VotableObjectJSON {
     pub votable_contract: String,
     pub id: VotableObjId,
     pub current_votes: U128
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct VotePositionJSON {
+    pub votable_address: AccountId,
+    pub votable_object_id: String,
+    pub voting_power: U128
 }
