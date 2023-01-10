@@ -199,12 +199,8 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return decodeJsonRpcData(response.result);
 };
 
-const callChangeMetavoteMethod = async (
-  method: string,
-  args: any,
-  deposit?: string
-): Promise<FinalExecutionOutcome | null> => {
-  const wallet = window.wallet;
+const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<FinalExecutionOutcome | null> => {
+  const wallet = window.wallet || await window.selector.wallet();
   const account_id = window.account_id;
   blockerStore.setState({ isActive: true });
   const result = await wallet!
@@ -225,13 +221,13 @@ const callChangeMetavoteMethod = async (
     .catch((err) => {
       console.error(`Failed to call metavote contract -- method: ${method}`);
       throw getPanicErrorFromText(err.message);
-    })
-    .finally(() => {
-      blockerStore.setState({ isActive: false });
+    }).
+    finally(()=> {
+      blockerStore.setState({isActive: false});
     });
-  if (result instanceof Object) {
-    return result;
-  }
+    if (result instanceof Object) {
+      return result;
+    }
   return null;
 };
 
@@ -298,7 +294,7 @@ export const getBalanceOfTokenForSupporter = async (
 };
 
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
-  const wallet = window.wallet;
+  let wallet = window.wallet || await window.selector.wallet();
   const account_id = window.account_id;
   blockerStore.setState({ isActive: true });
   const result = await wallet!.signAndSendTransaction({
@@ -312,15 +308,18 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
           args: args,
           gas: GAS,
           deposit: "1",
-        },
-      },
-    ],
-  });
-  checkPanicError(result);
-  blockerStore.setState({ isActive: false });
-  if (result instanceof Object) {
-    return result;
-  }
+        }
+      }]
+    }).catch((err) => {
+      console.error(`Failed to call metavote contract -- method: ${method}`);
+      throw getPanicErrorFromText(err.message);
+    }).finally(()=> {
+      blockerStore.setState({isActive: false});
+    })
+    checkPanicError(result);
+    if (result instanceof Object) {
+      return result;
+    }
   return null;
 };
 
