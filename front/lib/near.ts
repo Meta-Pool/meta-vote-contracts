@@ -308,8 +308,8 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
           args: args,
           gas: GAS,
           deposit: "1",
-        },
-      ],
+        }
+      }]
     }).catch((err) => {
       console.error(`Failed to call metavote contract -- method: ${method}`);
       throw getPanicErrorFromText(err.message);
