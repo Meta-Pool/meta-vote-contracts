@@ -41,7 +41,7 @@ import DetailInfo from "./DetailInfo";
 import SlippageSettingsModal from "./SlippageSettingsModal";
 import TokenAmount from "./TokenAmount";
 import TokenIcon from "./TokenIcon";
-import TokenName from "./TokenIcon/TokenName";
+import TokenSymbol from "./TokenIcon/TokenSymbol";
 import { isDenominationACurrency, isNearDenomination } from "./TokenIcon/util";
 
 export default function GetMeta() {
@@ -237,7 +237,7 @@ export default function GetMeta() {
                 >
                   <HStack>
                     <Text>1</Text>
-                    <TokenName denomination={tokenSelected} />
+                    <TokenSymbol denomination={tokenSelected} />
                     <Text>
                       ≈ {formatToLocaleNear(metaOnReturn / amount)} $META
                     </Text>
