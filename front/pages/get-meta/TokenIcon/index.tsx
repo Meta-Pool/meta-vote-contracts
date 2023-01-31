@@ -34,7 +34,7 @@ export default function TokenIcon({ denomination, ...props }: TokenIconProps) {
         alt="token"
         src={metadata?.icon}
       />
-      <Text color={"gray.900"}>{metadata?.name}</Text>
+      <Text color={"gray.900"}>{metadata?.symbol}</Text>
     </HStack>
   ) : null;
 }
