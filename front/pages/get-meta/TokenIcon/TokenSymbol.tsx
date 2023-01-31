@@ -5,17 +5,17 @@ import {
   isNearDenomination,
 } from "./util";
 
-interface TokenIconProps extends TextProps {
+interface Props extends TextProps {
   denomination: string;
 }
-export default function TokenName({ denomination, ...props }: TokenIconProps) {
+export default function TokenSymbol({ denomination, ...props }: Props) {
   const { data: metadata, isLoading } = useGetTokenMetadata(denomination);
   if (isNearDenomination(denomination)) {
     return <Text {...props}>{denomination}</Text>;
   }
   return !isLoading && metadata ? (
 
-      <Text {...props}>{metadata?.name}</Text>
+      <Text {...props}>{metadata?.symbol}</Text>
 
   ) : null;
 }
