@@ -54,14 +54,14 @@ export default function GetMeta() {
   const [minAmountExpected, setMinAmountExpected] = useState<number>(0);
   const [metaOnReturn, setMetaOnReturn] = useState<number>(0);
   const [slippage, setSlippage] = useState<number>(GET_META_DEFAULT_SLIPPAGE);
-  const [amountError, setAmountError] = useState<string| undefined>(undefined);
+  const [amountError, setAmountError] = useState<string | undefined>(undefined);
   const {
     isOpen: isOpenModal,
     onClose: onCloseModal,
     onOpen: onOpenModal,
   } = useDisclosure();
   const onChangeToken = (tokenContractId: string) => {
-    setTokenSelected(tokenContractId);   
+    setTokenSelected(tokenContractId);
   };
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function GetMeta() {
       setMinAmountExpected(0);
     }
   }, [tokenSelected, amount, slippage]);
-  
+
   const onGetMetaClick = () => {
     if (tokenSelected && amount > 0) {
       console.log(`calling deposit ${tokenSelected} for ${ntoy(amount)}`);
@@ -136,7 +136,7 @@ export default function GetMeta() {
   const router = useRouter();
   if (isLoading) return <PageLoading />;
   if (!GET_META_ENABLED) {
-    return (<FeatureComingSoon />)
+    return <FeatureComingSoon />;
   }
   return (
     <>
@@ -177,7 +177,12 @@ export default function GetMeta() {
             bg="rgba(0, 0, 0, 0.2)"
             borderRadius="8px"
           >
-            <HStack w="100%" spacing={5} justify="space-between" align="flex-end">
+            <HStack
+              w="100%"
+              spacing={5}
+              justify="space-between"
+              align="flex-end"
+            >
               <Menu placement="bottom-end">
                 <MenuButton
                   as={Button}
@@ -225,13 +230,16 @@ export default function GetMeta() {
             </HStack>
             {tokenSelected && amount > 0 ? (
               <VStack pt={5} spacing={"3"} w="100%">
-                <DetailInfo name={`Minimum received after slippage (${slippage}%)`}>
+                <DetailInfo
+                  color={colors.white}
+                  fontWeight={"extrabold"}
+                  name={`Minimum received after slippage (${slippage}%)`}
+                >
                   {`${formatToLocaleNear(minAmountExpected)} $META`}
                 </DetailInfo>
                 <DetailInfo
-             
+                  color={"gray.400"}
                   lineHeight={3}
-              
                   letterSpacing="wide"
                   name={"Rate"}
                 >

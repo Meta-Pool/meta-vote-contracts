@@ -23,8 +23,10 @@ const TokenAmount = ({
 
   useEffect(() => {
     setAmountError(undefined);
-    if (amount > yton(balance)) {
-      setAmountError("Insufficiente balance");
+    if (!currency) {
+      setAmountError("Select a token");
+    } else if (amount > yton(balance)) {
+      setAmountError("Insufficient balance");
     }
   }, [balance, amount, currency]);
 
