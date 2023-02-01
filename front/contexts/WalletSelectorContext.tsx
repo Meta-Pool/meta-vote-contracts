@@ -20,6 +20,7 @@ import { setupNearWallet } from "@near-wallet-selector/near-wallet";
 import { setupHereWallet } from "@near-wallet-selector/here-wallet";
 import { setupCoin98Wallet } from "@near-wallet-selector/coin98-wallet";
 import { setupMeteorWallet } from "@near-wallet-selector/meteor-wallet";
+import { setupNarwallets } from "@near-wallet-selector/narwallets";
 declare global {
   interface Window {
     selector: WalletSelector;
@@ -51,6 +52,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
       network: NETWORK_ID as NetworkId,
       debug: true,
       modules: [
+        setupNarwallets(),
         setupMeteorWallet() as WalletModuleFactory<Wallet>,
         setupNearWallet({
           walletUrl: nearConfig.walletUrl,
