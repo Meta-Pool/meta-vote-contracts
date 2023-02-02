@@ -18,11 +18,11 @@ export default function TokenIcon({ denomination, ...props }: TokenIconProps) {
         <Text
           fontFamily={"meta"}
           fontSize={"35px"}
-          color={"gray.900"}
+          color={props.color || "gray.900"}
         >
           {getCurrencyTokenCalt("NEAR")}
         </Text>
-        <Text color={"gray.900"}>{denomination}</Text>
+        <Text color={props.color || "gray.900"}>{denomination}</Text>
       </HStack>
     );
   }
@@ -34,7 +34,7 @@ export default function TokenIcon({ denomination, ...props }: TokenIconProps) {
         alt="token"
         src={metadata?.icon}
       />
-      <Text color={"gray.900"}>{metadata?.symbol}</Text>
+      <Text color={props.color || "gray.900"}>{metadata?.symbol}</Text>
     </HStack>
   ) : null;
 }
