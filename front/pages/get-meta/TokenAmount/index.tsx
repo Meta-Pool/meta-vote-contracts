@@ -10,8 +10,8 @@ export interface Props extends StackProps {
   currency?: string;
   amount: number;
   setAmount: (value: number) => void;
-  setAmountError: (value: string | undefined) => void;
-  readOnly?: boolean
+  setAmountError?: (value: string | undefined) => void;
+  readOnly?: boolean;
   stNearRate?: number;
 }
 const TokenAmount = ({
@@ -20,17 +20,19 @@ const TokenAmount = ({
   setAmount,
   setAmountError,
   readOnly,
-  stNearRate
+  stNearRate,
 }: Props) => {
   const { accountId } = useWalletSelector();
   const { data: balance } = useGetBalance(accountId!, currency);
 
   useEffect(() => {
-    setAmountError(undefined);
-    if (!currency) {
-      setAmountError("Select a token");
-    } else if (amount > yton(balance)) {
-      setAmountError("Insufficient balance");
+    if (setAmountError) {
+      setAmountError(undefined);
+      if (!currency) {
+        setAmountError("Select a token");
+      } else if (amount > yton(balance)) {
+        setAmountError("Insufficient balance");
+      }
     }
   }, [balance, amount, currency]);
 
@@ -47,7 +49,11 @@ const TokenAmount = ({
         onChange={(e) => setAmount(Number(e.target.value))}
         isReadOnly={readOnly}
       />
-      <TokenAmountInUsd currency={currency} amount={amount} stNearRate={stNearRate} />
+      <TokenAmountInUsd
+        currency={currency}
+        amount={amount}
+        stNearRate={stNearRate}
+      />
     </VStack>
   );
 };

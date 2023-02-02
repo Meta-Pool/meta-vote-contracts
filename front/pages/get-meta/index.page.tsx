@@ -245,7 +245,6 @@ export default function GetMeta() {
                 currency={META_CONTRACT_ID}
                 amount={metaAmount}
                 setAmount={setMetaAmount}
-                setAmountError={setAmountError}
                 readOnly={true}
                 stNearRate={metaStNearRate}
               />
