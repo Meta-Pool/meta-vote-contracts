@@ -10,9 +10,9 @@ const DetailInfo = ({ name, children, ...props }: Props) => {
     <HStack justifyContent="space-between" spacing={10} w="full" {...props}>
       <Stack w="max-content" align="flex-end">
         <Text
-          fontSize={"xs"}
+          fontSize={props.fontSize || "xs"}
           lineHeight={3}
-          color={"gray.400"}
+          color={props.color || "gray.400"}
           letterSpacing="wide"
         >
           {name}
@@ -20,9 +20,9 @@ const DetailInfo = ({ name, children, ...props }: Props) => {
       </Stack>
       <Stack justify="flex-end">
         <Text
-          fontSize={"xs"}
+          fontSize={props.fontSize || "xs"}
           lineHeight={3}
-          color={colors.white}
+          color={props.color || colors.white}
           letterSpacing="wide"
         >
           {children}

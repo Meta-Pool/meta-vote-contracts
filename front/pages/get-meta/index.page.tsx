@@ -1,4 +1,4 @@
-import { Settings } from "@carbon/icons-react";
+import { ArrowDown, Settings } from "@carbon/icons-react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import {
   useToast,
@@ -13,6 +13,7 @@ import {
   Menu,
   useDisclosure,
   VStack,
+  Divider,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -32,6 +33,7 @@ import {
   computeMetaAmountOnReturn,
   depositNear,
   depositToken,
+  META_CONTRACT_ID,
 } from "../../lib/near";
 import { formatToLocaleNear, ntoy, yton } from "../../lib/util";
 import ButtonOnLogin from "../components/ButtonLogin";
@@ -40,6 +42,7 @@ import PageLoading from "../components/PageLoading";
 import DetailInfo from "./DetailInfo";
 import SlippageSettingsModal from "./SlippageSettingsModal";
 import TokenAmount from "./TokenAmount";
+import TokenAmountInUsd from "./TokenAmount/TokenAmountInUsd";
 import TokenIcon from "./TokenIcon";
 import TokenSymbol from "./TokenIcon/TokenSymbol";
 import { isDenominationACurrency, isNearDenomination } from "./TokenIcon/util";
@@ -53,15 +56,17 @@ export default function GetMeta() {
   const [amount, setAmount] = useState<number>(0);
   const [minAmountExpected, setMinAmountExpected] = useState<number>(0);
   const [metaOnReturn, setMetaOnReturn] = useState<number>(0);
+  const [metaAmount, setMetaAmount] = useState<number>(0);
+  const [metaStNearRate, setMetaStNearRate] = useState<number>(0);
   const [slippage, setSlippage] = useState<number>(GET_META_DEFAULT_SLIPPAGE);
-  const [amountError, setAmountError] = useState<string| undefined>(undefined);
+  const [amountError, setAmountError] = useState<string | undefined>(undefined);
   const {
     isOpen: isOpenModal,
     onClose: onCloseModal,
     onOpen: onOpenModal,
   } = useDisclosure();
   const onChangeToken = (tokenContractId: string) => {
-    setTokenSelected(tokenContractId);   
+    setTokenSelected(tokenContractId);
   };
 
   useEffect(() => {
@@ -70,10 +75,13 @@ export default function GetMeta() {
         tokenSelected!,
         ntoy(amount)
       );
-      setMetaOnReturn(yton(result));
-      const _minAmountExpected = yton(result) - (yton(result) * slippage) / 100;
+      const _metaAmount = yton(result);
+      setMetaOnReturn(_metaAmount);
+      setMetaAmount(_metaAmount);
+      const _minAmountExpected = _metaAmount - (_metaAmount * slippage) / 100;
       // min amount would be the meta amount on return - slippage
       setMinAmountExpected(_minAmountExpected);
+      setMetaStNearRate(amount / _metaAmount);
     };
 
     if (tokenSelected && amount > 0) {
@@ -82,7 +90,7 @@ export default function GetMeta() {
       setMinAmountExpected(0);
     }
   }, [tokenSelected, amount, slippage]);
-  
+
   const onGetMetaClick = () => {
     if (tokenSelected && amount > 0) {
       console.log(`calling deposit ${tokenSelected} for ${ntoy(amount)}`);
@@ -133,10 +141,9 @@ export default function GetMeta() {
   };
 
   const onSetSlippage = () => {};
-  const router = useRouter();
   if (isLoading) return <PageLoading />;
   if (!GET_META_ENABLED) {
-    return (<FeatureComingSoon />)
+    return <FeatureComingSoon />;
   }
   return (
     <>
@@ -177,7 +184,12 @@ export default function GetMeta() {
             bg="rgba(0, 0, 0, 0.2)"
             borderRadius="8px"
           >
-            <HStack w="100%" spacing={5} justify="space-between" align="flex-end">
+            <HStack
+              w="100%"
+              spacing={5}
+              justify="space-between"
+              align="flex-end"
+            >
               <Menu placement="bottom-end">
                 <MenuButton
                   as={Button}
@@ -223,15 +235,32 @@ export default function GetMeta() {
                 setAmountError={setAmountError}
               />
             </HStack>
+            <Stack align={"center"}>
+                  <ArrowDown />
+            </Stack>
+           
+            <HStack w="100%" spacing={5} justify="space-between">
+              <TokenIcon color={colors.white} denomination={META_CONTRACT_ID} />
+              <TokenAmount
+                currency={META_CONTRACT_ID}
+                amount={metaAmount}
+                setAmount={setMetaAmount}
+                readOnly={true}
+                stNearRate={metaStNearRate}
+              />
+            </HStack>
             {tokenSelected && amount > 0 ? (
               <VStack pt={5} spacing={"3"} w="100%">
-                <DetailInfo name={`Minimum received after slippage (${slippage}%)`}>
+                <DetailInfo
+                  color={colors.white}
+                  fontWeight={"extrabold"}
+                  name={`Minimum received after slippage (${slippage}%)`}
+                >
                   {`${formatToLocaleNear(minAmountExpected)} $META`}
                 </DetailInfo>
                 <DetailInfo
-             
+                  color={"gray.400"}
                   lineHeight={3}
-              
                   letterSpacing="wide"
                   name={"Rate"}
                 >
@@ -241,6 +270,22 @@ export default function GetMeta() {
                     <Text>
                       ≈ {formatToLocaleNear(metaOnReturn / amount)} $META
                     </Text>
+                  </HStack>
+                </DetailInfo>
+                <DetailInfo
+                  color={"gray.400"}
+                  lineHeight={3}
+                  letterSpacing="wide"
+                  name={""}
+                >
+                  <HStack>
+                    <Text>1</Text>
+                    <TokenSymbol denomination={META_CONTRACT_ID} />
+                    <TokenAmountInUsd
+                      currency={META_CONTRACT_ID}
+                      amount={1}
+                      stNearRate={metaStNearRate}
+                    />
                   </HStack>
                 </DetailInfo>
               </VStack>

@@ -33,6 +33,7 @@ export type MetapoolContractState = {
   total_unstaked_and_waiting: string;
   total_stake_shares: string;
   st_near_price: string;
+  st_near_price_usd: number;
   total_unstake_claims: string;
   reserve_for_unstake_claims: string;
   total_meta: string;
