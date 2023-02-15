@@ -20,6 +20,7 @@ import { setupNearWallet } from "@near-wallet-selector/near-wallet";
 import { setupHereWallet } from "@near-wallet-selector/here-wallet";
 import { setupCoin98Wallet } from "@near-wallet-selector/coin98-wallet";
 import { setupMeteorWallet } from "@near-wallet-selector/meteor-wallet";
+import { setupXDEFI } from "@near-wallet-selector/xdefi";
 import { setupNarwallets } from "@near-wallet-selector/narwallets";
 declare global {
   interface Window {
@@ -62,6 +63,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         setupMathWallet(),
         setupNightly(),
         setupCoin98Wallet(),
+        setupXDEFI(),
         // setupLedger(),
         setupWalletConnect({
           projectId:
