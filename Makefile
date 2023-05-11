@@ -1,5 +1,5 @@
 #
-# Makefile for katherine fundraising
+# Makefile for Meta Vote
 #
 
 YOCTO_UNITS=000000000000000000000000
@@ -13,10 +13,7 @@ lint:
 
 # Build library dynamically linked to the rust runtime libraries
 build:
-	RUSTFLAGS='-C link-arg=-s' cargo +stable build --all --target wasm32-unknown-unknown --release
-	cp target/wasm32-unknown-unknown/release/meta_vote_contract.wasm res/
-#	cp target/wasm32-unknown-unknown/release/pipeline_contract.wasm res/
-	cp target/wasm32-unknown-unknown/release/test_meta_token.wasm res/
+	./scripts/build.sh
 
 publish-dev: build
 	NEAR_ENV=testnet near dev-deploy --wasmFile res/katherine_fundraising_contract.wasm
