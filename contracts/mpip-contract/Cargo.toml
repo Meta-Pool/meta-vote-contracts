@@ -1,5 +1,5 @@
 [package]
-name = "meta-vote-contract"
+name = "mpip-contract"
 version = "0.1.2"
 edition = "2021"
 authors = ["Narwallets.com <hello@narwallets.com>"]
@@ -8,6 +8,6 @@ authors = ["Narwallets.com <hello@narwallets.com>"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-near-sdk = "4.0.0"
-near-contract-standards = "4.0.0"
+near-sdk = "4.1.1"
+near-contract-standards = "4.1.1"
 uint = "0.9.3"
