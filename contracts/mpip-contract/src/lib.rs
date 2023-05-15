@@ -105,37 +105,37 @@ impl MpipContract {
 
     /// Update the voting period duration in days.
     pub fn update_voting_period(&mut self, new_value: Days) {
-        self.assert_only_admin();
+        self.assert_only_operator();
         self.voting_period = new_value;
     }
 
     /// Update minimum Meta amount to submit a MPIP.
     pub fn update_min_meta_amount(&mut self, new_value: U128) {
-        self.assert_only_admin();
+        self.assert_only_operator();
         self.min_meta_amount = new_value.0;
     }
 
     /// Update minimum stNEAR amount to submit a MPIP.
     pub fn update_min_st_near_amount(&mut self, new_value: U128) {
-        self.assert_only_admin();
+        self.assert_only_operator();
         self.min_st_near_amount = new_value.0;
     }
 
     /// Update minimum voting power to submit a MPIP.
     pub fn update_min_voting_power_amount(&mut self, new_value: U128) {
-        self.assert_only_admin();
+        self.assert_only_operator();
         self.min_voting_power_amount = new_value.0;
     }
 
     /// Update the cost in Meta to submit a MPIP.
     pub fn update_mpip_cost_in_meta(&mut self, new_value: U128) {
-        self.assert_only_admin();
+        self.assert_only_operator();
         self.mpip_cost_in_meta = new_value.0;
     }
 
     /// Update the storage cost per kilobytes in Near to submit a MPIP.
     pub fn update_mpip_storage_near_cost_per_kilobytes(&mut self, new_value: U128) {
-        self.assert_only_admin();
+        self.assert_only_operator();
         self.mpip_storage_near_cost_per_kilobytes = new_value.0;
     }
 
