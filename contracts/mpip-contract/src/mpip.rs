@@ -2,6 +2,32 @@ use crate::*;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 
+// /////////////////
+// Comment struct //
+// /////////////////
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct CommentJSON {
+    pub voter_id: AccountId,
+    pub locking_positions: Vec<LockingPositionJSON>,
+    pub voting_power: U128,
+    pub vote_positions: Vec<VotePositionJSON>
+}
+
+#[derive(BorshDeserialize, BorshSerialize)]
+pub struct Comment {
+    pub text: String,
+    pub extra: String,
+    // TODO: What's the difference between AccountId and Account?
+    pub owner_id: AccountId,
+    pub mpip_id: MpipId
+}
+
+// //////////////
+// MPIP struct //
+// //////////////
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct MpipJSON {
@@ -11,121 +37,51 @@ pub struct MpipJSON {
     pub vote_positions: Vec<VotePositionJSON>
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
-pub struct Mpip {
-    pub balance: Meta,
-    pub locking_positions: Vector<LockingPosition>,
-    pub voting_power: VotingPower,
-    pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>
+/// **Mpip Status flow**:
+/// 
+/// ```txt
+/// |
+/// | -- flow to right -->
+/// |                                     .-->|Accepted|
+/// |-----|In Review|--->|Voting Period|-< 
+/// |                                     *-->|Rejected|
+/// ```
+/// 
+/// The unique and secuential `id` is asigned to the new Mpip candidate
+/// when the voting period starts. 
+
+pub enum MpipStatus {
+    InReview,
+    VotingPeriod,
+    Accepted,
+    Rejected
 }
 
-impl Voter {
-    pub(crate) fn new(id: &VoterId) -> Self {
+#[derive(BorshDeserialize, BorshSerialize)]
+pub struct Mpip {
+    /// The `mpip_id` is asigned only if the idea is pushed to a voting and evaluation period.
+    pub id: Option<MpipId>,
+    pub title: String,
+    pub description: String,
+    pub comments: Vector<Comment>,
+    pub data: Option<String>,
+    pub extra: Option<String>,
+
+    /// The account that created the pre-voting-period Mpip.
+    pub creator_id: Account,
+
+    /// The account that submit the Mpip to a voting period.
+    pub publisher_id: Option<Account>,
+
+    /// The account that first closed the voting period.
+    pub closer_id: Option<Account>,
+}
+
+impl Mpip {
+    pub(crate) fn new() -> Self {
         Self {
-            balance: 0,
-            locking_positions: Vector::new(
-                StorageKey::LockingPosition {
-                    hash_id: generate_hash_id(id.to_string())
-                }
-            ),
-            voting_power: 0,
-            vote_positions: UnorderedMap::new(
-                StorageKey::VotePosition {
-                    hash_id: generate_hash_id(id.to_string())
-                }
-            )
+
         }
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.balance == 0 && self.locking_positions.is_empty()
-    }
-
-    pub(crate) fn sum_locked(&self) -> Meta {
-        let mut result = 0_u128;
-        for locking_position in self.locking_positions.iter() {
-            if locking_position.is_locked() {
-                result += locking_position.amount;
-            }
-        }
-        result
-    }
-
-    pub(crate) fn sum_unlocking(&self) -> Meta {
-        let mut result = 0_u128;
-        for locking_position in self.locking_positions.iter() {
-            if locking_position.is_unlocking() {
-                result += locking_position.amount;
-            }
-        }
-        result
-    }
-
-    pub(crate) fn sum_unlocked(&self) -> Meta {
-        let mut result = 0_u128;
-        for locking_position in self.locking_positions.iter() {
-            if locking_position.is_unlocked() {
-                result += locking_position.amount;
-            }
-        }
-        result
-    }
-
-    pub(crate) fn sum_used_votes(&self) -> VotingPower {
-        let mut result = 0_u128;
-        for map in self.vote_positions.values() {
-            result += map.values().sum::<u128>();
-        }
-        result
-    }
-
-    pub(crate) fn find_locked_position(&self, locking_period: Days) -> Option<u64> {
-        let mut index = 0_u64;
-        for locking_position in self.locking_positions.iter() {
-            if locking_position.locking_period == locking_period
-                    && locking_position.is_locked() {
-                return Some(index);
-            }
-            index += 1;
-        }
-        None
-    }
-
-    pub(crate) fn get_position(&self, index: PositionIndex) -> LockingPosition {
-        self.locking_positions.get(index).expect("Index out of range!")
-    }
-
-    pub(crate) fn remove_position(&mut self, index: PositionIndex) {
-        self.locking_positions.swap_remove(index);
-    }
-
-    pub(crate) fn get_votes_for_address(
-        &self,
-        voter_id: &VoterId,
-        contract_address: &ContractAddress
-    ) -> UnorderedMap<VotableObjId, VotingPower> {
-        let id = format!("{}-{}", voter_id.to_string(), contract_address.as_str());
-        self.vote_positions
-            .get(&contract_address)
-            .unwrap_or(
-                UnorderedMap::new(
-                    StorageKey::VoterVotes {
-                        hash_id: generate_hash_id(id.to_string())
-                    }
-                )
-            )
-    }
-
-    pub(crate) fn get_unlocked_position_index(&self) -> Vec<PositionIndex> {
-        let mut result = Vec::new();
-        for index in 0..self.locking_positions.len() {
-            let locking_position = self.locking_positions.get(index)
-                .expect("Locking position not found!");
-            if locking_position.is_unlocked() {
-                result.push(index);
-            }
-        }
-        result
     }
 
     pub(crate) fn to_json(&self, voter_id: VoterId) -> VoterJSON {
