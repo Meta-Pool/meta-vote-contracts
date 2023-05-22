@@ -19,31 +19,31 @@ construct_uint! {
     pub struct U256(4);
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(crate = "near_sdk::serde")]
-pub struct LockingPositionJSON {
-    pub index: Option<PositionIndex>,
-    pub amount: U128,
-    pub locking_period: Days,
-    pub voting_power: U128,
-    pub unlocking_started_at: Option<EpochMillis>,
-    pub is_unlocked: bool,
-    pub is_unlocking: bool,
-    pub is_locked: bool,
-}
+// #[derive(Serialize, Deserialize, Debug)]
+// #[serde(crate = "near_sdk::serde")]
+// pub struct LockingPositionJSON {
+//     pub index: Option<PositionIndex>,
+//     pub amount: U128,
+//     pub locking_period: Days,
+//     pub voting_power: U128,
+//     pub unlocking_started_at: Option<EpochMillis>,
+//     pub is_unlocked: bool,
+//     pub is_unlocking: bool,
+//     pub is_locked: bool,
+// }
 
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
-pub struct VotableObjectJSON {
-    pub votable_contract: String,
-    pub id: VotableObjId,
-    pub current_votes: U128
-}
+// #[derive(Serialize, Deserialize)]
+// #[serde(crate = "near_sdk::serde")]
+// pub struct VotableObjectJSON {
+//     pub votable_contract: String,
+//     pub id: VotableObjId,
+//     pub current_votes: U128
+// }
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(crate = "near_sdk::serde")]
-pub struct VotePositionJSON {
-    pub votable_address: AccountId,
-    pub votable_object_id: String,
-    pub voting_power: U128
-}
+// #[derive(Serialize, Deserialize, Debug)]
+// #[serde(crate = "near_sdk::serde")]
+// pub struct VotePositionJSON {
+//     pub votable_address: AccountId,
+//     pub votable_object_id: String,
+//     pub voting_power: U128
+// }

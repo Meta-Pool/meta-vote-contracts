@@ -13,6 +13,8 @@ pub enum StorageKey {
     Mpips
 }
 
+/// The MPIP status flow is one-way:
+/// VotingProcess -> Accepted/Rejected
 #[derive(BorshSerialize, BorshDeserialize, BorshStorageKey)]
 pub enum MpipStatus {
     VotingProcess,

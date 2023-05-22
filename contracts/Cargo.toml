@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "meta-vote-contract",
-    "test-meta-token"
+    "test-meta-token",
+    "mpip-contract"
 ]
 
 [profile.release]
