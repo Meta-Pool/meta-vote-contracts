@@ -71,11 +71,7 @@ impl MpipContract {
         meta_token_contract_address: ContractAddress,
         meta_vote_contract_address: ContractAddress,
         voting_period: Days,
-        voting_delay_millis: EpochMillis,
-        min_meta_amount: U128,
-        min_st_near_amount: U128,
         min_voting_power_amount: U128,
-        mpip_cost_in_meta: U128,
         mpip_storage_near_cost_per_kilobytes: U128,
         quorum_floor: BasisPoints,
     ) -> Self {
@@ -87,11 +83,11 @@ impl MpipContract {
             meta_vote_contract_address,
             mpips: UnorderedMap::new(StorageKey::Mpips),
             voting_period,
-            voting_delay_millis,
-            min_meta_amount: min_meta_amount.0,
-            min_st_near_amount: min_st_near_amount.0,
+            voting_delay_millis: 0,
+            min_meta_amount: 0,
+            min_st_near_amount: 0,
             min_voting_power_amount: min_voting_power_amount.0,
-            mpip_cost_in_meta: mpip_cost_in_meta.0,
+            mpip_cost_in_meta: 0,
             mpip_storage_near_cost_per_kilobytes: mpip_storage_near_cost_per_kilobytes.0,
             open_for_new_mpips: true,
             quorum_floor,
@@ -167,15 +163,16 @@ impl MpipContract {
         self.quorum_floor = new_value.0 as u32;
     }
 
-    pub fn start_voting_period(&mut self, mpip_id: MpipId, comments: String) {
+    pub fn start_voting_period(&mut self, mpip_id: MpipId) {
         self.assert_only_operator();
-        self.assert_proposal_is_active(mpip_id);
+        self.assert_proposal_is_draft(mpip_id);
         let mut proposal = self.internal_get_proposal(mpip_id);
         // dump comments into the proposal
         // proposal.comments = comments;
         let now = get_current_epoch_millis();
         proposal.vote_start_timestamp = Some(now);
         proposal.vote_end_timestamp = Some(now + days_to_millis(self.voting_period));
+        proposal.draft = false;
         self.mpips.insert(&mpip_id, &proposal);
     }
 
@@ -221,7 +218,7 @@ impl MpipContract {
 
     pub fn cancel_proposal(&mut self, mpip_id: MpipId) {
         self.assert_only_operator_or_creator(mpip_id);
-        self.assert_proposal_is_active(mpip_id);
+        self.assert_proposal_is_active_or_draft(mpip_id);
         let mut proposal = self.internal_get_proposal(mpip_id);
         proposal.canceled = true;
         self.mpips.insert(&mpip_id, &proposal);
