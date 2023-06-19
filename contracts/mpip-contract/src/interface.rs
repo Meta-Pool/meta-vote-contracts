@@ -1,23 +1,13 @@
-// use near_sdk::{ext_contract, AccountId};
-// use near_sdk::json_types::U128;
+use near_sdk::json_types::U128;
+use near_sdk::{ext_contract, AccountId};
 
-// #[ext_contract(ext_ft)]
-// pub trait FungibleTokenCore {
-//     fn ft_transfer_call(
-//         &mut self,
-//         receiver_id: AccountId,
-//         amount: U128,
-//         memo: Option<String>,
-//         msg: String
-//     );
+use crate::types::VoterId;
 
-//     fn ft_transfer(
-//         &mut self,
-//         receiver_id: AccountId,
-//         amount: U128,
-//         memo: Option<String>
-//     );
-// }
+#[ext_contract(ext_metavote)]
+pub trait ExtMetaVote {
+    fn vote(&mut self, voting_power: U128, contract_address: AccountId, votable_object_id: String);
+    fn get_available_voting_power(&self, voter_id: VoterId);
+}
 
 // #[ext_contract(ext_self)]
 // pub trait SelfMetaVote {
