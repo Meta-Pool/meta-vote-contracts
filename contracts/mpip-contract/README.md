@@ -47,7 +47,7 @@ A MPIP is a document that consist of
 
 The Proposal life cycle:
 
-![Proposal Life Cycle](media/mpip-process.png)
+![Proposal Life Cycle](../../media/mpip-process.png)
 
 **Draft** -
     Creation Criteria : Author voting power is above proposal threshold : voting power above minimum requested.
