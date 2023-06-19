@@ -80,6 +80,19 @@ impl MpipContract {
         }
     }
 
+    pub(crate) fn internal_proposal_is_active_or_draft(&self, mpip_id: MpipId) -> bool {
+        let proposal = self.internal_get_proposal(mpip_id);
+        // check if proposal has vote_start_timestamp
+        match proposal.vote_start_timestamp {
+            Some(date) => {
+                get_current_epoch_millis() <= date
+                    && !proposal.canceled
+                    && !proposal.executed
+            }
+            None => !proposal.canceled && !proposal.executed,
+        }
+    }
+
     pub(crate) fn internal_proposal_is_on_voting(&self, mpip_id: MpipId) -> bool {
         let proposal = self.internal_get_proposal(mpip_id);
         // check if proposal has vote_start_timestamp
@@ -103,6 +116,15 @@ impl MpipContract {
 
     pub(crate) fn assert_proposal_is_active(&self, mpip_id: MpipId) {
         require!(self.internal_proposal_is_active(mpip_id), "Proposal is not active")
+    }
+
+    pub(crate) fn assert_proposal_is_draft(&self, mpip_id: MpipId) {
+        let proposal = self.internal_get_proposal(mpip_id);
+        require!(proposal.draft, "Proposal is not on draft");
+    }
+
+    pub(crate) fn assert_proposal_is_active_or_draft(&self, mpip_id: MpipId) {
+        require!(self.internal_proposal_is_active_or_draft(mpip_id), "Proposal is not active or in draft state")
     }
 
     pub(crate) fn assert_proposal_is_on_voting(&self, mpip_id: MpipId) {
