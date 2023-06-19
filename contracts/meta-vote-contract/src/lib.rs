@@ -594,7 +594,7 @@ impl MetaVoteContract {
     pub fn get_used_voting_power(&self, voter_id: VoterId) -> U128 {
         let voter = self.internal_get_voter(&voter_id);
         U128::from(voter.sum_used_votes())
-    }
+    } 
 
     pub fn get_locking_period(&self) -> (Days, Days) {
         (self.min_locking_period, self.max_locking_period)
