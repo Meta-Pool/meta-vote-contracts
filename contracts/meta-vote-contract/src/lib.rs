@@ -11,13 +11,14 @@ use voter::{Voter, VoterJSON};
 
 mod constants;
 mod deposit;
+mod interface;
 mod internal;
 mod locking_position;
+mod migrate;
 mod types;
 mod utils;
 mod voter;
 mod withdraw;
-mod interface;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -31,6 +32,7 @@ pub struct MetaVoteContract {
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
     pub meta_token_contract_address: ContractAddress,
+    pub total_voting_power: VotingPower,
 }
 
 #[near_bindgen]
@@ -57,6 +59,7 @@ impl MetaVoteContract {
             max_locking_positions,
             max_voting_positions,
             meta_token_contract_address,
+            total_voting_power: 0
         }
     }
 
@@ -84,6 +87,7 @@ impl MetaVoteContract {
         locking_position.unlocking_started_at = Some(get_current_epoch_millis());
         voter.locking_positions.replace(index, &locking_position);
         voter.voting_power -= voting_power;
+        self.total_voting_power = self.total_voting_power.saturating_sub(voting_power);
         self.voters.insert(&voter_id, &voter);
     }
 
@@ -134,6 +138,7 @@ impl MetaVoteContract {
         voter.locking_positions.replace(index, &locking_position);
 
         voter.voting_power -= remove_voting_power;
+        self.total_voting_power = self.total_voting_power.saturating_sub(remove_voting_power);
         self.voters.insert(&voter_id, &voter);
     }
 
