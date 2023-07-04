@@ -12,6 +12,7 @@ pub struct ProposalVoteJson {
     pub for_votes: U128,
     pub against_votes: U128,
     pub abstain_votes: U128,
+    pub has_voted: Vec<VoteJson>
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -19,7 +20,7 @@ pub struct ProposalVote {
     pub for_votes: u128,
     pub against_votes: u128,
     pub abstain_votes: u128,
-    pub has_voted: UnorderedMap<VoterId, Vote>,
+    pub has_voted: UnorderedMap<AccountId, Vote>,
 }
 
 impl ProposalVote {
@@ -33,10 +34,19 @@ impl ProposalVote {
     }
 
     pub(crate) fn to_json(&self) -> ProposalVoteJson {
+        let mut votes = Vec::<VoteJson>::new();
+        for (account_id, vote) in self.has_voted.iter() {
+            votes.push(
+                vote.to_json(account_id)
+            );
+        }
+
         ProposalVoteJson {
             for_votes: U128::from(self.for_votes),
             abstain_votes: U128::from(self.abstain_votes),
             against_votes: U128::from(self.against_votes),
+            has_voted: votes
+
         }
     }
 }
