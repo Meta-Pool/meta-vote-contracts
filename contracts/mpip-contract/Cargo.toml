@@ -1,0 +1,13 @@
+[package]
+name = "mpip-contract"
+version = "0.1.2"
+edition = "2021"
+authors = ["Narwallets.com <hello@narwallets.com>"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = "4.1.1"
+near-contract-standards = "4.1.1"
+uint = "0.9.3"

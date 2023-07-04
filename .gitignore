@@ -17,7 +17,7 @@ Cargo.lock
 .*.sw?
 .vscode
 *.bak
-contract/res
+contracts/res/*.wasm
 
 # dev-deploy keys
 contract/neardev
@@ -26,43 +26,3 @@ contract/neardev_meta_token
 # Mac
 .DS_Store
 
-
-#Front
-# dependencies
-front/node_modules
-front/.pnp
-front/.pnp.js
-
-# testing
-front/coverage
-
-# next.js
-front/.next/
-front/out/
-
-# production
-front/build
-
-# misc
-front/.DS_Store
-front/*.pem
-
-# debug
-front/yarn-debug.log*
-front/npm-debug.log*
-front/yarn-error.log*
-front/.pnpm-debug.log*
-
-# local env files
-front/.env
-front/.env.local
-front/.env.development.local
-front/.env.test.local
-front/.env.production.local
-
-# vercel
-front/.vercel
-
-# typescript
-front/*.tsbuildinfo
-.npmrc
