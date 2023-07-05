@@ -150,7 +150,7 @@ impl MpipContract {
     }
 
     pub(crate) fn internal_get_proposal_vote(&self, mpip_id: MpipId) -> ProposalVote {
-        self.votes.get(&mpip_id).unwrap_or(ProposalVote::new())
+        self.votes.get(&mpip_id).unwrap_or(ProposalVote::new(&mpip_id))
     }
 
     pub(crate) fn internal_get_available_voting_power_from_promise(&self) -> Balance {

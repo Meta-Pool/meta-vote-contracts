@@ -22,7 +22,9 @@ impl Voter {
     pub(crate) fn new(voter_id: &VoterId) -> Self {
         Voter {
             used_voting_power: 0,
-            votes: UnorderedMap::new(StorageKey::Votes),
+            votes: UnorderedMap::new(StorageKey::Votes {
+                hash_id: generate_hash_id(voter_id.to_string())
+            }),
         }
     }
     pub(crate) fn to_json(&self, voter_id: VoterId) -> VoterJson {

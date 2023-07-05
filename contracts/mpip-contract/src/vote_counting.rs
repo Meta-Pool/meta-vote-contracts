@@ -1,7 +1,7 @@
 use crate::*;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
-
+use crate::utils::generate_hash_id;
 // /////////////////
 // Comment struct //
 // /////////////////
@@ -24,12 +24,14 @@ pub struct ProposalVote {
 }
 
 impl ProposalVote {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(id: &MpipId) -> Self {
         ProposalVote {
             for_votes: 0,
             against_votes: 0,
             abstain_votes: 0,
-            has_voted: UnorderedMap::new(StorageKey::HasVoted),
+            has_voted: UnorderedMap::new(StorageKey::HasVoted {
+                hash_id: generate_hash_id(id.to_string())
+            }),
         }
     }
 

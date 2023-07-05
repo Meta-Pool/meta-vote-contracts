@@ -14,9 +14,9 @@ pub const GAS_FOR_RESOLVE_VOTE: Gas = Gas(11 * TGAS);
 #[derive(BorshSerialize, BorshDeserialize, BorshStorageKey)]
 pub enum StorageKey {
     Mpips,
-    HasVoted,
+    HasVoted{ hash_id: CryptoHash },
     MpipVotes,
     Voters,
     Proposers,
-    Votes,
+    Votes { hash_id: CryptoHash },
 }
