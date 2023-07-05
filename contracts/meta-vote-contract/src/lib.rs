@@ -560,6 +560,10 @@ impl MetaVoteContract {
     /*   View functions   */
     /**********************/
 
+    pub fn get_total_voting_power(&self) -> U128 {
+        U128::from(self.total_voting_power)
+    }
+
     pub fn get_voters(&self, from_index: u32, limit: u32) -> Vec<VoterJSON> {
         let keys = self.voters.keys_as_vector();
         let voters_len = keys.len() as u64;
