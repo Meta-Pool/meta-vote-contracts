@@ -335,10 +335,8 @@ impl MpipContract {
     // *********
 
     pub fn vote_proposal(&mut self, mpip_id: MpipId, vote: VoteType, voting_power: U128) {
-        log!("DEBUG : VOTE PROPOSAL START",);
         self.assert_proposal_is_on_voting(&mpip_id);
         self.assert_has_not_voted(mpip_id, env::predecessor_account_id());
-        log!("XCC call",);
         ext_metavote::ext(self.meta_vote_contract_address.clone())
             .with_static_gas(GAS_FOR_GET_VOTING_POWER)
             .with_attached_deposit(1)
@@ -363,13 +361,8 @@ impl MpipContract {
         voter_id: AccountId,
         vote_type: VoteType,
     ) {
-        log!("XCC out, private call",);
         let total_v_power = self.internal_get_total_voting_power_from_promise();
         let mut voter = self.internal_get_voter(&voter_id);
-        log!(
-            "GET VOTER - used vp {}",
-            voter.used_voting_power.to_string()
-        );
         assert!(
             total_v_power >= voting_power.0,
             "Not enough free voting power to vote! You have {}, required {}.",
@@ -383,14 +376,12 @@ impl MpipContract {
             voter.used_voting_power
         );
         let mut proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        log!("PROPOSAL VOTE OUT");
         let vote_v_power = voting_power.0;
         let vote = Vote::new(mpip_id.clone(), vote_type.clone(), vote_v_power.clone());
 
         proposal_vote
             .has_voted
             .insert(&voter_id.clone(), &vote.clone());
-        log!("VOTE HAS VOTED OUT");
         match vote_type {
             VoteType::For => {
                 proposal_vote.for_votes += vote_v_power;
@@ -403,22 +394,10 @@ impl MpipContract {
             }
             _ => env::panic_str("Vote is not one of the valid options!"),
         }
-        log!(
-            "PROPOSAL NEW VOTING POWER {}",
-            proposal_vote.abstain_votes.to_string()
-        );
         self.votes.insert(&mpip_id.clone(), &proposal_vote);
-        log!("VOTES INSERT OUT");
-
-        // voter.votes.insert(&mpip_id.clone(), &vote.clone());
-        log!(
-            "VOTER VOTES INSERT OUT, VOTER USED VOTING POWER {}",
-            voter.used_voting_power.to_string()
-        );
+        voter.votes.insert(&mpip_id.clone(), &vote.clone());
         voter.used_voting_power += vote_v_power;
-        log!("VOTERS INSERT IN");
         self.voters.insert(&voter_id.clone(), &voter);
-        log!("VOTERS INSERT OUT");
     }
 
     pub fn remove_vote_proposal(&mut self, mpip_id: MpipId) {
@@ -444,7 +423,7 @@ impl MpipContract {
         self.votes.insert(&mpip_id, &proposal_vote);
 
         let mut voter = self.internal_get_voter(&voter_id);
-        // voter.votes.remove(&mpip_id);
+        voter.votes.remove(&mpip_id);
 
         voter.used_voting_power -= user_vote.voting_power;
         if voter.votes.is_empty() {
@@ -468,7 +447,6 @@ impl MpipContract {
 
     pub fn get_voter(&self, voter_id: VoterId) -> VoterJson {
         let voter = self.internal_get_voter(&voter_id);
-        log!("VOTER: used voting power {}.", voter.used_voting_power);
         voter.to_json(voter_id)
     }
 
