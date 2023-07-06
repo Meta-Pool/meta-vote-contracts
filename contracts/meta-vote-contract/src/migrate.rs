@@ -1,8 +1,5 @@
 use crate::*;
-use near_sdk::json_types::U128;
-use near_sdk::{env, log, near_bindgen, PromiseOrValue};
-
-use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+use near_sdk::{env, near_bindgen};
 
 
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -30,7 +27,9 @@ impl MetaVoteContract {
         let mut total_voting_power: VotingPower = 0;
         for (_, voter) in old_state.voters.iter() {
             for position in voter.locking_positions.iter() {
-                total_voting_power += position.voting_power;
+                if position.is_locked() {
+                    total_voting_power += position.voting_power;
+                }
             }
         }
 
