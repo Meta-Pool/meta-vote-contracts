@@ -3,7 +3,7 @@ use crate::{constants::*, locking_position::*};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::Vector;
 use near_sdk::collections::unordered_map::UnorderedMap;
-use near_sdk::json_types::U128;
+use near_sdk::json_types::{U128, U64};
 use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault, require};
 use types::*;
 use utils::{generate_hash_id, get_current_epoch_millis};
@@ -11,13 +11,14 @@ use voter::{Voter, VoterJSON};
 
 mod constants;
 mod deposit;
+mod interface;
 mod internal;
 mod locking_position;
+mod migrate;
 mod types;
 mod utils;
 mod voter;
 mod withdraw;
-mod interface;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -31,6 +32,7 @@ pub struct MetaVoteContract {
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
     pub meta_token_contract_address: ContractAddress,
+    pub total_voting_power: VotingPower,
 }
 
 #[near_bindgen]
@@ -57,6 +59,7 @@ impl MetaVoteContract {
             max_locking_positions,
             max_voting_positions,
             meta_token_contract_address,
+            total_voting_power: 0
         }
     }
 
@@ -84,6 +87,7 @@ impl MetaVoteContract {
         locking_position.unlocking_started_at = Some(get_current_epoch_millis());
         voter.locking_positions.replace(index, &locking_position);
         voter.voting_power -= voting_power;
+        self.total_voting_power = self.total_voting_power.saturating_sub(voting_power);
         self.voters.insert(&voter_id, &voter);
     }
 
@@ -134,6 +138,7 @@ impl MetaVoteContract {
         voter.locking_positions.replace(index, &locking_position);
 
         voter.voting_power -= remove_voting_power;
+        self.total_voting_power = self.total_voting_power.saturating_sub(remove_voting_power);
         self.voters.insert(&voter_id, &voter);
     }
 
@@ -402,7 +407,7 @@ impl MetaVoteContract {
         let voting_power = VotingPower::from(voting_power);
         assert!(
             voter.voting_power >= voting_power,
-            "Not enough free voting power to unlock! You have {}, required {}.",
+            "Not enough free voting power. You have {}, requested {}.",
             voter.voting_power, voting_power
         );
         assert!(
@@ -451,7 +456,7 @@ impl MetaVoteContract {
             &contract_address
         );
         let mut votes = votes_for_address.get(&votable_object_id)
-            .expect("Rebalance not allowed for unexisting Votable Object.");
+            .expect("Rebalance not allowed for nonexisting Votable Object.");
 
         require!(votes != voting_power, "Cannot rebalance to same Voting Power.");
         if voting_power == 0 {
@@ -555,6 +560,19 @@ impl MetaVoteContract {
     /*   View functions   */
     /**********************/
 
+    pub fn get_owner_id(&self) -> String {
+        self.owner_id.to_string()
+    }
+
+    pub fn get_voters_count(&self) -> U64 {
+        self.voters.len().into()
+    }
+
+    pub fn get_total_voting_power(&self) -> U128 {
+        U128::from(self.total_voting_power)
+    }
+
+    // get all information: voter + locking-positions + voting-positions
     pub fn get_voters(&self, from_index: u32, limit: u32) -> Vec<VoterJSON> {
         let keys = self.voters.keys_as_vector();
         let voters_len = keys.len() as u64;
@@ -600,6 +618,7 @@ impl MetaVoteContract {
         (self.min_locking_period, self.max_locking_period)
     }
 
+    // all locking positions for a voter
     pub fn get_all_locking_positions(
         &self,
         voter_id: VoterId
@@ -628,6 +647,7 @@ impl MetaVoteContract {
         }
     }
 
+    // votes by app and votable_object
     pub fn get_total_votes(
         &self,
         contract_address: ContractAddress,
@@ -642,6 +662,7 @@ impl MetaVoteContract {
         U128::from(votes)
     }
 
+    // votes by app (contract)
     pub fn get_votes_by_contract(
         &self,
         contract_address: ContractAddress
@@ -663,6 +684,7 @@ impl MetaVoteContract {
         results
     }
 
+    // given a voter, total votes per app + object_id
     pub fn get_votes_by_voter(
         &self,
         voter_id: VoterId

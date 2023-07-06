@@ -74,7 +74,7 @@ impl MetaVoteContract {
     }
 
     fn increase_locking_position(
-        &self,
+        &mut self,
         voter: &mut Voter,
         index: u64,
         amount: Meta,
@@ -87,10 +87,11 @@ impl MetaVoteContract {
 
         voter.locking_positions.replace(index, &current_position);
         voter.voting_power += voting_power;
+        self.total_voting_power += voting_power;
     }
 
     fn create_locking_position(
-        &self,
+        &mut self,
         voter: &mut Voter,
         amount: Meta,
         locking_period: Days
@@ -108,6 +109,7 @@ impl MetaVoteContract {
         );
         voter.locking_positions.push(&locking_position);
         voter.voting_power += voting_power;
+        self.total_voting_power += voting_power;
     }
 
     pub(crate) fn deposit_locking_position(
