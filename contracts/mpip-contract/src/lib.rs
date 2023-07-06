@@ -174,7 +174,7 @@ impl MpipContract {
         proposal.vote_start_timestamp = Some(now);
         proposal.vote_end_timestamp = Some(now + days_to_millis(self.voting_period));
         proposal.draft = false;
-        proposal.v_power_quorum_to_reach = Some(self.internal_get_quorum(total_voting_power.0)); 
+        proposal.v_power_quorum_to_reach = Some(self.internal_get_quorum(total_voting_power.0));
         self.proposals.insert(&mpip_id, &proposal);
     }
 
@@ -334,7 +334,13 @@ impl MpipContract {
     // * VOTER FUNCTIONS *
     // *********
 
-    pub fn vote_proposal(&mut self, mpip_id: MpipId, vote: VoteType, voting_power: U128) {
+    pub fn vote_proposal(
+        &mut self,
+        mpip_id: MpipId,
+        vote: VoteType,
+        voting_power: U128,
+        memo: String,
+    ) {
         self.assert_proposal_is_on_voting(&mpip_id);
         self.assert_has_not_voted(mpip_id, env::predecessor_account_id());
         ext_metavote::ext(self.meta_vote_contract_address.clone())
@@ -349,6 +355,7 @@ impl MpipContract {
                         voting_power.clone(),
                         env::predecessor_account_id(),
                         vote,
+                        memo,
                     ),
             );
     }
@@ -360,6 +367,7 @@ impl MpipContract {
         voting_power: U128,
         voter_id: AccountId,
         vote_type: VoteType,
+        memo: String,
     ) {
         let total_v_power = self.internal_get_total_voting_power_from_promise();
         let mut voter = self.internal_get_voter(&voter_id);
@@ -377,7 +385,12 @@ impl MpipContract {
         );
         let mut proposal_vote = self.internal_get_proposal_vote(mpip_id);
         let vote_v_power = voting_power.0;
-        let vote = Vote::new(mpip_id.clone(), vote_type.clone(), vote_v_power.clone());
+        let vote = Vote::new(
+            mpip_id.clone(),
+            vote_type.clone(),
+            vote_v_power.clone(),
+            memo.clone(),
+        );
 
         proposal_vote
             .has_voted
@@ -454,7 +467,7 @@ impl MpipContract {
         let voter = self.internal_get_voter(&voter_id);
         U128::from(voter.used_voting_power)
     }
-    
+
     // *********
     // * BOT FUNCTIONS *
     // *********
