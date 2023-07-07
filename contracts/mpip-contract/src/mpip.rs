@@ -9,7 +9,7 @@ use near_sdk::serde::{Deserialize, Serialize};
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub enum MpipState {
-    Draft,  // proposer share the idea. Giving awareneness from the community via discussion or poll
+    Draft,  // proposer share the idea. Giving awareness from the community via discussion or poll
     Active, // reviewed and accepted by managers
     VotingProcess, // on voting process
     Accepted, // accepted by votes
@@ -127,8 +127,7 @@ impl MpipContract {
 
     pub(crate) fn internal_get_proposal_state(
         &self,
-        mpip_id: MpipId,
-        total_voting_power: u128,
+        mpip_id: MpipId
     ) -> MpipState {
         let proposal = self.internal_get_proposal(&mpip_id);
         if proposal.executed {
@@ -145,7 +144,7 @@ impl MpipContract {
             return MpipState::Active;
         }
 
-        if self.internal_is_quorum_reached(mpip_id, total_voting_power)
+        if self.internal_is_quorum_reached(mpip_id)
             && self.get_proposal_vote_succeeded(mpip_id)
         {
             return MpipState::Accepted;

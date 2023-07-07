@@ -1,12 +1,9 @@
-use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
-use super::*;
-use near_sdk::{testing_env, VMContext};
-use near_sdk::json_types::U128;
-mod utils;
-use utils::*;
-
-fn new_contract() -> MpipContract {
-    todo!();
+// use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+// use super::*;
+// use near_sdk::{testing_env, VMContext};
+// mod utils;
+// fn new_contract() -> MpipContract {
+//     todo!();
     // MpipContract::new(
     //     owner_account(),
     //     MIN_LOCKING_PERIOD,
@@ -16,13 +13,13 @@ fn new_contract() -> MpipContract {
     //     MAX_VOTING_POSITIONS,
     //     meta_token_account(),
     // )
-}
+// }
 
-fn get_contract_setup(context: VMContext) -> MpipContract {
-    testing_env!(context.clone());
-    let contract = new_contract();
-    contract
-}
+// fn get_contract_setup(context: VMContext) -> MpipContract {
+//     testing_env!(context.clone());
+//     let contract = new_contract();
+//     contract
+// }
 
 // TODO! Try to run both kind of tests: The contract context and the workspace.
 

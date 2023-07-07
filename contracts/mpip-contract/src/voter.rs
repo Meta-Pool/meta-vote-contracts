@@ -1,7 +1,6 @@
 use crate::utils::generate_hash_id;
 use crate::*;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::UnorderedSet;
 use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 
@@ -29,7 +28,7 @@ impl Voter {
     }
     pub(crate) fn to_json(&self, voter_id: VoterId) -> VoterJson {
         let mut _votes = Vec::<VoteJson>::new();
-        for (mpip_id, vote) in self.votes.iter() {
+        for (_mpip_id, vote) in self.votes.iter() {
             _votes.push(vote.to_json(voter_id.clone()));
         }
 

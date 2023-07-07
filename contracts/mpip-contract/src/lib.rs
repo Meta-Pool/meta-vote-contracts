@@ -1,15 +1,10 @@
-use std::result;
-use std::thread::available_parallelism;
-
 use crate::constants::*;
 use crate::interface::*;
-use interface::ext_metavote::ext;
 use mpip::Mpip;
 use mpip::MpipJSON;
 use mpip::MpipState;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
-use near_sdk::collections::Vector;
 use near_sdk::json_types::U128;
 use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
 use types::*;
@@ -164,17 +159,29 @@ impl MpipContract {
         self.quorum_floor = new_value.0 as u32;
     }
 
-    pub fn start_voting_period(&mut self, mpip_id: MpipId, total_voting_power: U128) {
+    pub fn start_voting_period(&mut self, mpip_id: MpipId) {
         self.assert_only_operator_or_creator(mpip_id);
         self.assert_proposal_is_draft(mpip_id);
+        ext_metavote::ext(self.meta_vote_contract_address.clone())
+            .with_static_gas(GAS_FOR_GET_VOTING_POWER)
+            .with_attached_deposit(1)
+            .get_total_voting_power()
+            .then(
+                Self::ext(env::current_account_id())
+                    .with_static_gas(GAS_FOR_RESOLVE_VOTE)
+                    .start_voting_period_callback(mpip_id),
+            );
+    }
+
+    #[private]
+    pub fn start_voting_period_callback(&mut self, mpip_id: MpipId) {
+        let total_voting_power = self.internal_get_total_voting_power_from_promise();
         let mut proposal = self.internal_get_proposal(&mpip_id);
-        // dump comments into the proposal
-        // proposal.comments = comments;
         let now = get_current_epoch_millis();
         proposal.vote_start_timestamp = Some(now);
         proposal.vote_end_timestamp = Some(now + days_to_millis(self.voting_period));
         proposal.draft = false;
-        proposal.v_power_quorum_to_reach = Some(self.internal_get_quorum(total_voting_power.0));
+        proposal.v_power_quorum_to_reach = Some(self.internal_get_quorum(total_voting_power));
         self.proposals.insert(&mpip_id, &proposal);
     }
 
@@ -198,7 +205,7 @@ impl MpipContract {
             .then(
                 Self::ext(env::current_account_id())
                     .with_static_gas(GAS_FOR_RESOLVE_VOTE)
-                    .create_proposal_callback(title, short_description, body, data, extra),
+                    .create_proposal_callback(title, short_description, body, data, extra, env::predecessor_account_id()),
             );
     }
 
@@ -210,9 +217,11 @@ impl MpipContract {
         body: String,
         data: String,
         extra: String,
+        proposer_id: AccountId
     ) -> MpipId {
-        let total_v_power = self.internal_get_total_voting_power_from_promise();
-        self.assert_proposal_threshold(total_v_power);
+        let total_v_power = self.internal_get_user_total_voting_power_from_promise();
+        let voter = self.internal_get_voter(&proposer_id);
+        self.assert_proposal_threshold(total_v_power + voter.used_voting_power);
         self.assert_open_for_new_mpips();
         self.assert_proposal_storage_is_covered();
         let id = self.proposals.len() as MpipId;
@@ -258,7 +267,7 @@ impl MpipContract {
 
     /// Check proposal threshold:
     /// if account has the minimum Voting Power to participate in Governance.
-    pub fn check_proposal_threshold(&self, account_id: AccountId, voting_power: U128) -> bool {
+    pub fn check_proposal_threshold(&self, voting_power: U128) -> bool {
         self.internal_check_proposal_threshold(voting_power.0)
     }
 
@@ -267,10 +276,10 @@ impl MpipContract {
         proposal_vote.to_json()
     }
 
-    pub fn get_quorum_reached(&self, mpip_id: MpipId, total_voting_power: U128) -> bool {
+    pub fn get_quorum_reached(&self, mpip_id: MpipId) -> bool {
         self.assert_only_operator();
-        // self.assert_proposal_is_on_voting(mpip_id);
-        self.internal_is_quorum_reached(mpip_id, total_voting_power.0)
+
+        self.internal_is_quorum_reached(mpip_id)
     }
 
     pub fn get_proposal_vote_succeeded(&self, mpip_id: MpipId) -> bool {
@@ -278,8 +287,8 @@ impl MpipContract {
         proposal_vote.for_votes > proposal_vote.against_votes
     }
 
-    pub fn get_proposal_state(&self, mpip_id: MpipId, total_voting_power: U128) -> MpipState {
-        self.internal_get_proposal_state(mpip_id, total_voting_power.0)
+    pub fn get_proposal_state(&self, mpip_id: MpipId) -> MpipState {
+        self.internal_get_proposal_state(mpip_id)
     }
 
     pub fn get_proposal(&self, mpip_id: MpipId) -> MpipJSON {
@@ -369,7 +378,7 @@ impl MpipContract {
         vote_type: VoteType,
         memo: String,
     ) {
-        let total_v_power = self.internal_get_total_voting_power_from_promise();
+        let total_v_power = self.internal_get_user_total_voting_power_from_promise();
         let mut voter = self.internal_get_voter(&voter_id);
         assert!(
             total_v_power >= voting_power.0,
@@ -405,7 +414,6 @@ impl MpipContract {
             VoteType::Abstain => {
                 proposal_vote.abstain_votes += vote_v_power;
             }
-            _ => env::panic_str("Vote is not one of the valid options!"),
         }
         self.votes.insert(&mpip_id.clone(), &proposal_vote);
         voter.votes.insert(&mpip_id.clone(), &vote.clone());
@@ -430,7 +438,6 @@ impl MpipContract {
             VoteType::Abstain => {
                 proposal_vote.abstain_votes -= user_vote.voting_power;
             }
-            _ => env::panic_str("Vote is not one of the valid options!"),
         }
         proposal_vote.has_voted.remove(&voter_id);
         self.votes.insert(&mpip_id, &proposal_vote);
@@ -472,14 +479,14 @@ impl MpipContract {
     // * BOT FUNCTIONS *
     // *********
 
-    pub fn process_voting_status(&mut self, mpip_id: MpipId, total_voting_power: U128) {
+    pub fn process_voting_status(&mut self, mpip_id: MpipId) {
         self.assert_only_operator();
         if !self.internal_proposal_is_on_voting(&mpip_id) {
             return;
         }
         let mut proposal = self.internal_get_proposal(&mpip_id);
         if get_current_epoch_millis() >= proposal.vote_end_timestamp.unwrap() {
-            if self.internal_is_quorum_reached(mpip_id, total_voting_power.0) {
+            if self.internal_is_quorum_reached(mpip_id) {
                 // TODO EXECUTE
                 proposal.executed = true;
                 self.proposals.insert(&mpip_id, &proposal);

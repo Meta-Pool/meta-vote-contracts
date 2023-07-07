@@ -1,7 +1,6 @@
 use crate::*;
 // use meta_tools::utils::{assert_one_promise_result, get_linear_release_proportion};
-use crate::utils::{generate_hash_id, get_current_epoch_millis};
-use crate::vote::{Vote, VoteJson};
+use crate::utils::{ get_current_epoch_millis};
 use near_sdk::json_types::U128;
 use near_sdk::{env, near_bindgen, require, PromiseResult};
 
@@ -117,13 +116,6 @@ impl MpipContract {
         )
     }
 
-    pub(crate) fn assert_proposal_is_active(&self, mpip_id: MpipId) {
-        require!(
-            self.internal_proposal_is_active(mpip_id),
-            "Proposal is not active"
-        )
-    }
-
     pub(crate) fn assert_proposal_is_draft(&self, mpip_id: MpipId) {
         let proposal = self.internal_get_proposal(&mpip_id);
         require!(proposal.draft, "Proposal is not on draft");
@@ -153,7 +145,7 @@ impl MpipContract {
         self.votes.get(&mpip_id).unwrap_or(ProposalVote::new(&mpip_id))
     }
 
-    pub(crate) fn internal_get_available_voting_power_from_promise(&self) -> Balance {
+    pub(crate) fn internal_get_total_voting_power_from_promise(&self) -> Balance {
         require!(
             env::promise_results_count() == 1,
             "This is a callback method."
@@ -169,7 +161,7 @@ impl MpipContract {
         }
     }
 
-    pub(crate) fn internal_get_total_voting_power_from_promise(&self) -> Balance {
+    pub(crate) fn internal_get_user_total_voting_power_from_promise(&self) -> Balance {
         require!(
             env::promise_results_count() == 1,
             "This is a callback method."
@@ -199,8 +191,7 @@ impl MpipContract {
 
     pub(crate) fn internal_is_quorum_reached(
         &self,
-        mpip_id: MpipId,
-        total_voting_power: u128,
+        mpip_id: MpipId
     ) -> bool {
         // let quorum = self.internal_get_quorum(total_voting_power);
         let proposal_vote = self.internal_get_proposal_vote(mpip_id);

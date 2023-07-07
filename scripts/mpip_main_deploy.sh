@@ -28,9 +28,9 @@ MPIP_STOGARE_COST="0"$YOCTO_UNITS
 # NEAR_ENV=mainnet near create-account $OPERATOR_ADDRESS --masterAccount $MPIP_MASTER_ACCOUNT --initialBalance 1
 # create contract account
 
-near create-account $CONTRACT_ADDRESS --masterAccount $MPIP_MASTER_ACCOUNT --initialBalance 3
+# near create-account $CONTRACT_ADDRESS --masterAccount $MPIP_MASTER_ACCOUNT --initialBalance 3
 # Deploy MPIP Contract
-near deploy --wasmFile res/mpip_contract.wasm --initFunction new --initArgs '{"admin_id": "'$ADMIN_ADDRESS'", "operator_id": "'$OPERATOR_ADDRESS'", "meta_token_contract_address": "'$METATOKEN_CONTRACT_ADDRESS'", "meta_vote_contract_address": "'$METAVOTE_CONTRACT_ADDRESS'", "voting_period":'$VOTING_PERIOD', "min_voting_power_amount": "'$MIN_VOTING_POWER_AMOUNT'", "mpip_storage_near": "'$MPIP_STOGARE_COST'", "quorum_floor": '$QUORUM_FLOOR' }' --accountId $CONTRACT_ADDRESS
+# near deploy --wasmFile res/mpip_contract.wasm --initFunction new --initArgs '{"admin_id": "'$ADMIN_ADDRESS'", "operator_id": "'$OPERATOR_ADDRESS'", "meta_token_contract_address": "'$METATOKEN_CONTRACT_ADDRESS'", "meta_vote_contract_address": "'$METAVOTE_CONTRACT_ADDRESS'", "voting_period":'$VOTING_PERIOD', "min_voting_power_amount": "'$MIN_VOTING_POWER_AMOUNT'", "mpip_storage_near": "'$MPIP_STOGARE_COST'", "quorum_floor": '$QUORUM_FLOOR' }' --accountId $CONTRACT_ADDRESS
 
 # Redeploy MPIP Contract
-# NEAR_ENV=mainnet near deploy --wasmFile res/mpip_contract.wasm --accountId $CONTRACT_ADDRESS
+NEAR_ENV=mainnet near deploy --wasmFile res/mpip_contract.wasm --accountId $CONTRACT_ADDRESS
