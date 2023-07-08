@@ -1035,7 +1035,7 @@ fn test_deposit_for_claims() {
 }
 
 #[test]
-#[should_panic(expected = "not enough meta_to_distribute 100000000000000000000000000")]
+#[should_panic(expected = "not enough meta_to_distribute. actual 100000000000000000000000000, requested 100000000000000000000000001")]
 fn distribute_too_much() {
     let (mut contract, users) = internal_test_multi_voter_contract();
     internal_test_deposit_for_claims(&mut contract);
@@ -1085,8 +1085,8 @@ fn test_claim() {
     {
         let unclaimed_pre = contract.total_unclaimed_meta;
         let caller = users[2].account_id();
-        let user_record_pre = contract.get_voter_info(&caller);
-        println!("{:?}", user_record_pre);
+        // let user_record_pre = contract.get_voter_info(&caller);
+        // println!("{:?}", user_record_pre);
         set_context_caller(&caller);
         let claim_amount = 40 * YOCTO_UNITS;
         let duration = 165;
@@ -1096,10 +1096,10 @@ fn test_claim() {
             unclaimed_pre - claim_amount,
             "total_unclaimed_meta"
         );
+        let claim_balance_post = contract.get_claimable_meta(&caller).0;
+        assert_eq!(claim_balance_post, 0);
         let user_record_post = contract.get_voter_info(&caller);
-        assert_eq!(user_record_post.claimable_meta.0, 0);
-        let user_record_post = contract.get_voter_info(&caller);
-        println!("{:?}", user_record_post);
+        // println!("{:?}", user_record_post);
         assert_eq!(user_record_post.locking_positions.len(), 2);
         let pos = &user_record_post.locking_positions[1];
         assert_eq!(pos.locking_period, duration);
@@ -1122,8 +1122,9 @@ fn test_claim() {
             unclaimed_pre - claim_amount,
             "total_unclaimed_meta"
         );
-        let user_record_post = contract.get_voter_info(&caller);
+        // let user_record_post = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_post);
-        assert_eq!(user_record_post.claimable_meta.0, 14 * YOCTO_UNITS);
+        let claim_balance_post = contract.get_claimable_meta(&caller).0;
+        assert_eq!(claim_balance_post, 14 * YOCTO_UNITS);
     }
 }

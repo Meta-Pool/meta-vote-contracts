@@ -46,32 +46,22 @@ impl FungibleTokenReceiver for MetaVoteContract {
 
 #[near_bindgen]
 impl MetaVoteContract {
-    fn assert_min_deposit_amount(&self, amount: Balance) {
-        assert!(
-            amount >= self.min_deposit_amount,
-            "Minimum deposit amount is {} META.",
-            self.min_deposit_amount
-        );
-    }
 
     // distributes meta from self.meta_to_distribute between existent voters
     pub fn distribute_for_claims(&mut self, distribute_info: Vec<(AccountId, U128)>) {
         self.assert_only_owner();
         let mut total_distributed = 0;
         for item in distribute_info {
-            let mut voter = self.internal_get_voter_or_panic(&item.0);
-            let amount = item.1 .0;
-            voter.claimable_meta += amount;
-            self.voters.insert(&item.0, &voter);
+            let amount =  item.1 .0;
+            self.add_claimable_meta(&item.0,amount);
             total_distributed += amount;
         }
         assert!(
             total_distributed <= self.meta_to_distribute,
-            "not enough meta_to_distribute {}",
-            self.meta_to_distribute
+            "not enough meta_to_distribute. actual {}, requested {}",
+            self.meta_to_distribute, total_distributed
         );
         self.meta_to_distribute -= total_distributed;
-        self.total_unclaimed_meta += total_distributed;
     }
 
     // claim META and create/update a locking position
@@ -79,22 +69,8 @@ impl MetaVoteContract {
         let amount = amount.0;
         self.assert_min_deposit_amount(amount);
         let voter_id = VoterId::from(predecessor_account_id());
+        self.remove_claimable_meta(&voter_id, amount);
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
-        assert!(
-            voter.claimable_meta >= amount,
-            "you don't have enough claimable META"
-        );
-        log!(
-            "{} CLAIMS {} META and lock at {} days",
-            &voter_id,
-            amount,
-            locking_period
-        );
-        // update voter claimable & total
-        voter.claimable_meta -= amount;
-        self.voters.insert(&voter_id, &voter);
-        self.total_unclaimed_meta -= amount;
-
         // create/update locking position
         self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
     }

@@ -33,6 +33,9 @@ pub struct MetaVoteContract {
     pub max_voting_positions: u8,
     pub meta_token_contract_address: ContractAddress,
     pub total_voting_power: VotingPower,
+
+    // added v1.0.3
+    pub claimable_meta: UnorderedMap<VoterId, u128>,
     pub meta_to_distribute: u128,
     pub total_unclaimed_meta: u128,
 }
@@ -67,6 +70,7 @@ impl MetaVoteContract {
             total_voting_power: 0,
             meta_to_distribute: 0,
             total_unclaimed_meta: 0,
+            claimable_meta: UnorderedMap::new(StorageKey::Claimable),
         }
     }
 
@@ -529,6 +533,7 @@ impl MetaVoteContract {
         self.internal_decrease_total_votes(votes, &contract_address, &votable_object_id);
     }
 
+
     // *********
     // * Admin *
     // *********
@@ -580,6 +585,23 @@ impl MetaVoteContract {
         let voter = self.internal_get_voter(&voter_id);
         let balance = voter.balance + voter.sum_unlocked();
         U128::from(balance)
+    }
+
+    pub fn get_claimable_meta(&self, voter_id: &VoterId) -> U128 {
+        U128::from(self.claimable_meta.get(&voter_id).unwrap_or_default())
+    }
+    // get all claims
+    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId,U128)> {
+        let mut results = Vec::<(AccountId,U128)>::new();
+        let keys = self.claimable_meta.keys_as_vector();
+        let start = from_index as u64;
+        let limit = limit as u64;
+        for index in start..std::cmp::min(start + limit, keys.len()) {
+            let voter_id = keys.get(index).unwrap();
+            let amount = self.claimable_meta.get(&voter_id).unwrap();
+            results.push((voter_id,amount.into()));
+        }
+        results
     }
 
     pub fn get_locked_balance(&self, voter_id: VoterId) -> U128 {

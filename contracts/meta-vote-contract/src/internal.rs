@@ -1,12 +1,18 @@
 use crate::*;
-use near_sdk::near_bindgen;
 
-#[near_bindgen]
 impl MetaVoteContract {
     pub(crate) fn assert_only_owner(&self) {
         require!(
             self.owner_id == env::predecessor_account_id(),
             "Only the owner can call this function."
+        );
+    }
+
+    pub(crate) fn assert_min_deposit_amount(&self, amount: Balance) {
+        assert!(
+            amount >= self.min_deposit_amount,
+            "Minimum deposit amount is {} META.",
+            self.min_deposit_amount
         );
     }
 
@@ -23,24 +29,20 @@ impl MetaVoteContract {
 
     fn internal_get_total_votes_for_address(
         &self,
-        contract_address: &ContractAddress
+        contract_address: &ContractAddress,
     ) -> UnorderedMap<VotableObjId, VotingPower> {
         self.votes
-        .get(&contract_address)
-        .unwrap_or(
-            UnorderedMap::new(
-                StorageKey::ContractVotes {
-                    hash_id: generate_hash_id(contract_address.to_string())
-                }
-            )
-        )
+            .get(&contract_address)
+            .unwrap_or(UnorderedMap::new(StorageKey::ContractVotes {
+                hash_id: generate_hash_id(contract_address.to_string()),
+            }))
     }
 
     pub(crate) fn internal_increase_total_votes(
         &mut self,
         voting_power: VotingPower,
         contract_address: &ContractAddress,
-        votable_object_id: &VotableObjId
+        votable_object_id: &VotableObjId,
     ) {
         let mut votes_for_address = self.internal_get_total_votes_for_address(&contract_address);
         let mut votes = votes_for_address.get(&votable_object_id).unwrap_or(0_u128);
@@ -54,10 +56,11 @@ impl MetaVoteContract {
         &mut self,
         voting_power: VotingPower,
         contract_address: &ContractAddress,
-        votable_object_id: &VotableObjId
+        votable_object_id: &VotableObjId,
     ) {
         let mut votes_for_address = self.internal_get_total_votes_for_address(&contract_address);
-        let mut votes = votes_for_address.get(&votable_object_id)
+        let mut votes = votes_for_address
+            .get(&votable_object_id)
             .expect("Cannot decrease if the Contract Address has no Votable Object.");
         require!(votes >= voting_power, "Decreasing total is too large.");
         votes -= voting_power;
@@ -73,5 +76,34 @@ impl MetaVoteContract {
         } else {
             self.votes.insert(&contract_address, &votes_for_address);
         }
+    }
+
+    // ******************
+    // * Claimable Meta *
+    // ******************
+
+    pub(crate) fn add_claimable_meta(&mut self, account: &AccountId, amount: u128) {
+        assert!(amount > 0);
+        let existing_claimable_amount = self.claimable_meta.get(account).unwrap_or_default();
+        self.claimable_meta
+            .insert(account, &(existing_claimable_amount + amount));
+        // keep contract total
+        self.total_unclaimed_meta += amount;
+    }
+    pub(crate) fn remove_claimable_meta(&mut self, account: &AccountId, amount: u128) {
+        let existing_claimable_amount = self.claimable_meta.get(account).unwrap_or_default();
+        assert!(
+            existing_claimable_amount >= amount,
+            "you don't have enough claimable META"
+        );
+        let after_remove = existing_claimable_amount - amount;
+        if after_remove == 0 {
+            // 0 means remove
+            self.claimable_meta.remove(account)
+        } else {
+            self.claimable_meta.insert(account, &after_remove)
+        };
+        // keep contract total
+        self.total_unclaimed_meta -= amount;
     }
 }

@@ -9,7 +9,6 @@ pub struct VoterJSON {
     pub locking_positions: Vec<LockingPositionJSON>,
     pub voting_power: U128,
     pub vote_positions: Vec<VotePositionJSON>,
-    pub claimable_meta: U128,
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -18,7 +17,6 @@ pub struct Voter {
     pub locking_positions: Vector<LockingPosition>,
     pub voting_power: VotingPower,
     pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>,
-    pub claimable_meta: u128,
 }
 
 impl Voter {
@@ -32,7 +30,6 @@ impl Voter {
             vote_positions: UnorderedMap::new(StorageKey::VotePosition {
                 hash_id: generate_hash_id(id.to_string()),
             }),
-            claimable_meta: 0,
         }
     }
 
@@ -151,7 +148,6 @@ impl Voter {
             locking_positions,
             voting_power: U128::from(self.voting_power),
             vote_positions,
-            claimable_meta: self.claimable_meta.into()
         }
     }
 }

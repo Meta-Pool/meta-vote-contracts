@@ -36,6 +36,7 @@ impl MetaVoteContract {
             total_voting_power: old_state.total_voting_power,
             meta_to_distribute: 0,
             total_unclaimed_meta: 0,
+            claimable_meta: UnorderedMap::new(StorageKey::Claimable),
         };
         // only the owner can execute migrate
         result.assert_only_owner();
