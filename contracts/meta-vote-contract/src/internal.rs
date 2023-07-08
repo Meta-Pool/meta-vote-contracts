@@ -14,6 +14,12 @@ impl MetaVoteContract {
     pub(crate) fn internal_get_voter(&self, voter_id: &VoterId) -> Voter {
         self.voters.get(voter_id).unwrap_or(Voter::new(voter_id))
     }
+    pub(crate) fn internal_get_voter_or_panic(&self, voter_id: &VoterId) -> Voter {
+        match self.voters.get(voter_id) {
+            Some(a) => a,
+            _ => panic!("invalid voter_id {}", voter_id),
+        }
+    }
 
     fn internal_get_total_votes_for_address(
         &self,
