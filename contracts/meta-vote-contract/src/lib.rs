@@ -533,7 +533,6 @@ impl MetaVoteContract {
         self.internal_decrease_total_votes(votes, &contract_address, &votable_object_id);
     }
 
-
     // *********
     // * Admin *
     // *********
@@ -590,16 +589,17 @@ impl MetaVoteContract {
     pub fn get_claimable_meta(&self, voter_id: &VoterId) -> U128 {
         U128::from(self.claimable_meta.get(&voter_id).unwrap_or_default())
     }
+    
     // get all claims
-    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId,U128)> {
-        let mut results = Vec::<(AccountId,U128)>::new();
+    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128)> {
+        let mut results = Vec::<(AccountId, U128)>::new();
         let keys = self.claimable_meta.keys_as_vector();
         let start = from_index as u64;
         let limit = limit as u64;
         for index in start..std::cmp::min(start + limit, keys.len()) {
             let voter_id = keys.get(index).unwrap();
             let amount = self.claimable_meta.get(&voter_id).unwrap();
-            results.push((voter_id,amount.into()));
+            results.push((voter_id, amount.into()));
         }
         results
     }
@@ -720,6 +720,12 @@ impl MetaVoteContract {
         };
         U128::from(votes)
     }
+
+    // query current meta ready for distribution
+    pub fn get_meta_to_distribute(&self) -> U128 {
+        self.meta_to_distribute.into()
+    }
+
 }
 
 #[cfg(not(target_arch = "wasm32"))]

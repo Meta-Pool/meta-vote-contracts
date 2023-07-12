@@ -1,7 +1,7 @@
 use crate::*;
 use near_sdk::env::predecessor_account_id;
 use near_sdk::json_types::U128;
-use near_sdk::{env, log, near_bindgen, PromiseOrValue};
+use near_sdk::{env, log, near_bindgen, PromiseOrValue, assert_one_yocto};
 
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 
@@ -48,8 +48,10 @@ impl FungibleTokenReceiver for MetaVoteContract {
 impl MetaVoteContract {
 
     // distributes meta from self.meta_to_distribute between existent voters
+    #[payable]    
     pub fn distribute_for_claims(&mut self, distribute_info: Vec<(AccountId, U128)>) {
         self.assert_only_owner();
+        assert_one_yocto();
         let mut total_distributed = 0;
         for item in distribute_info {
             let amount =  item.1 .0;
