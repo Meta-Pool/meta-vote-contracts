@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::{env, near_bindgen};
+use near_sdk::{env::{self, predecessor_account_id}, near_bindgen};
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct OldState {
@@ -18,12 +18,12 @@ pub struct OldState {
 #[near_bindgen]
 impl MetaVoteContract {
     #[init(ignore_state)]
+    #[private] // only contract account can call this fn
     pub fn migrate() -> Self {
         // retrieve the current state from the contract
         let old_state: OldState = env::state_read().expect("failed");
-
         // return the new state
-        let result = Self {
+        Self {
             owner_id: old_state.owner_id,
             voters: old_state.voters,
             votes: old_state.votes,
@@ -37,9 +37,6 @@ impl MetaVoteContract {
             meta_to_distribute: 0,
             total_unclaimed_meta: 0,
             claimable_meta: UnorderedMap::new(StorageKey::Claimable),
-        };
-        // only the owner can execute migrate
-        result.assert_only_owner();
-        result
+        }
     }
 }
