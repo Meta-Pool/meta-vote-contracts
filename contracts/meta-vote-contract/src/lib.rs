@@ -74,6 +74,21 @@ impl MetaVoteContract {
         }
     }
 
+    // ****************
+    // * claim & Lock *
+    // ****************
+
+    // claim META and create/update a locking position
+    pub fn claim_and_lock(&mut self, amount: U128, locking_period: u16) {
+        let amount = amount.0;
+        self.assert_min_deposit_amount(amount);
+        let voter_id = VoterId::from(env::predecessor_account_id());
+        self.remove_claimable_meta(&voter_id, amount);
+        let mut voter = self.internal_get_voter_or_panic(&voter_id);
+        // create/update locking position
+        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+    }
+
     // *************
     // * Unlocking *
     // *************

@@ -1,9 +1,11 @@
 use crate::*;
-use near_sdk::env::predecessor_account_id;
 use near_sdk::json_types::U128;
-use near_sdk::{env, log, near_bindgen, PromiseOrValue, assert_one_yocto};
+use near_sdk::{env, log, near_bindgen, PromiseOrValue};
+use near_sdk::{serde_json, ONE_NEAR};
 
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+
+const E24: u128 = ONE_NEAR;
 
 #[near_bindgen]
 impl FungibleTokenReceiver for MetaVoteContract {
@@ -16,8 +18,12 @@ impl FungibleTokenReceiver for MetaVoteContract {
         let amount = amount.0;
 
         // deposit for-claims, msg == "for-claims" means META to be later distributed to voters
-        if msg == "for-claims" {
+        if &msg[..11] == "for-claims:" {
             self.meta_to_distribute += amount;
+            match serde_json::from_str(&msg[11..]) {
+                Ok(info) => self.distribute_for_claims(amount, &info),
+                Err(_) => panic!("Err parsing msg for-claims"),
+            };
         }
         // else, user deposit to lock
         else {
@@ -44,36 +50,25 @@ impl FungibleTokenReceiver for MetaVoteContract {
     }
 }
 
-#[near_bindgen]
 impl MetaVoteContract {
-
     // distributes meta from self.meta_to_distribute between existent voters
-    #[payable]    
-    pub fn distribute_for_claims(&mut self, distribute_info: Vec<(AccountId, U128)>) {
-        self.assert_only_owner();
-        assert_one_yocto();
+    pub(crate) fn distribute_for_claims(
+        &mut self,
+        total_amount: u128,
+        distribute_info: &Vec<(String, u64)>,
+    ) {
         let mut total_distributed = 0;
         for item in distribute_info {
-            let amount =  item.1 .0;
-            self.add_claimable_meta(&item.0,amount);
+            let amount = item.1 as u128 * E24;
+            self.add_claimable_meta(&AccountId::new_unchecked(item.0.clone()), amount);
             total_distributed += amount;
         }
         assert!(
-            total_distributed <= self.meta_to_distribute,
-            "not enough meta_to_distribute. actual {}, requested {}",
-            self.meta_to_distribute, total_distributed
+            total_distributed == total_amount,
+            "total to distribute {} != total_amount sent {}",
+            total_distributed,
+            total_amount
         );
         self.meta_to_distribute -= total_distributed;
-    }
-
-    // claim META and create/update a locking position
-    pub fn claim_and_lock(&mut self, amount: U128, locking_period: u16) {
-        let amount = amount.0;
-        self.assert_min_deposit_amount(amount);
-        let voter_id = VoterId::from(predecessor_account_id());
-        self.remove_claimable_meta(&voter_id, amount);
-        let mut voter = self.internal_get_voter_or_panic(&voter_id);
-        // create/update locking position
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
     }
 }
