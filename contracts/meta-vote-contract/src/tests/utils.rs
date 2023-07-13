@@ -2,7 +2,9 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use near_sdk::{AccountId, MockedBlockchain, PromiseResult, VMContext, Balance, PublicKey, Gas};
+use near_sdk::{
+    testing_env, AccountId, Balance, Gas, MockedBlockchain, PromiseResult, PublicKey, VMContext,
+};
 
 use crate::constants::YOCTO_UNITS;
 use crate::types::*;
@@ -54,8 +56,12 @@ pub fn voter_account() -> AccountId {
     AccountId::new_unchecked("voter.metavote.near".to_string())
 }
 
-pub fn multi_voter_account(id: String) -> AccountId {
-    AccountId::new_unchecked(format!("voter_{}.metavote.near", id))
+pub fn voter_account_id(id: u8) -> AccountId {
+    AccountId::new_unchecked(format!("voter_acc_{}.near", id))
+}
+
+pub fn compose_account(suffix: &str) -> AccountId {
+    AccountId::new_unchecked(format!("account_{}.near", suffix))
 }
 
 pub fn votable_account() -> AccountId {
@@ -63,20 +69,20 @@ pub fn votable_account() -> AccountId {
 }
 
 pub fn ntoy(near_amount: u128) -> u128 {
-    return near_amount * 10u128.pow(24)
+    return near_amount * 10u128.pow(24);
 }
 
 pub fn yton(yoctos_amount: u128) -> f64 {
-    return yoctos_amount as f64 / 10u128.pow(24) as f64
+    return yoctos_amount as f64 / 10u128.pow(24) as f64;
 }
 //convert yocto to f64 NEAR truncate to 4 dec places
 pub fn ytof(yoctos_amount: u128) -> f64 {
-    let four_dec_f:f64 = ((yoctos_amount / 10u128.pow(20)) as u32).into();
+    let four_dec_f: f64 = ((yoctos_amount / 10u128.pow(20)) as u32).into();
     return four_dec_f / 10000.0;
 }
 
 pub fn to_nanos(num_days: u64) -> u64 {
-    return num_days * 86400_000_000_000
+    return num_days * 86400_000_000_000;
 }
 
 #[inline]
@@ -93,7 +99,9 @@ pub fn assert_almost_eq_with_max_delta(left: u128, right: u128, max_delta: u128)
     assert!(
         std::cmp::max(left, right) - std::cmp::min(left, right) < max_delta,
         "Left {} is not even close to Right {} within delta {}",
-        left, right, max_delta
+        left,
+        right,
+        max_delta
     );
 }
 
@@ -102,7 +110,7 @@ pub fn assert_almost_eq(left: u128, right: u128) {
 }
 
 pub fn get_context(
-    predecessor_account_id: AccountId,
+    predecessor_account_id: &AccountId,
     account_balance: u128,
     account_locked_balance: u128,
     block_timestamp: u64,
@@ -115,7 +123,7 @@ pub fn get_context(
         current_account_id: contract_account(),
         signer_account_id: predecessor_account_id.clone(),
         signer_account_pk: ed,
-        predecessor_account_id,
+        predecessor_account_id: predecessor_account_id.clone(),
         input: vec![],
         block_index: 1,
         block_timestamp,
@@ -127,6 +135,15 @@ pub fn get_context(
         prepaid_gas: Gas(10u64.pow(15)),
         random_seed: seed,
         view_config: None,
-        output_data_receivers: Vec::new()
+        output_data_receivers: Vec::new(),
     }
+}
+
+pub fn set_context_caller(predecessor_account_id: &AccountId) {
+    testing_env!(get_context(
+        predecessor_account_id,
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        to_ts(GENESIS_TIME_IN_DAYS),
+    ));
 }

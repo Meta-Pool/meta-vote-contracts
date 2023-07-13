@@ -3,7 +3,10 @@ set -e
 export NEAR_ENV="mainnet"
 
 METAVOTE_CONTRACT_ADDRESS="meta-vote.near"
+METAVOTE_OWNER="meta-pool-dao.near"
 METAVOTE_WASM="contracts/res/meta_vote_contract.wasm"
+
+near view meta-vote.near get_owner_id
 
 YOCTO_UNITS="000000000000000000000000"
 TOTAL_PREPAID_GAS="300000000000000"
@@ -14,9 +17,9 @@ TOTAL_PREPAID_GAS="300000000000000"
 # Redeploy Contract
 # NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
 
-# Deploy with MIGRATION
+# Deploy with MIGRATION - Note: --initFunction caller IS ALWAYS contract-account
 echo DEPLOY AND MIGRATION
-near deploy meta-vote.near --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {} --initGas 300000000000000
+near deploy $METAVOTE_CONTRACT_ADDRESS --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {} --initGas 300000000000000
 
 # NEAR_ENV=testnet near deploy -f --wasmFile $METAVOTE_WASM --accountId metavote.testnet
 # NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId metavote.testnet

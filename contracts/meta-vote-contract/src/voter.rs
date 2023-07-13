@@ -5,10 +5,10 @@ use near_sdk::serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct VoterJSON {
-    pub voter_id: AccountId,
+    pub voter_id: String,
     pub locking_positions: Vec<LockingPositionJSON>,
     pub voting_power: U128,
-    pub vote_positions: Vec<VotePositionJSON>
+    pub vote_positions: Vec<VotePositionJSON>,
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -16,24 +16,20 @@ pub struct Voter {
     pub balance: Meta,
     pub locking_positions: Vector<LockingPosition>,
     pub voting_power: VotingPower,
-    pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>
+    pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>,
 }
 
 impl Voter {
     pub(crate) fn new(id: &VoterId) -> Self {
         Self {
             balance: 0,
-            locking_positions: Vector::new(
-                StorageKey::LockingPosition {
-                    hash_id: generate_hash_id(id.to_string())
-                }
-            ),
+            locking_positions: Vector::new(StorageKey::LockingPosition {
+                hash_id: generate_hash_id(id.to_string()),
+            }),
             voting_power: 0,
-            vote_positions: UnorderedMap::new(
-                StorageKey::VotePosition {
-                    hash_id: generate_hash_id(id.to_string())
-                }
-            )
+            vote_positions: UnorderedMap::new(StorageKey::VotePosition {
+                hash_id: generate_hash_id(id.to_string()),
+            }),
         }
     }
 
@@ -82,8 +78,7 @@ impl Voter {
     pub(crate) fn find_locked_position(&self, locking_period: Days) -> Option<u64> {
         let mut index = 0_u64;
         for locking_position in self.locking_positions.iter() {
-            if locking_position.locking_period == locking_period
-                    && locking_position.is_locked() {
+            if locking_position.locking_period == locking_period && locking_position.is_locked() {
                 return Some(index);
             }
             index += 1;
@@ -92,7 +87,9 @@ impl Voter {
     }
 
     pub(crate) fn get_position(&self, index: PositionIndex) -> LockingPosition {
-        self.locking_positions.get(index).expect("Index out of range!")
+        self.locking_positions
+            .get(index)
+            .expect("Index out of range!")
     }
 
     pub(crate) fn remove_position(&mut self, index: PositionIndex) {
@@ -102,24 +99,22 @@ impl Voter {
     pub(crate) fn get_votes_for_address(
         &self,
         voter_id: &VoterId,
-        contract_address: &ContractAddress
+        contract_address: &ContractAddress,
     ) -> UnorderedMap<VotableObjId, VotingPower> {
         let id = format!("{}-{}", voter_id.to_string(), contract_address.as_str());
         self.vote_positions
             .get(&contract_address)
-            .unwrap_or(
-                UnorderedMap::new(
-                    StorageKey::VoterVotes {
-                        hash_id: generate_hash_id(id.to_string())
-                    }
-                )
-            )
+            .unwrap_or(UnorderedMap::new(StorageKey::VoterVotes {
+                hash_id: generate_hash_id(id.to_string()),
+            }))
     }
 
     pub(crate) fn get_unlocked_position_index(&self) -> Vec<PositionIndex> {
         let mut result = Vec::new();
         for index in 0..self.locking_positions.len() {
-            let locking_position = self.locking_positions.get(index)
+            let locking_position = self
+                .locking_positions
+                .get(index)
                 .expect("Locking position not found!");
             if locking_position.is_unlocked() {
                 result.push(index);
@@ -128,7 +123,7 @@ impl Voter {
         result
     }
 
-    pub(crate) fn to_json(&self, voter_id: VoterId) -> VoterJSON {
+    pub(crate) fn to_json(&self, voter_id: &VoterId) -> VoterJSON {
         let mut locking_positions = Vec::<LockingPositionJSON>::new();
         for index in 0..self.locking_positions.len() {
             let pos = self.locking_positions.get(index).unwrap();
@@ -140,21 +135,19 @@ impl Voter {
             let pos = self.vote_positions.get(&address).unwrap();
             for obj in pos.keys_as_vector().iter() {
                 let value = pos.get(&obj).unwrap();
-                vote_positions.push(
-                    VotePositionJSON {
-                        votable_address: address.clone(),
-                        votable_object_id: obj,
-                        voting_power: U128::from(value)
-                    }
-                );
+                vote_positions.push(VotePositionJSON {
+                    votable_address: address.clone(),
+                    votable_object_id: obj,
+                    voting_power: U128::from(value),
+                });
             }
         }
 
         VoterJSON {
-            voter_id,
+            voter_id: voter_id.to_string(),
             locking_positions,
             voting_power: U128::from(self.voting_power),
-            vote_positions
+            vote_positions,
         }
     }
 }

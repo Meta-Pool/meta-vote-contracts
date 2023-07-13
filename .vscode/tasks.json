@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "make build",
+			"problemMatcher": [
+				"$rustc",
+				"$rust-panic"
+			],
+			"group": "build",
+			"label": "make build"
+		},
+		{
+			"type": "shell",
+			"command": "make test",
+			"problemMatcher": [
+				"$rustc",
+				"$rust-panic"
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"label": "make test"
+		}
+	]
+}

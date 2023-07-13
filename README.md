@@ -8,13 +8,13 @@ Implementation of a general voting system using the $META token.
 
 The last version of the deployed contract, in Near `mainnet`, is in the `stable` branch.
 
-Current stable version: [**v0.1.1**](https://github.com/Narwallets/meta-vote/releases/tag/v0.1.1)
-Check all releases in [Meta Vote Releases](https://github.com/Narwallets/meta-vote/releases).
+Current stable version: [**v0.1.1**](https://github.com/Meta-Pool/meta-vote-contracts/releases/tag/v0.1.1)
+Check all releases in [Meta Vote Releases](https://github.com/Meta-Pool/meta-vote-contracts/releases).
 
 To get the stable version, run the commands:
 
 ```sh
-git clone https://github.com/Narwallets/meta-vote.git
+git clone https://github.com/Meta-Pool/meta-vote-contracts
 cd meta-vote
 git fetch origin --tags
 
@@ -71,6 +71,13 @@ The best way to deploy Meta Vote is using the scripts for `mainnet` and `testnet
 
 - [main_deploy.sh](contract/scripts/main_deploy.sh)
 - [test_deploy.sh](contract/scripts/test_deploy.sh)
+
+
+## Deposit & Locking
+
+* Use ft_transfer_call on META token NEP-141 contract, in the `msg` field set the number of days for the auto-lock
+
+* to see how this contract process deposits check `fn ft_on_transfer()`
 
 ## Getting a list of paginated Voters
 
