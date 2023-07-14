@@ -1,6 +1,6 @@
 use crate::*;
 // use meta_tools::utils::{assert_one_promise_result, get_linear_release_proportion};
-use crate::utils::{ get_current_epoch_millis};
+use crate::utils::get_current_epoch_millis;
 use near_sdk::json_types::U128;
 use near_sdk::{env, near_bindgen, require, PromiseResult};
 
@@ -45,21 +45,24 @@ impl MpipContract {
         );
     }
 
-    pub(crate) fn internal_has_voted(&self, mpip_id: MpipId, account_id: VoterId) -> bool {
-        let proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        !proposal_vote.has_voted.get(&account_id).is_none()
+    pub(crate) fn internal_has_voted(&self, mpip_id: &MpipId, voter_id: &VoterId) -> bool {
+        let voter = self.voters.get(&voter_id);
+        match voter {
+            Some(_voter) => {  !_voter.votes.get(&mpip_id).is_none()},
+            None => { false }
+        }       
     }
 
     pub(crate) fn assert_has_not_voted(&self, mpip_id: MpipId, account_id: VoterId) {
         require!(
-            !self.internal_has_voted(mpip_id, account_id),
+            !self.internal_has_voted(&mpip_id, &account_id),
             "Account has already voted"
         );
     }
 
     pub(crate) fn assert_has_voted(&self, mpip_id: MpipId, account_id: VoterId) {
         require!(
-            self.internal_has_voted(mpip_id, account_id),
+            self.internal_has_voted(&mpip_id, &account_id),
             "Account has not voted"
         );
     }
@@ -109,6 +112,21 @@ impl MpipContract {
         }
     }
 
+    pub(crate) fn internal_proposal_voting_finished(&self, mpip_id: &MpipId) -> bool {
+        let proposal = self.internal_get_proposal(&mpip_id);
+        match proposal.vote_end_timestamp {
+            Some(date) => get_current_epoch_millis() >= date,
+            None => false,
+        }
+    }
+
+    pub(crate) fn assert_proposal_voting_finished(&self, mpip_id: &MpipId) {
+        require!(
+            self.internal_proposal_voting_finished(mpip_id),
+            "Proposal voting has not ended"
+        )
+    }
+
     pub(crate) fn assert_proposal_threshold(&self, voting_power: u128) {
         require!(
             self.internal_check_proposal_threshold(voting_power),
@@ -142,7 +160,20 @@ impl MpipContract {
     }
 
     pub(crate) fn internal_get_proposal_vote(&self, mpip_id: MpipId) -> ProposalVote {
-        self.votes.get(&mpip_id).unwrap_or(ProposalVote::new(&mpip_id))
+        self.votes
+            .get(&mpip_id)
+            .unwrap_or(ProposalVote::new(&mpip_id))
+    }
+
+    pub(crate) fn internal_get_voter_vote(&self, mpip_id: &MpipId, voter_id: &VoterId) -> Vote {
+        let voter = self
+            .voters
+            .get(&voter_id)
+            .expect("Voter has not active votes");
+        voter
+            .votes
+            .get(mpip_id)
+            .expect("Voter has no voted on this proposal")
     }
 
     pub(crate) fn internal_get_total_voting_power_from_promise(&self) -> Balance {
@@ -189,10 +220,7 @@ impl MpipContract {
         total_voting_power * u128::from(self.quorum_floor) / 100 / 100
     }
 
-    pub(crate) fn internal_is_quorum_reached(
-        &self,
-        mpip_id: MpipId
-    ) -> bool {
+    pub(crate) fn internal_is_quorum_reached(&self, mpip_id: MpipId) -> bool {
         // let quorum = self.internal_get_quorum(total_voting_power);
         let proposal_vote = self.internal_get_proposal_vote(mpip_id);
         let proposal = self.internal_get_proposal(&mpip_id);

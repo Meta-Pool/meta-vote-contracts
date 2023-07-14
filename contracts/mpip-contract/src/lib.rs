@@ -205,7 +205,14 @@ impl MpipContract {
             .then(
                 Self::ext(env::current_account_id())
                     .with_static_gas(GAS_FOR_RESOLVE_VOTE)
-                    .create_proposal_callback(title, short_description, body, data, extra, env::predecessor_account_id()),
+                    .create_proposal_callback(
+                        title,
+                        short_description,
+                        body,
+                        data,
+                        extra,
+                        env::predecessor_account_id(),
+                    ),
             );
     }
 
@@ -217,7 +224,7 @@ impl MpipContract {
         body: String,
         data: String,
         extra: String,
-        proposer_id: AccountId
+        proposer_id: AccountId,
     ) -> MpipId {
         let total_v_power = self.internal_get_user_total_voting_power_from_promise();
         let voter = self.internal_get_voter(&proposer_id);
@@ -427,6 +434,7 @@ impl MpipContract {
         self.assert_has_voted(mpip_id, voter_id.clone());
         let mut proposal_vote = self.internal_get_proposal_vote(mpip_id);
         let user_vote = proposal_vote.has_voted.get(&voter_id).unwrap();
+        let mut voter = self.internal_get_voter(&voter_id);
 
         match user_vote.vote_type {
             VoteType::For => {
@@ -441,8 +449,24 @@ impl MpipContract {
         }
         proposal_vote.has_voted.remove(&voter_id);
         self.votes.insert(&mpip_id, &proposal_vote);
+        voter.votes.remove(&mpip_id);
 
+        voter.used_voting_power -= user_vote.voting_power;
+        if voter.votes.is_empty() {
+            self.voters.remove(&voter_id);
+        } else {
+            self.voters.insert(&voter_id, &voter);
+        }
+    }
+
+    pub fn withdraw_voting_power(&mut self, mpip_id: MpipId) {
+        let voter_id = env::predecessor_account_id();
+        self.assert_proposal_voting_finished(&mpip_id);
+        self.assert_has_voted(mpip_id, voter_id.clone());
+        let proposal_vote = self.internal_get_proposal_vote(mpip_id);
+        let user_vote = proposal_vote.has_voted.get(&voter_id).unwrap();
         let mut voter = self.internal_get_voter(&voter_id);
+        voter.used_voting_power -= user_vote.voting_power;
         voter.votes.remove(&mpip_id);
 
         voter.used_voting_power -= user_vote.voting_power;
@@ -454,14 +478,17 @@ impl MpipContract {
     }
 
     pub fn has_voted(&self, voter_id: AccountId, mpip_id: MpipId) -> bool {
-        self.internal_has_voted(mpip_id, voter_id)
+        self.internal_has_voted(&mpip_id, &voter_id)
     }
 
     pub fn get_my_vote(&self, voter_id: VoterId, mpip_id: MpipId) -> Option<VoteJson> {
-        let proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        match proposal_vote.has_voted.get(&voter_id) {
-            Some(vote) => Some(vote.to_json(voter_id)),
-            None => None,
+        let has_voted = self.internal_has_voted(&mpip_id, &voter_id);
+        match has_voted {
+            true => Some(
+                self.internal_get_voter_vote(&mpip_id, &voter_id)
+                    .to_json(voter_id),
+            ),
+            false => None,
         }
     }
 
@@ -474,6 +501,7 @@ impl MpipContract {
         let voter = self.internal_get_voter(&voter_id);
         U128::from(voter.used_voting_power)
     }
+    
 
     // *********
     // * BOT FUNCTIONS *

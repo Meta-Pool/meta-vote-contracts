@@ -20,6 +20,7 @@ pub struct VoteJson {
     pub vote_type: VoteType,
     pub voting_power: U128,
     pub memo: String,
+    // pub already_withdrawn: bool
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, PartialEq, Clone)]
@@ -29,6 +30,7 @@ pub struct Vote {
     pub vote_type: VoteType,
     pub voting_power: u128,
     pub memo: String,
+    // pub already_withdrawn: bool
 }
 
 impl Vote {
@@ -43,6 +45,7 @@ impl Vote {
             vote_type: _vote_type,
             voting_power: _voting_power,
             memo: _memo,
+            // already_withdrawn: false
         }
     }
     pub(crate) fn to_json(&self, voter_id: VoterId) -> VoteJson {
@@ -52,6 +55,7 @@ impl Vote {
             vote_type: self.vote_type.clone(),
             voting_power: U128::from(self.voting_power),
             memo: self.memo.clone(),
+            // already_withdrawn: self.already_withdrawn.clone()
         }
     }
 }
