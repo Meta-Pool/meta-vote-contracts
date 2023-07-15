@@ -122,6 +122,9 @@ impl MpipContract {
         let mut proposer = self.internal_get_proposer(proposal.creator_id.clone());
         proposer.push(mpip_id);
         self.proposers.insert(&proposal.creator_id, &proposer);
+        let mut voter = self.internal_get_voter(&proposal.creator_id);
+        voter.used_voting_power -= self.min_voting_power_amount;
+        self.voters.insert(&proposal.creator_id, &voter);
         proposal.mpip_id.into()
     }
 
