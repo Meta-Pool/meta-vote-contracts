@@ -6,7 +6,7 @@ use near_sdk::{
     testing_env, AccountId, Balance, Gas, MockedBlockchain, PromiseResult, PublicKey, VMContext,
 };
 
-use crate::constants::YOCTO_UNITS;
+use crate::constants::E24;
 use crate::types::*;
 
 pub const LOCKUP_NEAR: u128 = 1000;
@@ -16,7 +16,7 @@ pub const TEST_INITIAL_BALANCE: u128 = 100;
 
 pub const MIN_LOCKING_PERIOD: Days = 30;
 pub const MAX_LOCKING_PERIOD: Days = 300;
-pub const MIN_DEPOSIT_AMOUNT: Balance = 1 * YOCTO_UNITS;
+pub const MIN_DEPOSIT_AMOUNT: Balance = 1 * E24;
 pub const MAX_LOCKING_POSITIONS: u8 = 20;
 pub const MAX_VOTING_POSITIONS: u8 = 100;
 
