@@ -36,8 +36,8 @@ pub struct MetaVoteContract {
 
     // added v1.0.3
     pub claimable_meta: UnorderedMap<VoterId, u128>,
-    pub meta_to_distribute: u128,
-    pub total_unclaimed_meta: u128,
+    pub accumulated_distributed_for_claims: u128, // accumulated total meta distributed
+    pub total_unclaimed_meta: u128, // currently unclaimed meta
 }
 
 #[near_bindgen]
@@ -68,7 +68,7 @@ impl MetaVoteContract {
             max_voting_positions,
             meta_token_contract_address,
             total_voting_power: 0,
-            meta_to_distribute: 0,
+            accumulated_distributed_for_claims: 0,
             total_unclaimed_meta: 0,
             claimable_meta: UnorderedMap::new(StorageKey::Claimable),
         }
@@ -737,8 +737,12 @@ impl MetaVoteContract {
     }
 
     // query current meta ready for distribution
-    pub fn get_meta_to_distribute(&self) -> U128 {
-        self.meta_to_distribute.into()
+    pub fn get_total_unclaimed_meta(&self) -> U128 {
+        self.total_unclaimed_meta.into()
+    }
+    // query total_distributed meta for claims
+    pub fn get_accumulated_distributed_for_claims(&self) -> U128 {
+        self.accumulated_distributed_for_claims.into()
     }
 
 }

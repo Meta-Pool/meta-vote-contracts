@@ -1,7 +1,8 @@
 use near_sdk::{BorshStorageKey, Gas, CryptoHash};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 
-pub const YOCTO_UNITS: u128 = 1_000_000_000_000_000_000_000_000;
+pub const E24: u128 = 1_000_000_000_000_000_000_000_000;
+pub const YOCTO_UNITS: u128 = E24;
 pub const TGAS: u64 = 1_000_000_000_000;
 
 /// Amount of gas for fungible token transfers.
@@ -18,3 +19,4 @@ pub enum StorageKey {
     VoterVotes { hash_id: CryptoHash },
     Claimable
 }
+

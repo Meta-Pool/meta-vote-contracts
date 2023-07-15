@@ -34,7 +34,7 @@ impl MetaVoteContract {
             max_voting_positions: old_state.max_voting_positions,
             meta_token_contract_address: old_state.meta_token_contract_address,
             total_voting_power: old_state.total_voting_power,
-            meta_to_distribute: 0,
+            accumulated_distributed_for_claims: 0,
             total_unclaimed_meta: 0,
             claimable_meta: UnorderedMap::new(StorageKey::Claimable),
         }

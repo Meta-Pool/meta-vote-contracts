@@ -19,7 +19,6 @@ impl FungibleTokenReceiver for MetaVoteContract {
 
         // deposit for-claims, msg == "for-claims" means META to be later distributed to voters
         if msg.len() >= 11 && &msg[..11] == "for-claims:" {
-            self.meta_to_distribute += amount;
             match serde_json::from_str(&msg[11..]) {
                 Ok(info) => self.distribute_for_claims(amount, &info),
                 Err(_) => panic!("Err parsing msg for-claims"),
@@ -69,6 +68,6 @@ impl MetaVoteContract {
             total_distributed,
             total_amount
         );
-        self.meta_to_distribute -= total_distributed;
+        self.accumulated_distributed_for_claims += total_distributed;
     }
 }
