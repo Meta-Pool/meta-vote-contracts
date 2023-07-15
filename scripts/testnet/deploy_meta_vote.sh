@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 export NEAR_ENV="testnet"
-echo $NEAR_ENV
 
 METAVOTE_CONTRACT_ADDRESS="metavote.testnet"
 METAVOTE_WASM="contracts/res/meta_vote_contract.wasm"
+
+echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $(date) 
 
 YOCTO_UNITS="000000000000000000000000"
 TOTAL_PREPAID_GAS="300000000000000"

@@ -1,3 +1,4 @@
+/*
 use crate::*;
 use near_sdk::{env::{self, predecessor_account_id}, near_bindgen};
 
@@ -40,3 +41,4 @@ impl MetaVoteContract {
         }
     }
 }
+*/
