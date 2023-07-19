@@ -134,10 +134,10 @@ impl MpipContract {
         )
     }
 
-    pub(crate) fn assert_proposal_is_draft(&self, mpip_id: MpipId) {
-        let proposal = self.internal_get_proposal(&mpip_id);
-        require!(proposal.draft, "Proposal is not on draft");
-    }
+    // pub(crate) fn assert_proposal_is_draft(&self, mpip_id: MpipId) {
+    //     let proposal = self.internal_get_proposal(&mpip_id);
+    //     require!(proposal.draft, "Proposal is not on draft");
+    // }
 
     pub(crate) fn assert_proposal_is_active_or_draft(&self, mpip_id: MpipId) {
         require!(

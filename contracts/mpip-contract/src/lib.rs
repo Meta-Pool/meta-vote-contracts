@@ -161,7 +161,7 @@ impl MpipContract {
 
     pub fn start_voting_period(&mut self, mpip_id: MpipId) {
         self.assert_only_operator_or_creator(mpip_id);
-        self.assert_proposal_is_draft(mpip_id);
+        self.assert_proposal_is_active_or_draft(mpip_id);
         ext_metavote::ext(self.meta_vote_contract_address.clone())
             .with_static_gas(GAS_FOR_GET_VOTING_POWER)
             .with_attached_deposit(1)
