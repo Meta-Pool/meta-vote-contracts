@@ -1,11 +1,11 @@
 [package]
 name = "meta-vote-contract"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
-authors = ["Narwallets.com <hello@narwallets.com>"]
+authors = ["metapool.app <hello@metapool.app>"]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 near-sdk = "4.0.0"

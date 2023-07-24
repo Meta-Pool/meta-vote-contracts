@@ -32,7 +32,10 @@ install:
 	cp target/release/libcfdi.so /usr/local/lib64/
 
 test:
-	RUST_BACKTRACE=1 cargo test -- --color always --nocapture
+	cd contracts && cargo test --lib -- --color always
+
+test-nocapture:
+	cd contracts && cargo test -- --color always  --nocapture
 
 format:
 	cargo fmt -- --check
