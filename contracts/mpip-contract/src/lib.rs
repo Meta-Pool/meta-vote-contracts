@@ -1,19 +1,15 @@
 use crate::constants::*;
 use crate::interface::*;
-use mpip::Mpip;
-use mpip::MpipJSON;
-use mpip::MpipState;
+use mpip::{Mpip, MpipJSON, MpipState};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::json_types::U128;
 use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
 use types::*;
 use utils::{days_to_millis, get_current_epoch_millis};
-use vote::VoteJson;
-use vote::{Vote, VoteType};
+use vote::{Vote, VoteType, VoteJson};
 use vote_counting::{ProposalVote, ProposalVoteJson};
-use voter::Voter;
-use voter::VoterJson;
+use voter::{Voter, VoterJson};
 
 mod constants;
 mod interface;
@@ -76,6 +72,8 @@ impl MpipContract {
         quorum_floor: BasisPoints,
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
+        require!(quorum_floor <= ONE_HUNDRED, "Incorrect quorum basis points.");
+
         Self {
             admin_id,
             operator_id,
@@ -154,11 +152,19 @@ impl MpipContract {
     }
 
     /// Update quorum floor: percent of all voting power need to vote yes for the proposal to pass.
-    pub fn update_quorum_floor(&mut self, new_value: U128) {
+    pub fn update_quorum_floor(&mut self, new_value: u16) {
         self.assert_only_operator();
-        self.quorum_floor = new_value.0 as u32;
+        require!(new_value <= ONE_HUNDRED, "Incorrect quorum basis points.");
+
+        self.quorum_floor = new_value;
     }
 
+    // ************
+    // *  *
+    // ************
+
+    /// REVIEW: when this process should be activated? and why
+    /// active or draft is so complicated????
     pub fn start_voting_period(&mut self, mpip_id: MpipId) {
         self.assert_only_operator_or_creator(mpip_id);
         self.assert_proposal_is_active_or_draft(mpip_id);
@@ -330,8 +336,8 @@ impl MpipContract {
         }
     }
 
-    pub fn get_quorum_floor(&self) -> String {
-        self.quorum_floor.to_string()
+    pub fn get_quorum_floor(&self) -> BasisPoints {
+        self.quorum_floor
     }
 
     pub fn get_proposal_threshold(&self) -> U128 {

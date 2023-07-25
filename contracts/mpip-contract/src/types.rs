@@ -9,7 +9,7 @@ pub type VotingPower = u128;
 pub type Days = u16;
 pub type ContractAddress = AccountId;
 pub type EpochMillis = u64;
-pub type BasisPoints = u32;
+pub type BasisPoints = u16;
 pub type PositionIndex = u64;
 use near_sdk::json_types::U128;
 construct_uint! {
