@@ -217,7 +217,6 @@ impl MpipContract {
                         body,
                         data,
                         extra,
-                        env::predecessor_account_id(),
                     ),
             );
     }
@@ -229,12 +228,10 @@ impl MpipContract {
         short_description: String,
         body: String,
         data: String,
-        extra: String,
-        proposer_id: AccountId,
+        extra: String
     ) -> MpipId {
         let total_v_power = self.internal_get_user_total_voting_power_from_promise();
-        let voter = self.internal_get_voter(&proposer_id);
-        self.assert_proposal_threshold(total_v_power + voter.used_voting_power);
+        self.assert_proposal_threshold(total_v_power);
         self.assert_open_for_new_mpips();
         self.assert_proposal_storage_is_covered();
         let id = self.proposals.len() as MpipId;
@@ -282,6 +279,11 @@ impl MpipContract {
     /// if account has the minimum Voting Power to participate in Governance.
     pub fn check_proposal_threshold(&self, voting_power: U128) -> bool {
         self.internal_check_proposal_threshold(voting_power.0)
+    }
+
+   
+    pub fn get_mpip_storage_near(&self) -> U128 {
+        U128::from(self.mpip_storage_near)
     }
 
     pub fn get_proposal_votes(&self, mpip_id: MpipId) -> ProposalVoteJson {
@@ -393,15 +395,15 @@ impl MpipContract {
     ) {
         let total_v_power = self.internal_get_user_total_voting_power_from_promise();
         let mut voter = self.internal_get_voter(&voter_id);
-        assert!(
-            total_v_power >= voting_power.0,
-            "Not enough free voting power to vote! You have {}, required {}.",
-            total_v_power,
-            voting_power.0
-        );
+        // assert!(
+        //     total_v_power >= voting_power.0,
+        //     "Not enough free voting power to vote! You have {}, required {}.",
+        //     total_v_power,
+        //     voting_power.0
+        // );
         assert!(
             total_v_power >= voting_power.0 + voter.used_voting_power,
-            "You have used all your voting power! You have {}, used {}.",
+            "You are trying to vote with more voting power that you have available! You have {}, used {}.",
             total_v_power,
             voter.used_voting_power
         );
