@@ -26,7 +26,10 @@ integration-test: build
 	./scripts/integration_test.sh
 
 integration: build
-	scripts/integration.sh
+	scripts/integration_test.sh
+
+workspace: build
+	scripts/run_workspace.sh
 
 install:
 	cp target/release/libcfdi.so /usr/local/lib64/

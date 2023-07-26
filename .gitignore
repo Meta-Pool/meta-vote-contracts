@@ -20,7 +20,15 @@ contracts/res/*.wasm
 
 # dev-deploy keys
 contract/neardev
+neardev
 contract/neardev_meta_token
+neardev_meta_token
+contract/neardev_meta_token
+neardev_meta_token
+contract/neardev_meta_vote
+neardev_meta_vote
+contract/neardev_mpips
+neardev_mpips
 
 # Mac
 .DS_Store

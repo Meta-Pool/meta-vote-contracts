@@ -145,7 +145,7 @@ impl MpipContract {
         self.min_voting_power_amount = new_value.0;
     }
 
-    /// Update the storage cost per kilobytes in Near to submit a MPIP.
+    /// Update the storage cost in Near to submit a MPIP.
     pub fn update_mpip_storage_near(&mut self, new_value: U128) {
         self.assert_only_operator();
         self.mpip_storage_near = new_value.0;
@@ -163,8 +163,6 @@ impl MpipContract {
     // *  *
     // ************
 
-    /// REVIEW: when this process should be activated? and why
-    /// active or draft is so complicated????
     pub fn start_voting_period(&mut self, mpip_id: MpipId) {
         self.assert_only_operator_or_creator(mpip_id);
         self.assert_proposal_is_active_or_draft(mpip_id);
@@ -195,7 +193,7 @@ impl MpipContract {
     // * Proposal creators functions *
     // *********
 
-    /// Creates a new proposal
+    #[payable]
     pub fn create_proposal(
         &mut self,
         title: String,
@@ -204,6 +202,8 @@ impl MpipContract {
         data: String,
         extra: String,
     ) {
+        self.assert_open_for_new_mpips();
+        self.assert_proposal_storage_is_covered();
         ext_metavote::ext(self.meta_vote_contract_address.clone())
             .with_static_gas(GAS_FOR_GET_VOTING_POWER)
             .with_attached_deposit(1)
@@ -232,8 +232,6 @@ impl MpipContract {
     ) -> MpipId {
         let total_v_power = self.internal_get_user_total_voting_power_from_promise();
         self.assert_proposal_threshold(total_v_power);
-        self.assert_open_for_new_mpips();
-        self.assert_proposal_storage_is_covered();
         let id = self.proposals.len() as MpipId;
         self.internal_create_proposal(id, title, short_description, body, data, extra);
         id
@@ -281,7 +279,6 @@ impl MpipContract {
         self.internal_check_proposal_threshold(voting_power.0)
     }
 
-   
     pub fn get_mpip_storage_near(&self) -> U128 {
         U128::from(self.mpip_storage_near)
     }
@@ -509,7 +506,6 @@ impl MpipContract {
         let voter = self.internal_get_voter(&voter_id);
         U128::from(voter.used_voting_power)
     }
-    
 
     // *********
     // * BOT FUNCTIONS *
