@@ -37,7 +37,7 @@ pub struct MetaVoteContract {
     // added v1.0.3
     pub claimable_meta: UnorderedMap<VoterId, u128>,
     pub accumulated_distributed_for_claims: u128, // accumulated total meta distributed
-    pub total_unclaimed_meta: u128, // currently unclaimed meta
+    pub total_unclaimed_meta: u128,               // currently unclaimed meta
 }
 
 #[near_bindgen]
@@ -168,6 +168,51 @@ impl MetaVoteContract {
         self.voters.insert(&voter_id, &voter);
     }
 
+    // ********************************
+    // * extend locking position days *
+    // ********************************
+
+    pub fn locking_position_extend_days(&mut self, index: PositionIndex, new_locking_period: Days) {
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter_or_panic(&voter_id);
+        let mut locking_position = voter.get_position(index);
+
+        // position should be locked
+        require!(
+            locking_position.unlocking_started_at.is_none(),
+            "position should be locked in order to extend time"
+        );
+        require!(
+            new_locking_period > locking_position.locking_period,
+            "new auto-lock period should be greater than previous one"
+        );
+
+        log!(
+            "EXTEND-TIME: {} position #{} {} days",
+            &voter_id.to_string(),
+            index,
+            new_locking_period
+        );
+
+        let old_voting_power = locking_position.voting_power;
+        let new_voting_power =
+            self.calculate_voting_power(locking_position.amount, new_locking_period);
+
+        // update to new total-voting-power (add delta)
+        self.total_voting_power += new_voting_power - old_voting_power;
+
+        // update to new voter-voting-power (add delta)
+        voter.voting_power += new_voting_power - old_voting_power;
+
+        // update position
+        locking_position.locking_period = new_locking_period;
+        locking_position.voting_power = new_voting_power;
+
+        // save
+        voter.locking_positions.replace(index, &locking_position);
+        self.voters.insert(&voter_id, &voter);
+    }
+
     // ***********
     // * Re-Lock *
     // ***********
@@ -201,7 +246,7 @@ impl MetaVoteContract {
             + locking_position.locking_period_millis();
 
         if now < unlocking_date {
-            // Position is **unlocking**.
+            // Position is still in the **unlocking** period, (unlocking_date is in the future)
             let remaining = unlocking_date - now;
             assert!(
                 remaining < days_to_millis(locking_period),
@@ -604,7 +649,7 @@ impl MetaVoteContract {
     pub fn get_claimable_meta(&self, voter_id: &VoterId) -> U128 {
         U128::from(self.claimable_meta.get(&voter_id).unwrap_or_default())
     }
-    
+
     // get all claims
     pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128)> {
         let mut results = Vec::<(AccountId, U128)>::new();
@@ -744,7 +789,6 @@ impl MetaVoteContract {
     pub fn get_accumulated_distributed_for_claims(&self) -> U128 {
         self.accumulated_distributed_for_claims.into()
     }
-
 }
 
 #[cfg(not(target_arch = "wasm32"))]

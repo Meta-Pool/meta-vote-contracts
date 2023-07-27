@@ -3,7 +3,7 @@ use crate::utils::proportional;
 use near_sdk::json_types::U128;
 
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, Debug)]
 pub struct LockingPosition {
     pub amount: Meta,
     pub locking_period: Days,

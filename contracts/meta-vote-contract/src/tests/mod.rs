@@ -1,8 +1,8 @@
 use super::*;
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 use near_sdk::json_types::U128;
+use near_sdk::serde_json;
 use near_sdk::testing_env;
-use near_sdk::{serde_json, ONE_NEAR};
 
 mod utils;
 use utils::*;
@@ -326,11 +326,11 @@ fn test_unlock_partial_position() {
     );
 }
 
-fn generate_relock_position_context() -> MetaVoteContract {
-    const LOCKING_PERIOD: u64 = 100;
+fn generate_lock_position_context(
+    locking_days: u16,
+    amount: Balance,
+) -> (MetaVoteContract, AccountId) {
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
-    let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
-    let timestamp_2 = to_ts(GENESIS_TIME_IN_DAYS + 5 + LOCKING_PERIOD);
 
     let context = get_context(
         &meta_token_account(),
@@ -342,9 +342,18 @@ fn generate_relock_position_context() -> MetaVoteContract {
     let mut contract = new_metavote_contract();
 
     let sender_id: AccountId = voter_account();
-    let amount = U128::from(10 * E24);
-    let msg: String = LOCKING_PERIOD.to_string();
-    contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+    let amount = U128::from(amount);
+    let msg: String = locking_days.to_string();
+    contract.ft_on_transfer(sender_id.clone(), amount, msg);
+    (contract, sender_id)
+}
+
+fn generate_relock_position_context() -> (MetaVoteContract,AccountId) {
+    const LOCKING_PERIOD: u16 = 100;
+    const AMOUNT: Balance = 10 * E24;
+    let (mut contract, sender_id) = generate_lock_position_context(LOCKING_PERIOD, AMOUNT);
+    let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
+    let timestamp_2 = to_ts(GENESIS_TIME_IN_DAYS + 5 + LOCKING_PERIOD as u64);
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_1);
@@ -374,19 +383,18 @@ fn generate_relock_position_context() -> MetaVoteContract {
         "Incorrect locked balance!"
     );
     assert_eq!(
-        amount,
-        contract.get_unlocking_balance(sender_id.clone()),
+        AMOUNT,
+        contract.get_unlocking_balance(sender_id.clone()).0,
         "Incorrect unlocking balance!"
     );
-    contract
+    (contract, sender_id)
 }
 
 #[test]
 #[should_panic(expected = "The new locking period should be greater than 88 days.")]
 fn test_relock_position_1() {
-    let mut contract = generate_relock_position_context();
+    let (mut contract, sender_id) = generate_relock_position_context();
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 12);
-    let sender_id: AccountId = voter_account();
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
@@ -394,11 +402,85 @@ fn test_relock_position_1() {
     contract.relock_position(0, 30, U128::from(0));
 }
 
+fn prepare_locking_position_extend_days(
+    initial_locking_days: u16,
+    amount: u128,
+) -> (MetaVoteContract, AccountId) {
+    let (contract, sender_id) = generate_lock_position_context(initial_locking_days, amount);
+    let five_days_after = to_ts(GENESIS_TIME_IN_DAYS + 5);
+
+    // New context: the voter is doing the call now!
+    let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, five_days_after);
+    testing_env!(context.clone());
+    (contract, sender_id)
+}
+
+fn do_locking_position_extend_days(
+    contract: &mut MetaVoteContract,
+    sender_id: &AccountId,
+    new_locking_days: u16,
+    amount: Balance
+) {
+    let voter = contract.internal_get_voter(&sender_id);
+    const INDEX: u64 = 0;
+    let locking_position = voter.locking_positions.get(INDEX).unwrap();
+    println!("{:?}", locking_position);
+    let now = get_current_epoch_millis();
+    let unlocking_date = now + locking_position.locking_period_millis();
+    let remaining = unlocking_date - now;
+    println!("{} {} {}", now, unlocking_date, millis_to_days(remaining),);
+    let old_voting_power = locking_position.voting_power;
+    let old_total_voting_power = contract.total_voting_power;
+
+    contract.locking_position_extend_days(INDEX, new_locking_days);
+
+    // check
+    let voter_new = contract.internal_get_voter(&sender_id);
+    let locking_position = voter.locking_positions.get(INDEX).unwrap();
+    println!("{:?}", locking_position);
+    assert_eq!(locking_position.locking_period, new_locking_days);
+    assert!(locking_position.is_locked());
+    assert_eq!(locking_position.amount, amount);
+    let expected_new_voting_power = contract.calculate_voting_power(amount, new_locking_days);
+    assert_eq!(locking_position.voting_power, expected_new_voting_power);
+    assert_eq!(
+        contract.total_voting_power,
+        old_total_voting_power - old_voting_power + expected_new_voting_power
+    );
+    assert_eq!(voter_new.balance, voter.balance);
+    assert_eq!(
+        voter_new.voting_power,
+        voter.voting_power - old_voting_power + expected_new_voting_power
+    );
+}
+
+#[test]
+fn test_locking_position_extend_days_1() {
+    let amount = 10*E24;
+    let (mut contract, sender_id) = prepare_locking_position_extend_days(30, amount);
+    do_locking_position_extend_days(&mut contract, &sender_id, 165, amount)
+}
+
+#[test]
+#[should_panic(expected = "new auto-lock period should be greater than previous one")]
+fn test_locking_position_extend_days_fail() {
+    let amount = 10*E24;
+    let (mut contract, sender_id) = prepare_locking_position_extend_days(30, amount);
+    do_locking_position_extend_days(&mut contract, &sender_id,  29,amount)
+}
+
+#[test]
+#[should_panic(expected = "position should be locked in order to extend time")]
+fn test_locking_position_extend_days_fail_2() {
+    let amount = 10*E24;
+    let (mut contract , sender_id) = generate_relock_position_context();
+    do_locking_position_extend_days(&mut contract, &sender_id,  60, amount)
+}
+
 #[test]
 fn test_relock_position_2() {
-    let mut contract = generate_relock_position_context();
+    let (mut contract, sender_id) = generate_relock_position_context();
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 12);
-    let sender_id: AccountId = voter_account();
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
@@ -442,9 +524,8 @@ fn test_relock_position_2() {
 
 #[test]
 fn test_relock_position_3() {
-    let mut contract = generate_relock_position_context();
+    let (mut contract, sender_id) = generate_relock_position_context();
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 177);
-    let sender_id: AccountId = voter_account();
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
@@ -489,9 +570,8 @@ fn test_relock_position_3() {
 #[test]
 #[should_panic(expected = "The new locking period should be greater than 77 days.")]
 fn test_relock_partial_position_1() {
-    let mut contract = generate_relock_position_context();
+    let (mut contract, sender_id) = generate_relock_position_context();
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 23);
-    let sender_id: AccountId = voter_account();
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
@@ -514,9 +594,8 @@ fn test_relock_partial_position_1() {
 
 #[test]
 fn test_relock_partial_position_2() {
-    let mut contract = generate_relock_position_context();
+    let (mut contract, sender_id) = generate_relock_position_context();
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 23);
-    let sender_id: AccountId = voter_account();
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
@@ -578,9 +657,8 @@ fn test_relock_partial_position_2() {
 
 #[test]
 fn test_relock_partial_position_3() {
-    let mut contract = generate_relock_position_context();
+    let (mut contract, sender_id) = generate_relock_position_context();
     let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 177);
-    let sender_id: AccountId = voter_account();
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
@@ -667,23 +745,11 @@ fn test_relock_partial_position_3() {
 
 #[test]
 fn test_clear_locking_position() {
-    const LOCKING_PERIOD: u64 = 100;
-    let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
-    let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
-    let timestamp_2 = to_ts(GENESIS_TIME_IN_DAYS + 5 + LOCKING_PERIOD);
-    testing_env!(get_context(
-        &meta_token_account(),
-        ntoy(TEST_INITIAL_BALANCE),
-        0,
-        timestamp_0,
-    ));
-    let mut contract = new_metavote_contract();
-
-    let sender_id: AccountId = voter_account();
-    let amount = U128::from(2 * E24);
-    let msg: String = "30".to_owned();
-
-    contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+    const LOCKING_PERIOD: u16 = 30;
+    const AMOUNT: Balance = 2 * E24;
+    let (mut contract, sender_id) = generate_lock_position_context(LOCKING_PERIOD, AMOUNT);
+    let unlock_started_timestamp = to_ts(GENESIS_TIME_IN_DAYS + 5);
+    let clear_positions_timestamp = to_ts(GENESIS_TIME_IN_DAYS + 5 + 60);
 
     let new_amount = U128::from(5 * E24);
     let new_msg: String = "32".to_owned();
@@ -697,14 +763,24 @@ fn test_clear_locking_position() {
     );
 
     // New context: the voter is doing the call now!
-    let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_1);
+    let context = get_context(
+        &sender_id,
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        unlock_started_timestamp,
+    );
     testing_env!(context.clone());
 
     contract.unlock_position(0);
     contract.unlock_position(1);
 
     // New context: the voter is doing the call now!
-    let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_2);
+    let context = get_context(
+        &sender_id,
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        clear_positions_timestamp,
+    );
     testing_env!(context.clone());
 
     let position_index_list: Vec<PositionIndex> = vec![0, 1];
@@ -717,12 +793,12 @@ fn test_clear_locking_position() {
         "Locking position was not deleted!"
     );
     assert_eq!(
-        Meta::from(amount) + Meta::from(new_amount),
+        Meta::from(AMOUNT) + Meta::from(new_amount),
         voter.balance,
         "Incorrect balance!"
     );
     assert_eq!(
-        Meta::from(amount) + Meta::from(new_amount),
+        Meta::from(AMOUNT) + Meta::from(new_amount),
         Meta::from(contract.get_balance(sender_id.clone())),
         "Incorrect balance!"
     );
@@ -740,22 +816,11 @@ fn test_clear_locking_position() {
     expected = "Not enough free voting power to unlock! You have 0, required 20370370370370370370370370."
 )]
 fn test_unlock_position_without_voting_power() {
-    const LOCKING_PERIOD: u64 = 100;
-    let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
-    let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
-    let context = get_context(
-        &meta_token_account(),
-        ntoy(TEST_INITIAL_BALANCE),
-        0,
-        timestamp_0,
-    );
-    testing_env!(context);
-    let mut contract = new_metavote_contract();
+    const LOCKING_PERIOD: u16 = 100;
+    const AMOUNT: Balance = 10 * E24;
+    let (mut contract, sender_id) = generate_lock_position_context(LOCKING_PERIOD, AMOUNT);
 
-    let sender_id: AccountId = voter_account();
-    let amount = U128::from(10 * E24);
-    let msg: String = LOCKING_PERIOD.to_string();
-    contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+    let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_1);
@@ -767,7 +832,7 @@ fn test_unlock_position_without_voting_power() {
         .index
         .unwrap();
 
-    let vote = contract.calculate_voting_power(Meta::from(amount), msg.parse::<Days>().unwrap());
+    let vote = contract.calculate_voting_power(Meta::from(AMOUNT), LOCKING_PERIOD);
     contract.vote(U128::from(vote), votable_account(), "0".to_owned());
     let voter = contract.internal_get_voter(&sender_id);
     assert_eq!(voter.voting_power, 0, "Incorrect Voting Power calculation.");
@@ -781,28 +846,16 @@ fn test_unlock_position_without_voting_power() {
 
 #[test]
 fn test_rebalance_increase_and_decrease() {
-    const LOCKING_PERIOD: u64 = 100;
-    let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
+    const LOCKING_PERIOD: u16 = 100;
+    const AMOUNT: Balance = 10 * E24;
+    let (mut contract, sender_id) = generate_lock_position_context(LOCKING_PERIOD, AMOUNT);
     let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
-    let context = get_context(
-        &meta_token_account(),
-        ntoy(TEST_INITIAL_BALANCE),
-        0,
-        timestamp_0,
-    );
-    testing_env!(context);
-    let mut contract = new_metavote_contract();
-
-    let sender_id: AccountId = voter_account();
-    let amount = U128::from(10 * E24);
-    let msg: String = LOCKING_PERIOD.to_string();
-    contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
 
     // New context: the voter is doing the call now!
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_1);
     testing_env!(context.clone());
 
-    let vote = contract.calculate_voting_power(Meta::from(amount), msg.parse::<Days>().unwrap());
+    let vote = contract.calculate_voting_power(Meta::from(AMOUNT), LOCKING_PERIOD);
     let contract_address = votable_account();
     let votable_object_id = "0".to_owned();
 
@@ -1024,19 +1077,24 @@ fn internal_distribute_100_for_claims(contract: &mut MetaVoteContract, users: &V
     let initial_unclaimed = contract.total_unclaimed_meta;
     const AMOUNT: u128 = 100 * E24;
     let mut msg = String::from("for-claims:");
-    msg.push_str(&serde_json::to_string(&vec![
-        (users[0].account_id().to_string(), 10),
-        (users[1].account_id().to_string(), 20),
-        (users[2].account_id().to_string(), 40),
-        (users[3].account_id().to_string(), 30),
-    ]).unwrap());
+    msg.push_str(
+        &serde_json::to_string(&vec![
+            (users[0].account_id().to_string(), 10),
+            (users[1].account_id().to_string(), 20),
+            (users[2].account_id().to_string(), 40),
+            (users[3].account_id().to_string(), 30),
+        ])
+        .unwrap(),
+    );
     contract.ft_on_transfer(sender_id.clone(), AMOUNT.into(), msg);
     assert_eq!(
-        contract.accumulated_distributed_for_claims, initial_accumulated_distributed + AMOUNT,
+        contract.accumulated_distributed_for_claims,
+        initial_accumulated_distributed + AMOUNT,
         "accumulated_distributed_for_claims not correct"
     );
     assert_eq!(
-        contract.total_unclaimed_meta, initial_unclaimed + AMOUNT,
+        contract.total_unclaimed_meta,
+        initial_unclaimed + AMOUNT,
         "contract.total_unclaimed_meta not correct"
     );
 }
@@ -1048,19 +1106,24 @@ fn test_deposit_for_claims() {
 }
 
 #[test]
-#[should_panic(expected = "total to distribute 101000000000000000000000000 != total_amount sent 100000000000000000000000000")]
+#[should_panic(
+    expected = "total to distribute 101000000000000000000000000 != total_amount sent 100000000000000000000000000"
+)]
 fn distribute_too_much() {
     let (mut contract, users) = internal_prepare_multi_voter_contract();
     set_context_caller(&owner_account());
     let amount = 100 * E24;
     let mut msg = String::from("for-claims:");
-    msg.push_str(&serde_json::to_string(&vec![
-        (users[0].account_id().to_string(), 10),
-        (users[1].account_id().to_string(), 20),
-        (users[2].account_id().to_string(), 40),
-        (users[3].account_id().to_string(), 31),
-    ]).unwrap());
-    contract.ft_on_transfer( operator_account(), amount.into(), msg);
+    msg.push_str(
+        &serde_json::to_string(&vec![
+            (users[0].account_id().to_string(), 10),
+            (users[1].account_id().to_string(), 20),
+            (users[2].account_id().to_string(), 40),
+            (users[3].account_id().to_string(), 31),
+        ])
+        .unwrap(),
+    );
+    contract.ft_on_transfer(operator_account(), amount.into(), msg);
 }
 
 fn prepare_contract_with_claims() -> (MetaVoteContract, Vec<User>) {
@@ -1102,7 +1165,10 @@ fn test_claim() {
             "total_unclaimed_meta"
         );
         let claim_balance_post = contract.get_claimable_meta(&caller).0;
-        assert_eq!(claim_balance_post, claim_balance_pre.saturating_sub(claim_amount));
+        assert_eq!(
+            claim_balance_post,
+            claim_balance_pre.saturating_sub(claim_amount)
+        );
         let user_record_post = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_post);
         assert_eq!(user_record_post.locking_positions.len(), 2);
