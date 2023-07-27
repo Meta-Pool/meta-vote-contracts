@@ -37,11 +37,14 @@ A MPIP is a document that consist of
   
   - Create proposal (should reach proposal threshold)
   - Cancel proposal (only for active proposals)
+  - Get all proposal created by the author
   
 - **voter** is any address that has Voting Power
 
   - Vote on proposals
   - Delegate votes to another address (not implemented)
+  - Get all votes (proposals votes which the author has voted)
+  - Get vote on proposal
 
 ## MPIP Process
 

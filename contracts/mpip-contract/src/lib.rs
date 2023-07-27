@@ -1,22 +1,17 @@
-use std::thread::available_parallelism;
-
 use crate::constants::*;
 use crate::interface::*;
-use interface::ext_metavote::ext;
-use mpip::Mpip;
-use mpip::MpipJSON;
-use mpip::MpipState;
+use mpip::{Mpip, MpipJSON, MpipState};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::json_types::U128;
-use near_sdk::{env, near_bindgen, require, AccountId, Balance, PanicOnDefault};
+use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
 use types::*;
 use utils::{days_to_millis, get_current_epoch_millis};
-use vote::{Vote, VoteType};
+use vote::{Vote, VoteType, VoteJson};
 use vote_counting::{ProposalVote, ProposalVoteJson};
+use voter::{Voter, VoterJson};
 
 mod constants;
-mod deposit;
 mod interface;
 mod internal;
 mod mpip;
@@ -24,6 +19,7 @@ mod types;
 mod utils;
 mod vote;
 mod vote_counting;
+mod voter;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -32,8 +28,10 @@ pub struct MpipContract {
     pub operator_id: AccountId,
     pub meta_token_contract_address: ContractAddress,
     pub meta_vote_contract_address: ContractAddress,
-    pub mpips: UnorderedMap<MpipId, Mpip>,
-
+    pub proposals: UnorderedMap<MpipId, Mpip>,
+    pub votes: UnorderedMap<MpipId, ProposalVote>,
+    pub voters: UnorderedMap<AccountId, Voter>,
+    pub proposers: UnorderedMap<AccountId, Vec<MpipId>>,
     /// Duration of the voting period.
     pub voting_period: Days,
 
@@ -42,14 +40,14 @@ pub struct MpipContract {
     // This can be increased to leave time for users to buy voting power, or delegate it, before the voting of a proposal starts.
     pub voting_delay_millis: EpochMillis,
 
-    /// Parameters to allow an Account to create a new MPIP. (proposal tresholds)
+    /// Parameters to allow an Account to create a new MPIP. (proposal threshold)
     pub min_meta_amount: Balance,
     pub min_st_near_amount: Balance,
     pub min_voting_power_amount: VotingPower,
 
     /// Cost of committing a new MPIP. Meta is burned. Near is for storage.
     pub mpip_cost_in_meta: Balance,
-    pub mpip_storage_near_cost_per_kilobytes: Balance,
+    pub mpip_storage_near: Balance,
 
     /// The creation of new MPIPs could be stopped.
     pub open_for_new_mpips: bool,
@@ -58,8 +56,6 @@ pub struct MpipContract {
     /// If a quorum is set to 50%, this means that 50% of all circulating $META need to vote yes for the proposal to pass.
     // Percent is denominated in basis points 100% equals 10_000 basis points.
     pub quorum_floor: BasisPoints,
-
-    pub mpip_votes: UnorderedMap<MpipId, ProposalVote>,
 }
 
 #[near_bindgen]
@@ -72,26 +68,30 @@ impl MpipContract {
         meta_vote_contract_address: ContractAddress,
         voting_period: Days,
         min_voting_power_amount: U128,
-        mpip_storage_near_cost_per_kilobytes: U128,
+        mpip_storage_near: U128,
         quorum_floor: BasisPoints,
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
+        require!(quorum_floor <= ONE_HUNDRED, "Incorrect quorum basis points.");
+
         Self {
             admin_id,
             operator_id,
             meta_token_contract_address,
             meta_vote_contract_address,
-            mpips: UnorderedMap::new(StorageKey::Mpips),
+            proposals: UnorderedMap::new(StorageKey::Mpips),
             voting_period,
             voting_delay_millis: 0,
             min_meta_amount: 0,
             min_st_near_amount: 0,
             min_voting_power_amount: min_voting_power_amount.0,
             mpip_cost_in_meta: 0,
-            mpip_storage_near_cost_per_kilobytes: mpip_storage_near_cost_per_kilobytes.0,
+            mpip_storage_near: mpip_storage_near.0,
             open_for_new_mpips: true,
             quorum_floor,
-            mpip_votes: UnorderedMap::new(StorageKey::MpipVotes),
+            votes: UnorderedMap::new(StorageKey::MpipVotes),
+            voters: UnorderedMap::new(StorageKey::Voters),
+            proposers: UnorderedMap::new(StorageKey::Proposers),
         }
     }
 
@@ -127,60 +127,73 @@ impl MpipContract {
         self.voting_period = new_value;
     }
 
+    /// Update the voting delay duration in milliseconds.
+    pub fn update_voting_delay(&mut self, new_value: EpochMillis) {
+        self.assert_only_operator();
+        self.voting_delay_millis = new_value;
+    }
+
     /// Update minimum Meta amount to submit a MPIP.
     pub fn update_min_meta_amount(&mut self, new_value: U128) {
         self.assert_only_operator();
         self.min_meta_amount = new_value.0;
     }
 
-    /// Update minimum stNEAR amount to submit a MPIP.
-    pub fn update_min_st_near_amount(&mut self, new_value: U128) {
-        self.assert_only_operator();
-        self.min_st_near_amount = new_value.0;
-    }
-
-    /// Update minimum voting power to submit a MPIP.
+    /// Update minimum voting power to submit a MPIP (proposal threshold).
     pub fn update_min_voting_power_amount(&mut self, new_value: U128) {
         self.assert_only_operator();
         self.min_voting_power_amount = new_value.0;
     }
 
-    /// Update the cost in Meta to submit a MPIP.
-    pub fn update_mpip_cost_in_meta(&mut self, new_value: U128) {
+    /// Update the storage cost in Near to submit a MPIP.
+    pub fn update_mpip_storage_near(&mut self, new_value: U128) {
         self.assert_only_operator();
-        self.mpip_cost_in_meta = new_value.0;
-    }
-
-    /// Update the storage cost per kilobytes in Near to submit a MPIP.
-    pub fn update_mpip_storage_near_cost_per_kilobytes(&mut self, new_value: U128) {
-        self.assert_only_operator();
-        self.mpip_storage_near_cost_per_kilobytes = new_value.0;
+        self.mpip_storage_near = new_value.0;
     }
 
     /// Update quorum floor: percent of all voting power need to vote yes for the proposal to pass.
-    pub fn update_quorum_floor(&mut self, new_value: U128) {
+    pub fn update_quorum_floor(&mut self, new_value: u16) {
         self.assert_only_operator();
-        self.quorum_floor = new_value.0 as u32;
+        require!(new_value <= ONE_HUNDRED, "Incorrect quorum basis points.");
+
+        self.quorum_floor = new_value;
     }
 
+    // ************
+    // *  *
+    // ************
+
     pub fn start_voting_period(&mut self, mpip_id: MpipId) {
-        self.assert_only_operator();
-        self.assert_proposal_is_draft(mpip_id);
-        let mut proposal = self.internal_get_proposal(mpip_id);
-        // dump comments into the proposal
-        // proposal.comments = comments;
+        self.assert_only_operator_or_creator(mpip_id);
+        self.assert_proposal_is_active_or_draft(mpip_id);
+        ext_metavote::ext(self.meta_vote_contract_address.clone())
+            .with_static_gas(GAS_FOR_GET_VOTING_POWER)
+            .with_attached_deposit(1)
+            .get_total_voting_power()
+            .then(
+                Self::ext(env::current_account_id())
+                    .with_static_gas(GAS_FOR_RESOLVE_VOTE)
+                    .start_voting_period_callback(mpip_id),
+            );
+    }
+
+    #[private]
+    pub fn start_voting_period_callback(&mut self, mpip_id: MpipId) {
+        let total_voting_power = self.internal_get_total_voting_power_from_promise();
+        let mut proposal = self.internal_get_proposal(&mpip_id);
         let now = get_current_epoch_millis();
         proposal.vote_start_timestamp = Some(now);
         proposal.vote_end_timestamp = Some(now + days_to_millis(self.voting_period));
         proposal.draft = false;
-        self.mpips.insert(&mpip_id, &proposal);
+        proposal.v_power_quorum_to_reach = Some(self.internal_get_quorum(total_voting_power));
+        self.proposals.insert(&mpip_id, &proposal);
     }
 
     // *********
     // * Proposal creators functions *
     // *********
 
-    /// Creates a new proposal
+    #[payable]
     pub fn create_proposal(
         &mut self,
         title: String,
@@ -189,39 +202,71 @@ impl MpipContract {
         data: String,
         extra: String,
     ) {
+        self.assert_open_for_new_mpips();
+        self.assert_proposal_storage_is_covered();
         ext_metavote::ext(self.meta_vote_contract_address.clone())
             .with_static_gas(GAS_FOR_GET_VOTING_POWER)
             .with_attached_deposit(1)
-            .get_available_voting_power(env::predecessor_account_id())
+            .get_all_locking_positions(env::predecessor_account_id())
             .then(
                 Self::ext(env::current_account_id())
                     .with_static_gas(GAS_FOR_RESOLVE_VOTE)
-                    .private_create_proposal(title, short_description, body, data, extra),
+                    .create_proposal_callback(
+                        title,
+                        short_description,
+                        body,
+                        data,
+                        extra,
+                    ),
             );
     }
 
     #[private]
-    pub fn private_create_proposal(
+    pub fn create_proposal_callback(
         &mut self,
+        title: String,
+        short_description: String,
+        body: String,
+        data: String,
+        extra: String
+    ) -> MpipId {
+        let total_v_power = self.internal_get_user_total_voting_power_from_promise();
+        self.assert_proposal_threshold(total_v_power);
+        let id = self.proposals.len() as MpipId;
+        self.internal_create_proposal(id, title, short_description, body, data, extra);
+        id
+    }
+
+    pub fn cancel_proposal(&mut self, mpip_id: MpipId) {
+        self.assert_only_operator_or_creator(mpip_id);
+        self.assert_proposal_is_active_or_draft(mpip_id);
+        let mut proposal = self.internal_get_proposal(&mpip_id);
+        proposal.canceled = true;
+        self.proposals.insert(&mpip_id, &proposal);
+    }
+
+    pub fn update_proposal(
+        &mut self,
+        mpip_id: MpipId,
         title: String,
         short_description: String,
         body: String,
         data: String,
         extra: String,
     ) {
-        let available_v_power = self.get_available_voting_power_from_promise();
-        self.assert_proposal_treshold(available_v_power);
-        self.assert_open_for_new_mpips();
-        let id = self.mpips.len() as MpipId;
-        self.internal_create_proposal(id, title, short_description, body, data, extra);
+        self.assert_only_creator(mpip_id);
+        self.assert_proposal_is_active_or_draft(mpip_id);
+        let mut proposal = self.internal_get_proposal(&mpip_id);
+        proposal.title = title;
+        proposal.short_description = short_description;
+        proposal.body = body;
+        proposal.data = data;
+        proposal.extra = extra;
+        self.proposals.insert(&mpip_id, &proposal);
     }
 
-    pub fn cancel_proposal(&mut self, mpip_id: MpipId) {
-        self.assert_only_operator_or_creator(mpip_id);
-        self.assert_proposal_is_active_or_draft(mpip_id);
-        let mut proposal = self.internal_get_proposal(mpip_id);
-        proposal.canceled = true;
-        self.mpips.insert(&mpip_id, &proposal);
+    pub fn get_my_proposals(&self, proposer_id: AccountId) -> Vec<MpipId> {
+        self.internal_get_proposer(proposer_id)
     }
 
     // *********
@@ -229,9 +274,13 @@ impl MpipContract {
     // *********
 
     /// Check proposal threshold:
-    /// if acccount has the minimum Voting Power to participate in Governance.
-    pub fn check_proposal_treshold(&self, account_id: AccountId, voting_power: U128) -> bool {
-        self.internal_check_proposal_treshold(voting_power.0)
+    /// if account has the minimum Voting Power to participate in Governance.
+    pub fn check_proposal_threshold(&self, voting_power: U128) -> bool {
+        self.internal_check_proposal_threshold(voting_power.0)
+    }
+
+    pub fn get_mpip_storage_near(&self) -> U128 {
+        U128::from(self.mpip_storage_near)
     }
 
     pub fn get_proposal_votes(&self, mpip_id: MpipId) -> ProposalVoteJson {
@@ -239,10 +288,10 @@ impl MpipContract {
         proposal_vote.to_json()
     }
 
-    pub fn get_quorum_reached(&self, mpip_id: MpipId, total_voting_power: U128) -> bool {
+    pub fn get_quorum_reached(&self, mpip_id: MpipId) -> bool {
         self.assert_only_operator();
-        // self.assert_proposal_is_on_voting(mpip_id);
-        self.internal_is_quorum_reached(mpip_id, total_voting_power.0)
+
+        self.internal_is_quorum_reached(mpip_id)
     }
 
     pub fn get_proposal_vote_succeeded(&self, mpip_id: MpipId) -> bool {
@@ -250,92 +299,147 @@ impl MpipContract {
         proposal_vote.for_votes > proposal_vote.against_votes
     }
 
-    pub fn get_proposal_state(&self, mpip_id: MpipId, total_voting_power: U128) -> MpipState {
-        self.internal_get_proposal_state(mpip_id, total_voting_power.0)
+    pub fn get_proposal_state(&self, mpip_id: MpipId) -> MpipState {
+        self.internal_get_proposal_state(mpip_id)
     }
 
     pub fn get_proposal(&self, mpip_id: MpipId) -> MpipJSON {
-        let proposal = self.internal_get_proposal(mpip_id);
+        let proposal = self.internal_get_proposal(&mpip_id);
         proposal.to_json()
     }
 
-    pub fn get_proposals(&self) -> Vec<MpipJSON> {
-        let mut result = Vec::new();
-        for (_id, proposal) in self.mpips.iter() {
+    pub fn get_proposals(&self, from_index: u32, limit: u32) -> Option<Vec<MpipJSON>> {
+        let mut result = Vec::<MpipJSON>::new();
+
+        let keys = self.proposals.keys_as_vector();
+        let mpips_len = keys.len() as u64;
+        let start = from_index as u64;
+        let limit = limit as u64;
+
+        if start >= mpips_len {
+            return None;
+        }
+        for index in start..std::cmp::min(start + limit, mpips_len) {
+            let mpip_id = keys.get(index).unwrap();
+            let proposal = self.proposals.get(&mpip_id).unwrap();
             result.push(proposal.to_json());
         }
-        result
+        Some(result)
+    }
+
+    pub fn get_last_proposal_id(&self) -> Option<MpipId> {
+        if self.proposals.len() > 0 {
+            Some(self.proposals.len() as MpipId - 1)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_quorum_floor(&self) -> BasisPoints {
+        self.quorum_floor
+    }
+
+    pub fn get_proposal_threshold(&self) -> U128 {
+        U128::from(self.min_voting_power_amount)
+    }
+
+    pub fn get_total_voters(&self) -> String {
+        self.voters.len().to_string()
+    }
+
+    pub fn get_proposal_is_active_or_draft(&self, mpip_id: MpipId) -> bool {
+        self.internal_proposal_is_active_or_draft(mpip_id)
     }
 
     // *********
     // * VOTER FUNCTIONS *
     // *********
 
-    pub fn vote_proposal(&mut self, mpip_id: MpipId, vote: VoteType, voting_power: U128) {
-        self.assert_vote_active(mpip_id);
+    pub fn vote_proposal(
+        &mut self,
+        mpip_id: MpipId,
+        vote: VoteType,
+        voting_power: U128,
+        memo: String,
+    ) {
+        self.assert_proposal_is_on_voting(&mpip_id);
         self.assert_has_not_voted(mpip_id, env::predecessor_account_id());
         ext_metavote::ext(self.meta_vote_contract_address.clone())
             .with_static_gas(GAS_FOR_GET_VOTING_POWER)
             .with_attached_deposit(1)
-            .get_available_voting_power(env::predecessor_account_id())
+            .get_all_locking_positions(env::predecessor_account_id())
             .then(
                 Self::ext(env::current_account_id())
                     .with_static_gas(GAS_FOR_RESOLVE_VOTE)
-                    .private_vote_proposal(
-                        mpip_id,
+                    .vote_proposal_callback(
+                        mpip_id.clone(),
                         voting_power.clone(),
                         env::predecessor_account_id(),
                         vote,
+                        memo,
                     ),
             );
     }
 
     #[private]
-    pub fn private_vote_proposal(
+    pub fn vote_proposal_callback(
         &mut self,
-        mpip_id: u32,
+        mpip_id: MpipId,
         voting_power: U128,
-        account_id: AccountId,
+        voter_id: AccountId,
         vote_type: VoteType,
+        memo: String,
     ) {
-        let available_v_power = self.get_available_voting_power_from_promise();
-        self.assert_has_not_voted(mpip_id, account_id.clone());
+        let total_v_power = self.internal_get_user_total_voting_power_from_promise();
+        let mut voter = self.internal_get_voter(&voter_id);
+        // assert!(
+        //     total_v_power >= voting_power.0,
+        //     "Not enough free voting power to vote! You have {}, required {}.",
+        //     total_v_power,
+        //     voting_power.0
+        // );
         assert!(
-            available_v_power >= voting_power.0,
-            "Not enough free voting power to vote! You have {}, required {}.",
-            available_v_power,
-            voting_power.0
+            total_v_power >= voting_power.0 + voter.used_voting_power,
+            "You are trying to vote with more voting power that you have available! You have {}, used {}.",
+            total_v_power,
+            voter.used_voting_power
         );
         let mut proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        // let vote = Vote::new(vote_type.clone(), voting_power);
-        let vote = Vote::new(vote_type.clone(), voting_power.0);
+        let vote_v_power = voting_power.0;
+        let vote = Vote::new(
+            mpip_id.clone(),
+            vote_type.clone(),
+            vote_v_power.clone(),
+            memo.clone(),
+        );
 
-        proposal_vote.has_voted.insert(&account_id, &vote);
-
+        proposal_vote
+            .has_voted
+            .insert(&voter_id.clone(), &vote.clone());
         match vote_type {
             VoteType::For => {
-                proposal_vote.for_votes += voting_power.0;
+                proposal_vote.for_votes += vote_v_power;
             }
             VoteType::Against => {
-                proposal_vote.against_votes += voting_power.0;
+                proposal_vote.against_votes += vote_v_power;
             }
             VoteType::Abstain => {
-                proposal_vote.abstain_votes += voting_power.0;
+                proposal_vote.abstain_votes += vote_v_power;
             }
-            _ => env::panic_str("Vote is not one of the valid options!"),
         }
-
-        self.mpip_votes.insert(&mpip_id, &proposal_vote);
+        self.votes.insert(&mpip_id.clone(), &proposal_vote);
+        voter.votes.insert(&mpip_id.clone(), &vote.clone());
+        voter.used_voting_power += vote_v_power;
+        self.voters.insert(&voter_id.clone(), &voter);
     }
 
     pub fn remove_vote_proposal(&mut self, mpip_id: MpipId) {
-        self.assert_vote_active(mpip_id);
-        self.assert_has_voted(mpip_id, env::predecessor_account_id());
+        let voter_id = env::predecessor_account_id();
+        self.assert_proposal_is_on_voting(&mpip_id);
+        self.assert_has_voted(mpip_id, voter_id.clone());
         let mut proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        let user_vote = proposal_vote
-            .has_voted
-            .get(&env::predecessor_account_id())
-            .unwrap();
+        let user_vote = proposal_vote.has_voted.get(&voter_id).unwrap();
+        let mut voter = self.internal_get_voter(&voter_id);
 
         match user_vote.vote_type {
             VoteType::For => {
@@ -347,38 +451,77 @@ impl MpipContract {
             VoteType::Abstain => {
                 proposal_vote.abstain_votes -= user_vote.voting_power;
             }
-            _ => env::panic_str("Vote is not one of the valid options!"),
         }
-        proposal_vote
-            .has_voted
-            .remove(&env::predecessor_account_id());
-        self.mpip_votes.insert(&mpip_id, &proposal_vote);
+        proposal_vote.has_voted.remove(&voter_id);
+        self.votes.insert(&mpip_id, &proposal_vote);
+        voter.votes.remove(&mpip_id);
+
+        voter.used_voting_power -= user_vote.voting_power;
+        if voter.votes.is_empty() {
+            self.voters.remove(&voter_id);
+        } else {
+            self.voters.insert(&voter_id, &voter);
+        }
     }
 
-    pub fn has_voted(&self, account_id: AccountId, mpip_id: MpipId) -> bool {
-        self.internal_has_voted(mpip_id, account_id)
-    }
-
-    pub fn get_my_vote(&self, mpip_id: MpipId) -> Option<Vote> {
+    pub fn withdraw_voting_power(&mut self, mpip_id: MpipId) {
+        let voter_id = env::predecessor_account_id();
+        self.assert_proposal_voting_finished(&mpip_id);
+        self.assert_has_voted(mpip_id, voter_id.clone());
         let proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        proposal_vote.has_voted.get(&env::predecessor_account_id())
+        let user_vote = proposal_vote.has_voted.get(&voter_id).unwrap();
+        let mut voter = self.internal_get_voter(&voter_id);
+        voter.used_voting_power -= user_vote.voting_power;
+        voter.votes.remove(&mpip_id);
+
+        voter.used_voting_power -= user_vote.voting_power;
+        if voter.votes.is_empty() {
+            self.voters.remove(&voter_id);
+        } else {
+            self.voters.insert(&voter_id, &voter);
+        }
+    }
+
+    pub fn has_voted(&self, voter_id: AccountId, mpip_id: MpipId) -> bool {
+        self.internal_has_voted(&mpip_id, &voter_id)
+    }
+
+    pub fn get_my_vote(&self, voter_id: VoterId, mpip_id: MpipId) -> Option<VoteJson> {
+        let has_voted = self.internal_has_voted(&mpip_id, &voter_id);
+        match has_voted {
+            true => Some(
+                self.internal_get_voter_vote(&mpip_id, &voter_id)
+                    .to_json(voter_id),
+            ),
+            false => None,
+        }
+    }
+
+    pub fn get_voter(&self, voter_id: VoterId) -> VoterJson {
+        let voter = self.internal_get_voter(&voter_id);
+        voter.to_json(voter_id)
+    }
+
+    pub fn get_voter_used_voting_power(&self, voter_id: VoterId) -> U128 {
+        let voter = self.internal_get_voter(&voter_id);
+        U128::from(voter.used_voting_power)
     }
 
     // *********
     // * BOT FUNCTIONS *
     // *********
 
-    pub fn process_voting_status(&mut self, mpip_id: MpipId, total_voting_power: U128) {
+    pub fn process_voting_status(&mut self, mpip_id: MpipId) {
         self.assert_only_operator();
-        if !self.internal_proposal_is_on_voting(mpip_id) {
+        if !self.internal_proposal_is_on_voting(&mpip_id) {
             return;
         }
-        let mut proposal = self.internal_get_proposal(mpip_id);
+        let mut proposal = self.internal_get_proposal(&mpip_id);
         if get_current_epoch_millis() >= proposal.vote_end_timestamp.unwrap() {
-            if self.internal_is_quorum_reached(mpip_id, total_voting_power.0) {
+            if self.internal_is_quorum_reached(mpip_id) {
                 // TODO EXECUTE
                 proposal.executed = true;
-                self.mpips.insert(&mpip_id, &proposal);
+                self.proposals.insert(&mpip_id, &proposal);
             }
         }
     }
