@@ -111,33 +111,13 @@ impl MpipContract {
             None => false,
         }
     }
-
-    pub(crate) fn internal_proposal_voting_finished(&self, mpip_id: &MpipId) -> bool {
-        let proposal = self.internal_get_proposal(&mpip_id);
-        match proposal.vote_end_timestamp {
-            Some(date) => get_current_epoch_millis() >= date,
-            None => false,
-        }
-    }
-
-    pub(crate) fn assert_proposal_voting_finished(&self, mpip_id: &MpipId) {
-        require!(
-            self.internal_proposal_voting_finished(mpip_id),
-            "Proposal voting has not ended"
-        )
-    }
-
+  
     pub(crate) fn assert_proposal_threshold(&self, voting_power: u128) {
         require!(
             self.internal_check_proposal_threshold(voting_power),
             "Proposal threshold does not reached"
         )
     }
-
-    // pub(crate) fn assert_proposal_is_draft(&self, mpip_id: MpipId) {
-    //     let proposal = self.internal_get_proposal(&mpip_id);
-    //     require!(proposal.draft, "Proposal is not on draft");
-    // }
 
     pub(crate) fn assert_proposal_is_active_or_draft(&self, mpip_id: MpipId) {
         require!(
