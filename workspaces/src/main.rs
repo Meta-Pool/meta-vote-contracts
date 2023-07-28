@@ -131,7 +131,34 @@ async fn main() -> anyhow::Result<()> {
     // Due to Workspaces nuances, this is the way to see if a receipt in the tx failed.
     assert!(res.is_success() && res.receipt_failures().len() == 1, "Not enough voting power");
 
-    // TODO: test that the number of proposals equals 0
+    let res = voter
+        .call(mpip_contract.id(), "get_proposals")
+        .args_json(serde_json::json!({
+            "from_index": 0,
+            "limit": 100
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    assert!(res.len() == 0);
+
+    let res = voter
+        .call(mpip_contract.id(), "get_user_proposals_ids")
+        .args_json(serde_json::json!({
+            "proposer_id": voter.id()
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    assert!(res.len() == 0);
 
     ///////////////////////////////////////
     // Stage 2: Creating Proposals
