@@ -10,8 +10,8 @@ use near_sdk::AccountId as NearAccountId;
 
 // use workspaces::network::Sandbox;
 use workspaces::{Account, AccountId, Contract, Worker, DevNetwork};
-use workspaces::result::ExecutionFinalResult;
-use workspaces::error::Error as WorkspaceError;
+// use workspaces::result::ExecutionFinalResult;
+// use workspaces::error::Error as WorkspaceError;
 
 // use meta_test_utils::now::Now;
 // use meta_test_utils::now;
@@ -130,18 +130,73 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     // Due to Workspaces nuances, this is the way to see if a receipt in the tx failed.
     assert!(res.is_success() && res.receipt_failures().len() == 1, "Not enough voting power");
-    // println!("NOT ENOUGH VOTING POWER: {:?}\n", res);
-    // println!("should be true: {:?}\n", res.is_failure());
-    // println!("should be false: {:?}\n", res.is_success());
-    // println!("receipt_failures: {:?}\n", res.receipt_failures());
-    // println!("receipt_failures: {:?}\n", res.receipt_failures().len());
 
-// echo "--------------- get_available_voting_power"
-// NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_available_voting_power '{"voter_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
+    // TODO: test that the number of proposals equals 0
 
-// echo "--------------- Creating a new proposal"
-// NEAR_ENV=testnet near call $MPIPS_CONTRACT_ADDRESS create_proposal '{"title": "title1", "short_description": "short_description1", "body": "body1", "data": "data1", "extra": "extra1"}' --accountId $VOTER_ID --depositYocto $TOTAL_PREPAID_GAS --gas $TOTAL_PREPAID_GAS
+    ///////////////////////////////////////
+    // Stage 2: Creating Proposals
+    ///////////////////////////////////////
 
+    let res = voter
+        .call(metatoken_contract.id(), "ft_transfer_call")
+        .args_json(serde_json::json!({
+            "receiver_id": metavote_contract.id(),
+            "amount": format!("{}", parse_near!("3 N")),
+            "msg": "2"
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(1)
+        .transact()
+        .await?;
+    println!("Transfer stNEAR: {:?}\n", res);
+
+    let res = owner
+        .call(metavote_contract.id(), "get_available_voting_power")
+        .args_json(serde_json::json!({
+            "voter_id": voter.id()
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(1)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    let num: u128 = format!("{}", parse_near!("3 N")).parse().unwrap();
+    let res: u128 = res.to_string().parse().unwrap();
+    assert!(res > num, "Voting power should be larger than the deposit");
+    println!("Transfer stNEAR __: {:?}\n", res);
+
+    let res = voter
+        .call(mpip_contract.id(), "create_proposal")
+        .args_json(serde_json::json!({
+            "title": "title1",
+            "short_description": "short_description1",
+            "body": "body1",
+            "data": "data1",
+            "extra": "extra1"
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    // Due to Workspaces nuances, this is the way to see if a receipt in the tx failed.
+    assert!(res.is_success() && res.receipt_failures().len() == 0, "Not enough voting power");
+
+    let res = voter
+        .call(mpip_contract.id(), "get_proposals")
+        .args_json(serde_json::json!({
+            "from_index": 0,
+            "limit": 100
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    assert!(res.len() == 1);
 
     Ok(())
 }
