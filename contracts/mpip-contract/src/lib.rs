@@ -360,7 +360,6 @@ impl MpipContract {
         &mut self,
         mpip_id: MpipId,
         vote: VoteType,
-        voting_power: U128,
         memo: String,
     ) {
         self.assert_proposal_is_on_voting(&mpip_id);
@@ -374,7 +373,6 @@ impl MpipContract {
                     .with_static_gas(GAS_FOR_RESOLVE_VOTE)
                     .vote_proposal_callback(
                         mpip_id.clone(),
-                        voting_power.clone(),
                         env::predecessor_account_id(),
                         vote,
                         memo,
@@ -386,7 +384,6 @@ impl MpipContract {
     pub fn vote_proposal_callback(
         &mut self,
         mpip_id: MpipId,
-        voting_power: U128,
         voter_id: AccountId,
         vote_type: VoteType,
         memo: String,
@@ -399,7 +396,7 @@ impl MpipContract {
             total_v_power
         );
         let mut proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        let vote_v_power = voting_power.0;
+        let vote_v_power = total_v_power;
         let vote = Vote::new(
             mpip_id.clone(),
             vote_type.clone(),
