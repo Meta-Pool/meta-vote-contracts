@@ -217,13 +217,48 @@ async fn main() -> anyhow::Result<()> {
             "limit": 100
         }))
         .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(parse_gas!("300 Tgas") as u128)
+        // .deposit(parse_gas!("300 Tgas") as u128)
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
     let res = str::from_utf8(res).unwrap();
     let res = json::parse(&res)?;
     assert!(res.len() == 1);
+
+    ///////////////////////////////////////
+    // Stage 3: Voting Proposals
+    ///////////////////////////////////////
+
+    let res = voter
+        .call(mpip_contract.id(), "get_proposal")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    println!("Proposal 1: {:?}\n", res);
+
+    let res = voter
+        .call(mpip_contract.id(), "start_voting_period")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    // let res = &res.raw_bytes().unwrap().clone();
+    // let res = str::from_utf8(res).unwrap();
+    // let res = json::parse(&res)?;
+    println!("ACA las birras: {:?}\n", res);
+
+    // assert!(res.len() == 1);
+    // get_proposal(&self, mpip_id: MpipId)
 
     Ok(())
 }
