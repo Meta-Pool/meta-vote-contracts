@@ -29,6 +29,7 @@ async fn main() -> anyhow::Result<()> {
     // Creating Accounts.
     let owner = worker.dev_create_account().await?;
     let voter = worker.dev_create_account().await?;
+    let proposer = worker.dev_create_account().await?;
 
     ///////////////////////////////////////
     // Stage 1: Deploy relevant contracts
@@ -49,13 +50,15 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Owner: {}", owner.id());
     println!("Voter: {}", voter.id());
+    println!("Proposer: {}", proposer.id());
 
     let res = registering_accounts(
         &metatoken_contract,
         &metavote_contract,
         &mpip_contract,
         &owner,
-        &voter
+        &voter,
+        &proposer
     ).await?;
     println!("Registering Accounts.: {:?}\n", res);
 
@@ -87,6 +90,18 @@ async fn main() -> anyhow::Result<()> {
     assert_eq!(res.to_string(), format!("{}", parse_near!("15 N")));
 
     let res = owner
+        .call(metatoken_contract.id(), "ft_transfer")
+        .args_json(serde_json::json!({
+           "receiver_id": proposer.id(),
+            "amount": format!("{}", parse_near!("15 N"))
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(1)
+        .transact()
+        .await?;
+    println!("Transfer stNEAR: {:?}\n", res);
+
+    let res = owner
         .call(metavote_contract.id(), "get_available_voting_power")
         .args_json(serde_json::json!({
             "voter_id": voter.id()
@@ -100,7 +115,7 @@ async fn main() -> anyhow::Result<()> {
     let res = json::parse(&res)?;
     assert_eq!(res.to_string(), "0");
 
-    let res = voter
+    let res = proposer
         .call(mpip_contract.id(), "create_proposal")
         .args_json(serde_json::json!({
             "title": "title1",
@@ -115,7 +130,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     assert!(res.is_failure(), "Not enough deposit");
 
-    let res = voter
+    let res = proposer
         .call(mpip_contract.id(), "create_proposal")
         .args_json(serde_json::json!({
             "title": "title1",
@@ -131,7 +146,7 @@ async fn main() -> anyhow::Result<()> {
     // Due to Workspaces nuances, this is the way to see if a receipt in the tx failed.
     assert!(res.is_success() && res.receipt_failures().len() == 1, "Not enough voting power");
 
-    let res = voter
+    let res = proposer
         .call(mpip_contract.id(), "get_proposals")
         .args_json(serde_json::json!({
             "from_index": 0,
@@ -146,7 +161,7 @@ async fn main() -> anyhow::Result<()> {
     let res = json::parse(&res)?;
     assert!(res.len() == 0);
 
-    let res = voter
+    let res = proposer
         .call(mpip_contract.id(), "get_user_proposals_ids")
         .args_json(serde_json::json!({
             "proposer_id": voter.id()
@@ -194,7 +209,37 @@ async fn main() -> anyhow::Result<()> {
     assert!(res > num, "Voting power should be larger than the deposit");
     println!("Transfer stNEAR __: {:?}\n", res);
 
-    let res = voter
+    let res = proposer
+        .call(metatoken_contract.id(), "ft_transfer_call")
+        .args_json(serde_json::json!({
+            "receiver_id": metavote_contract.id(),
+            "amount": format!("{}", parse_near!("3 N")),
+            "msg": "2"
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(1)
+        .transact()
+        .await?;
+    println!("Transfer stNEAR: {:?}\n", res);
+
+    let res = owner
+        .call(metavote_contract.id(), "get_available_voting_power")
+        .args_json(serde_json::json!({
+            "voter_id": proposer.id()
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .deposit(1)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    let num: u128 = format!("{}", parse_near!("3 N")).parse().unwrap();
+    let res: u128 = res.to_string().parse().unwrap();
+    assert!(res > num, "Voting power should be larger than the deposit");
+    println!("Transfer stNEAR __: {:?}\n", res);
+
+    let res = proposer
         .call(mpip_contract.id(), "create_proposal")
         .args_json(serde_json::json!({
             "title": "title1",
@@ -210,7 +255,7 @@ async fn main() -> anyhow::Result<()> {
     // Due to Workspaces nuances, this is the way to see if a receipt in the tx failed.
     assert!(res.is_success() && res.receipt_failures().len() == 0, "Not enough voting power");
 
-    let res = voter
+    let res = proposer
         .call(mpip_contract.id(), "get_proposals")
         .args_json(serde_json::json!({
             "from_index": 0,
@@ -243,22 +288,16 @@ async fn main() -> anyhow::Result<()> {
     let res = json::parse(&res)?;
     println!("Proposal 1: {:?}\n", res);
 
-    let res = voter
+    let res = proposer
         .call(mpip_contract.id(), "start_voting_period")
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
         .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
         .transact()
         .await?;
-    // let res = &res.raw_bytes().unwrap().clone();
-    // let res = str::from_utf8(res).unwrap();
-    // let res = json::parse(&res)?;
-    println!("ACA las birras: {:?}\n", res);
+    println!("Starting Voting Period: {:?}\n", res);
 
-    // assert!(res.len() == 1);
-    // get_proposal(&self, mpip_id: MpipId)
 
     Ok(())
 }
@@ -344,7 +383,8 @@ async fn registering_accounts(
     metavote_contract: &Contract,
     mpip_contract: &Contract,
     owner: &Account,
-    voter: &Account
+    voter: &Account,
+    proposer: &Account
 ) -> anyhow::Result<()> {
     // Register Accounts
     let res = owner
@@ -376,6 +416,16 @@ async fn registering_accounts(
         .transact()
         .await?;
     println!("Register 3: {:?}\n", res);
+
+    let res = owner
+        .call(metatoken_contract.id(), "register_account")
+        .args_json(serde_json::json!({
+            "account_id": proposer.id(),
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        .transact()
+        .await?;
+    println!("Register 4: {:?}\n", res);
 
     Ok(())
 }
