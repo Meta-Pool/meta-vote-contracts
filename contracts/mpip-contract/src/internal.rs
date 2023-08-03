@@ -48,9 +48,9 @@ impl MpipContract {
     pub(crate) fn internal_has_voted(&self, mpip_id: &MpipId, voter_id: &VoterId) -> bool {
         let voter = self.voters.get(&voter_id);
         match voter {
-            Some(_voter) => {  !_voter.votes.get(&mpip_id).is_none()},
-            None => { false }
-        }       
+            Some(_voter) => !_voter.votes.get(&mpip_id).is_none(),
+            None => false,
+        }
     }
 
     pub(crate) fn assert_has_not_voted(&self, mpip_id: MpipId, account_id: VoterId) {
@@ -111,7 +111,7 @@ impl MpipContract {
             None => false,
         }
     }
-  
+
     pub(crate) fn assert_proposal_threshold(&self, voting_power: u128) {
         require!(
             self.internal_check_proposal_threshold(voting_power),
@@ -189,7 +189,9 @@ impl MpipContract {
                     let locking_position = locking_positions
                         .get(index)
                         .expect("Locking position not found!");
-                    result += locking_position.voting_power.0;
+                    if locking_position.is_locked {
+                        result += locking_position.voting_power.0;
+                    }
                 }
                 result
             }
