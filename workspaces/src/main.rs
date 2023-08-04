@@ -288,6 +288,20 @@ async fn main() -> anyhow::Result<()> {
     let res = json::parse(&res)?;
     println!("Proposal 1: {:?}\n", res);
 
+    let res = voter
+        .call(mpip_contract.id(), "get_proposal_state")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    assert_eq!(res, "Draft");
+
     let res = proposer
         .call(mpip_contract.id(), "start_voting_period")
         .args_json(serde_json::json!({
@@ -298,6 +312,159 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     println!("Starting Voting Period: {:?}\n", res);
 
+    // let res = voter
+    //     .call(mpip_contract.id(), "get_proposal")
+    //     .args_json(serde_json::json!({
+    //         "mpip_id": 0
+    //     }))
+    //     .gas(parse_gas!("200 Tgas") as u64)
+    //     // .deposit(parse_gas!("300 Tgas") as u128)
+    //     .transact()
+    //     .await?;
+    // let res = &res.raw_bytes().unwrap().clone();
+    // let res = str::from_utf8(res).unwrap();
+    // let res = json::parse(&res)?;
+    // println!("Proposal ACA: {:?}\n", res);
+
+    let res = voter
+        .call(mpip_contract.id(), "get_proposal_state")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    assert_eq!(res, "VotingProcess");
+
+    let res = voter
+        .call(mpip_contract.id(), "get_proposal_votes")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    assert_eq!(res["for_votes"], "0");
+    assert_eq!(res["against_votes"], "0");
+    assert_eq!(res["abstain_votes"], "0");
+
+    // Voting AGAINST
+
+    let res = voter
+        .call(mpip_contract.id(), "vote_proposal")
+        .args_json(serde_json::json!({
+            "mpip_id": 0,
+            "vote": "Against",
+            "memo": ""
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    // let res = &res.raw_bytes().unwrap().clone();
+    // let res = str::from_utf8(res).unwrap();
+    // let res = json::parse(&res)?;
+    println!("vote_proposal: {:?}\n", res);
+
+    let res = voter
+        .call(mpip_contract.id(), "get_proposal_votes")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+
+    let num: u128 = format!("{}", parse_near!("3 N")).parse().unwrap();
+    let aga: u128 = res["against_votes"].to_string().parse().unwrap();
+    assert!(aga > num, "Voting power should be larger than the deposit");
+    assert_eq!(res["for_votes"], "0");
+    assert_eq!(res["abstain_votes"], "0");
+
+    // Remove Vote
+
+    let res = voter
+        .call(mpip_contract.id(), "remove_vote_proposal")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    // let res = &res.raw_bytes().unwrap().clone();
+    // let res = str::from_utf8(res).unwrap();
+    // let res = json::parse(&res)?;
+
+    // Voting FOR
+
+    let res = voter
+        .call(mpip_contract.id(), "vote_proposal")
+        .args_json(serde_json::json!({
+            "mpip_id": 0,
+            "vote": "For",
+            "memo": ""
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    // let res = &res.raw_bytes().unwrap().clone();
+    // let res = str::from_utf8(res).unwrap();
+    // let res = json::parse(&res)?;
+    println!("vote_proposal: {:?}\n", res);
+
+    let res = voter
+        .call(mpip_contract.id(), "get_proposal_votes")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+
+    let num: u128 = format!("{}", parse_near!("3 N")).parse().unwrap();
+    let aga: u128 = res["for_votes"].to_string().parse().unwrap();
+    assert!(aga > num, "Voting power should be larger than the deposit");
+    assert_eq!(res["against_votes"], "0");
+    assert_eq!(res["abstain_votes"], "0");
+
+    println!("HERE");
+    let blocks_to_advance = 500000;
+    worker.fast_forward(blocks_to_advance).await?;
+    println!("tHERE");
+
+    let res = voter
+        .call(mpip_contract.id(), "get_proposal_state")
+        .args_json(serde_json::json!({
+            "mpip_id": 0
+        }))
+        .gas(parse_gas!("200 Tgas") as u64)
+        // .deposit(parse_gas!("300 Tgas") as u128)
+        .transact()
+        .await?;
+    let res = &res.raw_bytes().unwrap().clone();
+    let res = str::from_utf8(res).unwrap();
+    let res = json::parse(&res)?;
+    println!("FINAL: {:?}\n", res);
+    
+    // assert_eq!(res, "VotingProcess");
 
     Ok(())
 }
@@ -366,7 +533,7 @@ async fn create_mpip(
             "operator_id": owner.id(),
             "meta_token_contract_address": token_contract_address,
             "meta_vote_contract_address": metavote_contract_address,
-            "voting_period": 2,
+            "voting_period": 1,
             "min_voting_power_amount": format!("{}", parse_near!("3 N")),
             "mpip_storage_near": "300000000000000",
             "quorum_floor": 1000
