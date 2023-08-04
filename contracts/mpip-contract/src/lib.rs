@@ -4,9 +4,10 @@ use mpip::{Mpip, MpipJSON, MpipState};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::json_types::U128;
+use near_sdk::json_types::U64;
 use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
 use types::*;
-use utils::{days_to_millis, get_current_epoch_millis};
+use utils::get_current_epoch_millis;
 use vote::{Vote, VoteJson, VoteType};
 use vote_counting::{ProposalVote, ProposalVoteJson};
 use voter::{Voter, VoterJson};
@@ -33,12 +34,13 @@ pub struct MpipContract {
     pub voters: UnorderedMap<AccountId, Voter>,
     pub proposers: UnorderedMap<AccountId, Vec<MpipId>>,
     /// Duration of the voting period.
-    pub voting_period: Days,
+    pub voting_period: EpochMillis,
 
-    // Delay in milliseconds between the proposal is Active (reviewed and accepted by manager)
-    // an the vote starts.
-    // This can be increased to leave time for users to buy voting power, or delegate it, before the voting of a proposal starts.
-    pub voting_delay_millis: EpochMillis,
+    /// Not in use.
+    // // Delay in milliseconds between the proposal is Active (reviewed and accepted by manager)
+    // // an the vote starts.
+    // // This can be increased to leave time for users to buy voting power, or delegate it, before the voting of a proposal starts.
+    // pub voting_delay_millis: EpochMillis,
 
     /// Parameters to allow an Account to create a new MPIP. (proposal threshold)
     pub min_meta_amount: Balance,
@@ -66,7 +68,7 @@ impl MpipContract {
         operator_id: AccountId,
         meta_token_contract_address: ContractAddress,
         meta_vote_contract_address: ContractAddress,
-        voting_period: Days,
+        voting_period: U64,
         min_voting_power_amount: U128,
         mpip_storage_near: U128,
         quorum_floor: BasisPoints,
@@ -83,8 +85,8 @@ impl MpipContract {
             meta_token_contract_address,
             meta_vote_contract_address,
             proposals: UnorderedMap::new(StorageKey::Mpips),
-            voting_period,
-            voting_delay_millis: 0,
+            voting_period: voting_period.0,
+            // voting_delay_millis: 0,
             min_meta_amount: 0,
             min_st_near_amount: 0,
             min_voting_power_amount: min_voting_power_amount.0,
@@ -124,17 +126,18 @@ impl MpipContract {
     // * Operator *
     // ************
 
-    /// Update the voting period duration in days.
-    pub fn update_voting_period(&mut self, new_value: Days) {
+    /// Update the voting period duration in milliseconds.
+    pub fn update_voting_period(&mut self, new_value: U64) {
         self.assert_only_operator();
-        self.voting_period = new_value;
+        self.voting_period = new_value.0;
     }
 
-    /// Update the voting delay duration in milliseconds.
-    pub fn update_voting_delay(&mut self, new_value: EpochMillis) {
-        self.assert_only_operator();
-        self.voting_delay_millis = new_value;
-    }
+    /// Not in use.
+    // /// Update the voting delay duration in milliseconds.
+    // pub fn update_voting_delay(&mut self, new_value: EpochMillis) {
+    //     self.assert_only_operator();
+    //     self.voting_delay_millis = new_value;
+    // }
 
     /// Update minimum Meta amount to submit a MPIP.
     pub fn update_min_meta_amount(&mut self, new_value: U128) {
@@ -186,7 +189,7 @@ impl MpipContract {
         let mut proposal = self.internal_get_proposal(&mpip_id);
         let now = get_current_epoch_millis();
         proposal.vote_start_timestamp = Some(now);
-        proposal.vote_end_timestamp = Some(now + days_to_millis(self.voting_period));
+        proposal.vote_end_timestamp = Some(now + self.voting_period);
         proposal.draft = false;
         proposal.v_power_quorum_to_reach = Some(self.internal_get_quorum(total_voting_power));
         self.proposals.insert(&mpip_id, &proposal);

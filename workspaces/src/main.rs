@@ -446,7 +446,7 @@ async fn main() -> anyhow::Result<()> {
     assert_eq!(res["abstain_votes"], "0");
 
     println!("HERE");
-    let blocks_to_advance = 500000;
+    let blocks_to_advance = 3000;
     worker.fast_forward(blocks_to_advance).await?;
     println!("tHERE");
 
@@ -464,7 +464,7 @@ async fn main() -> anyhow::Result<()> {
     let res = json::parse(&res)?;
     println!("FINAL: {:?}\n", res);
     
-    // assert_eq!(res, "VotingProcess");
+    assert_eq!(res, "Accepted");
 
     Ok(())
 }
@@ -533,7 +533,7 @@ async fn create_mpip(
             "operator_id": owner.id(),
             "meta_token_contract_address": token_contract_address,
             "meta_vote_contract_address": metavote_contract_address,
-            "voting_period": 1,
+            "voting_period": "3600000",
             "min_voting_power_amount": format!("{}", parse_near!("3 N")),
             "mpip_storage_near": "300000000000000",
             "quorum_floor": 1000
