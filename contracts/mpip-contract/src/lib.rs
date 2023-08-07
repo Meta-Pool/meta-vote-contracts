@@ -4,10 +4,11 @@ use mpip::{Mpip, MpipJSON, MpipState};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::json_types::U128;
+use near_sdk::json_types::U64;
 use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
 use types::*;
-use utils::{days_to_millis, get_current_epoch_millis};
-use vote::{Vote, VoteType, VoteJson};
+use utils::get_current_epoch_millis;
+use vote::{Vote, VoteJson, VoteType};
 use vote_counting::{ProposalVote, ProposalVoteJson};
 use voter::{Voter, VoterJson};
 
@@ -33,12 +34,13 @@ pub struct MpipContract {
     pub voters: UnorderedMap<AccountId, Voter>,
     pub proposers: UnorderedMap<AccountId, Vec<MpipId>>,
     /// Duration of the voting period.
-    pub voting_period: Days,
+    pub voting_period: EpochMillis,
 
-    // Delay in milliseconds between the proposal is Active (reviewed and accepted by manager)
-    // an the vote starts.
-    // This can be increased to leave time for users to buy voting power, or delegate it, before the voting of a proposal starts.
-    pub voting_delay_millis: EpochMillis,
+    /// Not in use.
+    // // Delay in milliseconds between the proposal is Active (reviewed and accepted by manager)
+    // // an the vote starts.
+    // // This can be increased to leave time for users to buy voting power, or delegate it, before the voting of a proposal starts.
+    // pub voting_delay_millis: EpochMillis,
 
     /// Parameters to allow an Account to create a new MPIP. (proposal threshold)
     pub min_meta_amount: Balance,
@@ -66,13 +68,16 @@ impl MpipContract {
         operator_id: AccountId,
         meta_token_contract_address: ContractAddress,
         meta_vote_contract_address: ContractAddress,
-        voting_period: Days,
+        voting_period: U64,
         min_voting_power_amount: U128,
         mpip_storage_near: U128,
         quorum_floor: BasisPoints,
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
-        require!(quorum_floor <= ONE_HUNDRED, "Incorrect quorum basis points.");
+        require!(
+            quorum_floor <= ONE_HUNDRED,
+            "Incorrect quorum basis points."
+        );
 
         Self {
             admin_id,
@@ -80,8 +85,8 @@ impl MpipContract {
             meta_token_contract_address,
             meta_vote_contract_address,
             proposals: UnorderedMap::new(StorageKey::Mpips),
-            voting_period,
-            voting_delay_millis: 0,
+            voting_period: voting_period.0,
+            // voting_delay_millis: 0,
             min_meta_amount: 0,
             min_st_near_amount: 0,
             min_voting_power_amount: min_voting_power_amount.0,
@@ -121,17 +126,18 @@ impl MpipContract {
     // * Operator *
     // ************
 
-    /// Update the voting period duration in days.
-    pub fn update_voting_period(&mut self, new_value: Days) {
+    /// Update the voting period duration in milliseconds.
+    pub fn update_voting_period(&mut self, new_value: U64) {
         self.assert_only_operator();
-        self.voting_period = new_value;
+        self.voting_period = new_value.0;
     }
 
-    /// Update the voting delay duration in milliseconds.
-    pub fn update_voting_delay(&mut self, new_value: EpochMillis) {
-        self.assert_only_operator();
-        self.voting_delay_millis = new_value;
-    }
+    /// Not in use.
+    // /// Update the voting delay duration in milliseconds.
+    // pub fn update_voting_delay(&mut self, new_value: EpochMillis) {
+    //     self.assert_only_operator();
+    //     self.voting_delay_millis = new_value;
+    // }
 
     /// Update minimum Meta amount to submit a MPIP.
     pub fn update_min_meta_amount(&mut self, new_value: U128) {
@@ -183,7 +189,7 @@ impl MpipContract {
         let mut proposal = self.internal_get_proposal(&mpip_id);
         let now = get_current_epoch_millis();
         proposal.vote_start_timestamp = Some(now);
-        proposal.vote_end_timestamp = Some(now + days_to_millis(self.voting_period));
+        proposal.vote_end_timestamp = Some(now + self.voting_period);
         proposal.draft = false;
         proposal.v_power_quorum_to_reach = Some(self.internal_get_quorum(total_voting_power));
         self.proposals.insert(&mpip_id, &proposal);
@@ -211,13 +217,7 @@ impl MpipContract {
             .then(
                 Self::ext(env::current_account_id())
                     .with_static_gas(GAS_FOR_RESOLVE_VOTE)
-                    .create_proposal_callback(
-                        title,
-                        short_description,
-                        body,
-                        data,
-                        extra,
-                    ),
+                    .create_proposal_callback(title, short_description, body, data, extra),
             );
     }
 
@@ -228,7 +228,7 @@ impl MpipContract {
         short_description: String,
         body: String,
         data: String,
-        extra: String
+        extra: String,
     ) -> MpipId {
         let total_v_power = self.internal_get_user_total_voting_power_from_promise();
         self.assert_proposal_threshold(total_v_power);
@@ -327,6 +327,10 @@ impl MpipContract {
         Some(result)
     }
 
+    pub fn get_user_proposals_ids(&self, proposer_id: AccountId) -> Vec<MpipId> {
+        self.proposers.get(&proposer_id).unwrap_or(Vec::new())
+    }
+
     pub fn get_last_proposal_id(&self) -> Option<MpipId> {
         if self.proposals.len() > 0 {
             Some(self.proposals.len() as MpipId - 1)
@@ -359,7 +363,6 @@ impl MpipContract {
         &mut self,
         mpip_id: MpipId,
         vote: VoteType,
-        voting_power: U128,
         memo: String,
     ) {
         self.assert_proposal_is_on_voting(&mpip_id);
@@ -373,7 +376,6 @@ impl MpipContract {
                     .with_static_gas(GAS_FOR_RESOLVE_VOTE)
                     .vote_proposal_callback(
                         mpip_id.clone(),
-                        voting_power.clone(),
                         env::predecessor_account_id(),
                         vote,
                         memo,
@@ -385,27 +387,19 @@ impl MpipContract {
     pub fn vote_proposal_callback(
         &mut self,
         mpip_id: MpipId,
-        voting_power: U128,
         voter_id: AccountId,
         vote_type: VoteType,
         memo: String,
     ) {
         let total_v_power = self.internal_get_user_total_voting_power_from_promise();
         let mut voter = self.internal_get_voter(&voter_id);
-        // assert!(
-        //     total_v_power >= voting_power.0,
-        //     "Not enough free voting power to vote! You have {}, required {}.",
-        //     total_v_power,
-        //     voting_power.0
-        // );
         assert!(
-            total_v_power >= voting_power.0 + voter.used_voting_power,
-            "You are trying to vote with more voting power that you have available! You have {}, used {}.",
-            total_v_power,
-            voter.used_voting_power
+            total_v_power > 0,
+            "Not enough voting power to vote! You have {}",
+            total_v_power
         );
         let mut proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        let vote_v_power = voting_power.0;
+        let vote_v_power = total_v_power;
         let vote = Vote::new(
             mpip_id.clone(),
             vote_type.clone(),
@@ -429,7 +423,6 @@ impl MpipContract {
         }
         self.votes.insert(&mpip_id.clone(), &proposal_vote);
         voter.votes.insert(&mpip_id.clone(), &vote.clone());
-        voter.used_voting_power += vote_v_power;
         self.voters.insert(&voter_id.clone(), &voter);
     }
 
@@ -456,25 +449,6 @@ impl MpipContract {
         self.votes.insert(&mpip_id, &proposal_vote);
         voter.votes.remove(&mpip_id);
 
-        voter.used_voting_power -= user_vote.voting_power;
-        if voter.votes.is_empty() {
-            self.voters.remove(&voter_id);
-        } else {
-            self.voters.insert(&voter_id, &voter);
-        }
-    }
-
-    pub fn withdraw_voting_power(&mut self, mpip_id: MpipId) {
-        let voter_id = env::predecessor_account_id();
-        self.assert_proposal_voting_finished(&mpip_id);
-        self.assert_has_voted(mpip_id, voter_id.clone());
-        let proposal_vote = self.internal_get_proposal_vote(mpip_id);
-        let user_vote = proposal_vote.has_voted.get(&voter_id).unwrap();
-        let mut voter = self.internal_get_voter(&voter_id);
-        voter.used_voting_power -= user_vote.voting_power;
-        voter.votes.remove(&mpip_id);
-
-        voter.used_voting_power -= user_vote.voting_power;
         if voter.votes.is_empty() {
             self.voters.remove(&voter_id);
         } else {
@@ -500,11 +474,6 @@ impl MpipContract {
     pub fn get_voter(&self, voter_id: VoterId) -> VoterJson {
         let voter = self.internal_get_voter(&voter_id);
         voter.to_json(voter_id)
-    }
-
-    pub fn get_voter_used_voting_power(&self, voter_id: VoterId) -> U128 {
-        let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.used_voting_power)
     }
 
     // *********

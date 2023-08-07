@@ -48,9 +48,9 @@ impl MpipContract {
     pub(crate) fn internal_has_voted(&self, mpip_id: &MpipId, voter_id: &VoterId) -> bool {
         let voter = self.voters.get(&voter_id);
         match voter {
-            Some(_voter) => {  !_voter.votes.get(&mpip_id).is_none()},
-            None => { false }
-        }       
+            Some(_voter) => !_voter.votes.get(&mpip_id).is_none(),
+            None => false,
+        }
     }
 
     pub(crate) fn assert_has_not_voted(&self, mpip_id: MpipId, account_id: VoterId) {
@@ -112,32 +112,12 @@ impl MpipContract {
         }
     }
 
-    pub(crate) fn internal_proposal_voting_finished(&self, mpip_id: &MpipId) -> bool {
-        let proposal = self.internal_get_proposal(&mpip_id);
-        match proposal.vote_end_timestamp {
-            Some(date) => get_current_epoch_millis() >= date,
-            None => false,
-        }
-    }
-
-    pub(crate) fn assert_proposal_voting_finished(&self, mpip_id: &MpipId) {
-        require!(
-            self.internal_proposal_voting_finished(mpip_id),
-            "Proposal voting has not ended"
-        )
-    }
-
     pub(crate) fn assert_proposal_threshold(&self, voting_power: u128) {
         require!(
             self.internal_check_proposal_threshold(voting_power),
             "Proposal threshold does not reached"
         )
     }
-
-    // pub(crate) fn assert_proposal_is_draft(&self, mpip_id: MpipId) {
-    //     let proposal = self.internal_get_proposal(&mpip_id);
-    //     require!(proposal.draft, "Proposal is not on draft");
-    // }
 
     pub(crate) fn assert_proposal_is_active_or_draft(&self, mpip_id: MpipId) {
         require!(
@@ -209,7 +189,9 @@ impl MpipContract {
                     let locking_position = locking_positions
                         .get(index)
                         .expect("Locking position not found!");
-                    result += locking_position.voting_power.0;
+                    if locking_position.is_locked {
+                        result += locking_position.voting_power.0;
+                    }
                 }
                 result
             }
