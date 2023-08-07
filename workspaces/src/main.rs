@@ -6,12 +6,9 @@ use near_units::{parse_gas, parse_near};
 // use json;
 use std::str;
 // use near_sdk::json_types::{U128, U64};
-use near_sdk::AccountId as NearAccountId;
 
 // use workspaces::network::Sandbox;
 use workspaces::{Account, AccountId, Contract, Worker, DevNetwork};
-// use workspaces::result::ExecutionFinalResult;
-// use workspaces::error::Error as WorkspaceError;
 
 // use meta_test_utils::now::Now;
 // use meta_test_utils::now;
