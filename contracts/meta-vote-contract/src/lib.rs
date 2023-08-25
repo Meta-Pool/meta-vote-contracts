@@ -323,6 +323,8 @@ impl MetaVoteContract {
                 "A locking position cannot have less than {} META.",
                 self.min_deposit_amount
             );
+            assert!(new_amount > 0, "Use relock_position() function instead.");
+
             locking_position.amount = new_amount;
             voter.locking_positions.replace(index, &locking_position);
         } else {
