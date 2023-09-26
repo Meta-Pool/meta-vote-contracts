@@ -1,0 +1,1 @@
+YOCTO="000000000000000000000000" NEAR_ENV=mainnet near call mpip.meta-pool-dao.near update_mpip_storage_near '{"new_value": "'15$YOCTO'"}' --accountId meta-pool-dao.near --gas 300000000000000

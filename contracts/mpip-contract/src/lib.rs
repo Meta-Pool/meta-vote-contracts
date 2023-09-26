@@ -5,7 +5,7 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::json_types::U128;
 use near_sdk::json_types::U64;
-use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
+use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault, Promise};
 use types::*;
 use utils::get_current_epoch_millis;
 use vote::{Vote, VoteJson, VoteType};
@@ -120,6 +120,11 @@ impl MpipContract {
     pub fn update_admin_role(&mut self, new_value: AccountId) {
         self.assert_only_admin();
         self.admin_id = new_value;
+    }
+
+    pub fn pay_to_account(&mut self, amount: U128, to: AccountId) -> Promise {
+        self.assert_only_admin();
+        Promise::new(to).transfer(amount.0)
     }
 
     // ************
