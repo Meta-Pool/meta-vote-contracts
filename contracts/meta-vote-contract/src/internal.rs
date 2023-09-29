@@ -78,32 +78,61 @@ impl MetaVoteContract {
         }
     }
 
-    // ******************
-    // * Claimable Meta *
-    // ******************
+    // ***************************
+    // * Claimable Meta & stNear *
+    // ***************************
 
-    pub(crate) fn add_claimable_meta(&mut self, account: &AccountId, amount: u128) {
-        assert!(amount > 0);
-        let existing_claimable_amount = self.claimable_meta.get(account).unwrap_or_default();
-        self.claimable_meta
-            .insert(account, &(existing_claimable_amount + amount));
+    fn add_claimable(
+        claimable: &mut UnorderedMap<VoterId, u128>,
+        total_unclaimed: &mut u128,
+        account: &AccountId,
+        amount: u128
+    ) {
+        let existing_claimable_amount = claimable.get(account).unwrap_or_default();
+        claimable.insert(account, &(existing_claimable_amount + amount));
         // keep contract total
-        self.total_unclaimed_meta += amount;
+        *total_unclaimed += amount;
     }
-    pub(crate) fn remove_claimable_meta(&mut self, account: &AccountId, amount: u128) {
-        let existing_claimable_amount = self.claimable_meta.get(account).unwrap_or_default();
+
+    fn remove_claimable(
+        claimable: &mut UnorderedMap<VoterId, u128>,
+        total_unclaimed: &mut u128,
+        account: &AccountId,
+        amount: u128,
+        token: &str
+    ) {
+        let existing_claimable_amount = claimable.get(account).unwrap_or_default();
         assert!(
             existing_claimable_amount >= amount,
-            "you don't have enough claimable META"
+            "you don't have enough claimable {}",
+            token
         );
         let after_remove = existing_claimable_amount - amount;
         if after_remove == 0 {
             // 0 means remove
-            self.claimable_meta.remove(account)
+            claimable.remove(account)
         } else {
-            self.claimable_meta.insert(account, &after_remove)
+            claimable.insert(account, &after_remove)
         };
         // keep contract total
-        self.total_unclaimed_meta -= amount;
+        *total_unclaimed -= amount;
+    }
+
+    pub(crate) fn add_claimable_meta(&mut self, account: &AccountId, amount: u128) {
+        assert!(amount > 0);
+        Self::add_claimable(&mut self.claimable_meta, &mut self.total_unclaimed_meta, account, amount);
+    }
+
+    pub(crate) fn add_claimable_stnear(&mut self, account: &AccountId, amount: u128) {
+        assert!(amount > 0);
+        Self::add_claimable(&mut self.claimable_stnear, &mut self.total_unclaimed_stnear, account, amount);
+    }
+
+    pub(crate) fn remove_claimable_meta(&mut self, account: &AccountId, amount: u128) {
+        Self::remove_claimable(&mut self.claimable_meta, &mut self.total_unclaimed_meta, account, amount, "META");
+    }
+
+    pub(crate) fn remove_claimable_stnear(&mut self, account: &AccountId, amount: u128) {
+        Self::remove_claimable(&mut self.claimable_stnear, &mut self.total_unclaimed_stnear, account, amount, "stNEAR");
     }
 }

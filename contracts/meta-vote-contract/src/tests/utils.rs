@@ -52,6 +52,10 @@ pub fn meta_token_account() -> AccountId {
     AccountId::new_unchecked("meta-token.metavote.near".to_string())
 }
 
+pub fn meta_pool_account() -> AccountId {
+    AccountId::new_unchecked("meta-pool.metavote.near".to_string())
+}
+
 pub fn voter_account() -> AccountId {
     AccountId::new_unchecked("voter.metavote.near".to_string())
 }

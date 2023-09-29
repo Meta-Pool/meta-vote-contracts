@@ -17,6 +17,7 @@ pub enum StorageKey {
     Votes,
     ContractVotes { hash_id: CryptoHash },
     VoterVotes { hash_id: CryptoHash },
-    Claimable
+    Claimable,
+    ClaimableStNear
 }
 

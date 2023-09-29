@@ -16,6 +16,7 @@ fn new_metavote_contract() -> MetaVoteContract {
         MAX_LOCKING_POSITIONS,
         MAX_VOTING_POSITIONS,
         meta_token_account(),
+        meta_pool_account()
     )
 }
 
@@ -1086,6 +1087,8 @@ fn internal_distribute_100_for_claims(contract: &mut MetaVoteContract, users: &V
         ])
         .unwrap(),
     );
+
+    set_context_caller(&meta_token_account());
     contract.ft_on_transfer(sender_id.clone(), AMOUNT.into(), msg);
     assert_eq!(
         contract.accumulated_distributed_for_claims,
@@ -1123,6 +1126,7 @@ fn distribute_too_much() {
         ])
         .unwrap(),
     );
+    set_context_caller(&meta_token_account());
     contract.ft_on_transfer(operator_account(), amount.into(), msg);
 }
 

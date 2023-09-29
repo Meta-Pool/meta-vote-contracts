@@ -34,10 +34,17 @@ pub struct MetaVoteContract {
     pub meta_token_contract_address: ContractAddress,
     pub total_voting_power: VotingPower,
 
-    // added v1.0.3
+    // added v0.1.3
     pub claimable_meta: UnorderedMap<VoterId, u128>,
-    pub accumulated_distributed_for_claims: u128, // accumulated total meta distributed
-    pub total_unclaimed_meta: u128,               // currently unclaimed meta
+    pub accumulated_distributed_for_claims: u128,       // accumulated total meta distributed
+    pub total_unclaimed_meta: u128,                     // currently unclaimed meta
+
+    // added v0.1.4
+    pub stnear_token_contract_address: ContractAddress,
+    pub claimable_stnear: UnorderedMap<VoterId, u128>,
+    pub accum_distributed_stnear_for_claims: u128,      // accumulated total stnear distributed
+    pub total_unclaimed_stnear: u128,                   // currently unclaimed stnear
+
 }
 
 #[near_bindgen]
@@ -51,6 +58,7 @@ impl MetaVoteContract {
         max_locking_positions: u8,
         max_voting_positions: u8,
         meta_token_contract_address: ContractAddress,
+        stnear_token_contract_address: ContractAddress,
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
         require!(
@@ -71,6 +79,10 @@ impl MetaVoteContract {
             accumulated_distributed_for_claims: 0,
             total_unclaimed_meta: 0,
             claimable_meta: UnorderedMap::new(StorageKey::Claimable),
+            stnear_token_contract_address,
+            claimable_stnear: UnorderedMap::new(StorageKey::ClaimableStNear),
+            accum_distributed_stnear_for_claims: 0,
+            total_unclaimed_stnear: 0,
         }
     }
 
@@ -87,6 +99,17 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         // create/update locking position
         self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+    }
+
+    // claim stNear
+    pub fn claim_stnear(&mut self, amount: U128) {
+        let amount = amount.0;
+        let voter_id = VoterId::from(env::predecessor_account_id());
+        self.remove_claimable_stnear(&voter_id, amount);
+
+        // IMPORTANT: if user is not a voter, then the claim is not available.
+        let _voter = self.internal_get_voter_or_panic(&voter_id);
+        self.transfer_stnear_to_voter(voter_id, amount);
     }
 
     // *************

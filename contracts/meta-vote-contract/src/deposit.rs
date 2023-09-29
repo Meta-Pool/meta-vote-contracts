@@ -57,17 +57,39 @@ impl MetaVoteContract {
         distribute_info: &Vec<(String, u64)>,
     ) {
         let mut total_distributed = 0;
-        for item in distribute_info {
-            let amount = item.1 as u128 * E24;
-            self.add_claimable_meta(&AccountId::new_unchecked(item.0.clone()), amount);
-            total_distributed += amount;
+        let token_address = env::predecessor_account_id();
+
+        // Meta Token
+        if token_address == self.meta_token_contract_address {
+            for item in distribute_info {
+                let amount = item.1 as u128 * E24;
+                self.add_claimable_meta(&AccountId::new_unchecked(item.0.clone()), amount);
+                total_distributed += amount;
+            }
+            assert!(
+                total_distributed == total_amount,
+                "total to distribute {} != total_amount sent {}",
+                total_distributed,
+                total_amount
+            );
+            self.accumulated_distributed_for_claims += total_distributed;
+
+        // stNear Token
+        } else if token_address == self.stnear_token_contract_address {
+            for item in distribute_info {
+                let amount = item.1 as u128 * E24;
+                self.add_claimable_stnear(&AccountId::new_unchecked(item.0.clone()), amount);
+                total_distributed += amount;
+            }
+            assert!(
+                total_distributed == total_amount,
+                "total to distribute {} != total_amount sent {}",
+                total_distributed,
+                total_amount
+            );
+            self.accum_distributed_stnear_for_claims += total_distributed;
+        } else {
+            panic!("Unknown token address: {} meta: {} stnear: {}", token_address, self.meta_token_contract_address, self.stnear_token_contract_address);
         }
-        assert!(
-            total_distributed == total_amount,
-            "total to distribute {} != total_amount sent {}",
-            total_distributed,
-            total_amount
-        );
-        self.accumulated_distributed_for_claims += total_distributed;
     }
 }

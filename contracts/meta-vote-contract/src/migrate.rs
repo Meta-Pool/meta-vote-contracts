@@ -1,6 +1,5 @@
-/*
 use crate::*;
-use near_sdk::{env::{self, predecessor_account_id}, near_bindgen};
+use near_sdk::{env, near_bindgen};
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct OldState {
@@ -14,6 +13,11 @@ pub struct OldState {
     pub max_voting_positions: u8,
     pub meta_token_contract_address: ContractAddress,
     pub total_voting_power: VotingPower,
+
+    // added v0.1.3
+    pub claimable_meta: UnorderedMap<VoterId, u128>,
+    pub accumulated_distributed_for_claims: u128,
+    pub total_unclaimed_meta: u128,
 }
 
 #[near_bindgen]
@@ -35,10 +39,13 @@ impl MetaVoteContract {
             max_voting_positions: old_state.max_voting_positions,
             meta_token_contract_address: old_state.meta_token_contract_address,
             total_voting_power: old_state.total_voting_power,
-            accumulated_distributed_for_claims: 0,
-            total_unclaimed_meta: 0,
-            claimable_meta: UnorderedMap::new(StorageKey::Claimable),
+            accumulated_distributed_for_claims: old_state.accumulated_distributed_for_claims,
+            total_unclaimed_meta: old_state.total_unclaimed_meta,
+            claimable_meta: old_state.claimable_meta,
+            stnear_token_contract_address: "meta-pool.near".parse().unwrap(),
+            claimable_stnear: UnorderedMap::new(StorageKey::ClaimableStNear),
+            accum_distributed_stnear_for_claims: 0,
+            total_unclaimed_stnear: 0
         }
     }
 }
-*/
