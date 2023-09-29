@@ -89,7 +89,7 @@ impl MetaVoteContract {
             );
             self.accum_distributed_stnear_for_claims += total_distributed;
         } else {
-            panic!("Unknown token address: {} meta: {} stnear: {}", token_address, self.meta_token_contract_address, self.stnear_token_contract_address);
+            panic!("Unknown token address: {}", token_address);
         }
     }
 }
