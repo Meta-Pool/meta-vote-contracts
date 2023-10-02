@@ -675,6 +675,10 @@ impl MetaVoteContract {
         U128::from(self.claimable_meta.get(&voter_id).unwrap_or_default())
     }
 
+    pub fn get_claimable_stnear(&self, voter_id: &VoterId) -> U128 {
+        U128::from(self.claimable_stnear.get(&voter_id).unwrap_or_default())
+    }
+
     // get all claims
     pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128)> {
         let mut results = Vec::<(AccountId, U128)>::new();
