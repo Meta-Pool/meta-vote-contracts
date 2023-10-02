@@ -1072,7 +1072,8 @@ fn test_multi_voter_contract() {
     internal_prepare_multi_voter_contract();
 }
 
-fn internal_distribute_100_for_claims(contract: &mut MetaVoteContract, users: &Vec<User>) {
+/// For META Claims
+fn internal_distribute_100_meta_for_claims(contract: &mut MetaVoteContract, users: &Vec<User>) {
     let sender_id: AccountId = operator_account();
     let initial_accumulated_distributed = contract.accumulated_distributed_for_claims;
     let initial_unclaimed = contract.total_unclaimed_meta;
@@ -1102,17 +1103,49 @@ fn internal_distribute_100_for_claims(contract: &mut MetaVoteContract, users: &V
     );
 }
 
+/// For stNear Claims
+fn internal_distribute_300_stnear_for_claims(contract: &mut MetaVoteContract, users: &Vec<User>) {
+    let sender_id: AccountId = operator_account();
+    let initial_accumulated_distributed = contract.accum_distributed_stnear_for_claims;
+    let initial_unclaimed = contract.total_unclaimed_stnear;
+    const AMOUNT: u128 = 300 * E24;
+    let mut msg = String::from("for-claims:");
+    msg.push_str(
+        &serde_json::to_string(&vec![
+            (users[0].account_id().to_string(), 150),
+            (users[1].account_id().to_string(), 50),
+            (users[2].account_id().to_string(), 80),
+            (users[3].account_id().to_string(), 20),
+        ])
+        .unwrap(),
+    );
+
+    set_context_caller(&meta_pool_account());
+    contract.ft_on_transfer(sender_id.clone(), AMOUNT.into(), msg);
+    assert_eq!(
+        contract.accum_distributed_stnear_for_claims,
+        initial_accumulated_distributed + AMOUNT,
+        "accum_distributed_stnear_for_claims not correct"
+    );
+    assert_eq!(
+        contract.total_unclaimed_stnear,
+        initial_unclaimed + AMOUNT,
+        "contract.total_unclaimed_stnear not correct"
+    );
+}
+
 #[test]
 fn test_deposit_for_claims() {
     let (mut contract, users) = internal_prepare_multi_voter_contract();
-    let _ = internal_distribute_100_for_claims(&mut contract, &users);
+    let _ = internal_distribute_100_meta_for_claims(&mut contract, &users);
+    let _ = internal_distribute_300_stnear_for_claims(&mut contract, &users);
 }
 
 #[test]
 #[should_panic(
     expected = "total to distribute 101000000000000000000000000 != total_amount sent 100000000000000000000000000"
 )]
-fn distribute_too_much() {
+fn distribute_too_much_meta() {
     let (mut contract, users) = internal_prepare_multi_voter_contract();
     set_context_caller(&owner_account());
     let amount = 100 * E24;
@@ -1130,9 +1163,31 @@ fn distribute_too_much() {
     contract.ft_on_transfer(operator_account(), amount.into(), msg);
 }
 
+#[test]
+#[should_panic(
+    expected = "total to distribute 301000000000000000000000000 != total_amount sent 300000000000000000000000000"
+)]
+fn distribute_too_much_stnear() {
+    let (mut contract, users) = internal_prepare_multi_voter_contract();
+    set_context_caller(&owner_account());
+    let amount = 300 * E24;
+    let mut msg = String::from("for-claims:");
+    msg.push_str(
+        &serde_json::to_string(&vec![
+            (users[0].account_id().to_string(), 150),
+            (users[1].account_id().to_string(), 50),
+            (users[2].account_id().to_string(), 80),
+            (users[3].account_id().to_string(), 21),
+        ])
+        .unwrap(),
+    );
+    set_context_caller(&meta_pool_account());
+    contract.ft_on_transfer(operator_account(), amount.into(), msg);
+}
+
 fn prepare_contract_with_claims() -> (MetaVoteContract, Vec<User>) {
     let (mut contract, users) = internal_prepare_multi_voter_contract();
-    internal_distribute_100_for_claims(&mut contract, &users);
+    internal_distribute_100_meta_for_claims(&mut contract, &users);
     (contract, users)
 }
 #[test]
