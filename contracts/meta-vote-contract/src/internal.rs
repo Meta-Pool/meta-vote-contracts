@@ -83,25 +83,25 @@ impl MetaVoteContract {
     // ***************************
 
     fn add_claimable(
-        claimable: &mut UnorderedMap<VoterId, u128>,
+        claimable_map: &mut UnorderedMap<VoterId, u128>,
         total_unclaimed: &mut u128,
         account: &AccountId,
         amount: u128
     ) {
-        let existing_claimable_amount = claimable.get(account).unwrap_or_default();
-        claimable.insert(account, &(existing_claimable_amount + amount));
+        let existing_claimable_amount = claimable_map.get(account).unwrap_or_default();
+        claimable_map.insert(account, &(existing_claimable_amount + amount));
         // keep contract total
         *total_unclaimed += amount;
     }
 
     fn remove_claimable(
-        claimable: &mut UnorderedMap<VoterId, u128>,
+        claimable_map: &mut UnorderedMap<VoterId, u128>,
         total_unclaimed: &mut u128,
         account: &AccountId,
         amount: u128,
         token: &str
     ) {
-        let existing_claimable_amount = claimable.get(account).unwrap_or_default();
+        let existing_claimable_amount = claimable_map.get(account).unwrap_or_default();
         assert!(
             existing_claimable_amount >= amount,
             "you don't have enough claimable {}",
@@ -110,9 +110,9 @@ impl MetaVoteContract {
         let after_remove = existing_claimable_amount - amount;
         if after_remove == 0 {
             // 0 means remove
-            claimable.remove(account)
+            claimable_map.remove(account)
         } else {
-            claimable.insert(account, &after_remove)
+            claimable_map.insert(account, &after_remove)
         };
         // keep contract total
         *total_unclaimed -= amount;

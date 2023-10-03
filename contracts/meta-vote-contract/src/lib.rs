@@ -36,14 +36,14 @@ pub struct MetaVoteContract {
 
     // added v0.1.3
     pub claimable_meta: UnorderedMap<VoterId, u128>,
-    pub accumulated_distributed_for_claims: u128,       // accumulated total meta distributed
-    pub total_unclaimed_meta: u128,                     // currently unclaimed meta
+    pub accumulated_distributed_for_claims: u128,       // accumulated total META distributed
+    pub total_unclaimed_meta: u128,                     // currently unclaimed META
 
     // added v0.1.4
     pub stnear_token_contract_address: ContractAddress,
     pub claimable_stnear: UnorderedMap<VoterId, u128>,
-    pub accum_distributed_stnear_for_claims: u128,      // accumulated total stnear distributed
-    pub total_unclaimed_stnear: u128,                   // currently unclaimed stnear
+    pub accum_distributed_stnear_for_claims: u128,      // accumulated total stNEAR distributed
+    pub total_unclaimed_stnear: u128,                   // currently unclaimed stNEAR
 
 }
 

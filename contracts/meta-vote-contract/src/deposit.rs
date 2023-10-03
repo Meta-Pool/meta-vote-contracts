@@ -6,6 +6,7 @@ use near_sdk::{serde_json, ONE_NEAR};
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 
 const E24: u128 = ONE_NEAR;
+const E20: Balance = 100_000_000_000_000_000_000;
 
 #[near_bindgen]
 impl FungibleTokenReceiver for MetaVoteContract {
@@ -51,6 +52,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
 
 impl MetaVoteContract {
     // distributes meta from self.meta_to_distribute between existent voters
+    // called from ft_on_transfer
     pub(crate) fn distribute_for_claims(
         &mut self,
         total_amount: u128,
@@ -62,34 +64,31 @@ impl MetaVoteContract {
         // Meta Token
         if token_address == self.meta_token_contract_address {
             for item in distribute_info {
+                // in case of META, item.1 is integer META
                 let amount = item.1 as u128 * E24;
                 self.add_claimable_meta(&AccountId::new_unchecked(item.0.clone()), amount);
                 total_distributed += amount;
             }
-            assert!(
-                total_distributed == total_amount,
-                "total to distribute {} != total_amount sent {}",
-                total_distributed,
-                total_amount
-            );
             self.accumulated_distributed_for_claims += total_distributed;
 
         // stNear Token
         } else if token_address == self.stnear_token_contract_address {
             for item in distribute_info {
-                let amount = item.1 as u128 * E24;
+                // in case of stNEAR, item.1 is stNEAR amount * 1e4 (4 decimal places)
+                // so we multiply by 1e20 to get yocto-stNEAR
+                let amount = item.1 as u128 * E20;
                 self.add_claimable_stnear(&AccountId::new_unchecked(item.0.clone()), amount);
                 total_distributed += amount;
             }
-            assert!(
-                total_distributed == total_amount,
-                "total to distribute {} != total_amount sent {}",
-                total_distributed,
-                total_amount
-            );
             self.accum_distributed_stnear_for_claims += total_distributed;
         } else {
             panic!("Unknown token address: {}", token_address);
         }
-    }
+        assert!(
+            total_distributed == total_amount,
+            "total to distribute {} != total_amount sent {}",
+            total_distributed,
+            total_amount
+        );
+}
 }

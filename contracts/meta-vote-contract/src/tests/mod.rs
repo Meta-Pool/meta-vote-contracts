@@ -7,6 +7,8 @@ use near_sdk::testing_env;
 mod utils;
 use utils::*;
 
+const E20: u128 = 100_000_000_000_000_000_000;
+
 fn new_metavote_contract() -> MetaVoteContract {
     MetaVoteContract::new(
         owner_account(),
@@ -1108,14 +1110,14 @@ fn internal_distribute_300_stnear_for_claims(contract: &mut MetaVoteContract, us
     let sender_id: AccountId = operator_account();
     let initial_accumulated_distributed = contract.accum_distributed_stnear_for_claims;
     let initial_unclaimed = contract.total_unclaimed_stnear;
-    const AMOUNT: u128 = 300 * E24;
+    const AMOUNT: u128 = 3000040 * E20; // 300.0040
     let mut msg = String::from("for-claims:");
     msg.push_str(
         &serde_json::to_string(&vec![
-            (users[0].account_id().to_string(), 150),
-            (users[1].account_id().to_string(), 50),
-            (users[2].account_id().to_string(), 80),
-            (users[3].account_id().to_string(), 20),
+            (users[0].account_id().to_string(), 1500010),  // 150.0010
+            (users[1].account_id().to_string(), 0500012),  // 50.0012
+            (users[2].account_id().to_string(), 0800008), // 80.0008
+            (users[3].account_id().to_string(), 0200010), // 20.0010
         ])
         .unwrap(),
     );
@@ -1165,24 +1167,24 @@ fn distribute_too_much_meta() {
 
 #[test]
 #[should_panic(
-    expected = "total to distribute 301000000000000000000000000 != total_amount sent 300000000000000000000000000"
+    expected = "total to distribute 300012900000000000000000000 != total_amount sent 300003000000000000000000000"
 )]
 fn distribute_too_much_stnear() {
     let (mut contract, users) = internal_prepare_multi_voter_contract();
     set_context_caller(&owner_account());
-    let amount = 300 * E24;
+    const AMOUNT: u128 = 3000030 * E20; // 300.0030
     let mut msg = String::from("for-claims:");
     msg.push_str(
         &serde_json::to_string(&vec![
-            (users[0].account_id().to_string(), 150),
-            (users[1].account_id().to_string(), 50),
-            (users[2].account_id().to_string(), 80),
-            (users[3].account_id().to_string(), 21),
+            (users[0].account_id().to_string(), 1500010),  // 150.0010
+            (users[1].account_id().to_string(), 0500012),  // 50.0012
+            (users[2].account_id().to_string(), 0800008), // 80.0008
+            (users[3].account_id().to_string(), 0200099), // 20.0099 too much
         ])
         .unwrap(),
     );
     set_context_caller(&meta_pool_account());
-    contract.ft_on_transfer(operator_account(), amount.into(), msg);
+    contract.ft_on_transfer(operator_account(), AMOUNT.into(), msg);
 }
 
 fn prepare_contract_with_claims() -> (MetaVoteContract, Vec<User>) {
@@ -1281,7 +1283,7 @@ fn test_claim_stnear() {
         // println!("{:?}", user_record_pre);
         set_context_caller(&caller);
         let claim_balance_pre = contract.get_claimable_stnear(&caller).0;
-        let claim_amount = 80 * E24;
+        let claim_amount = 800008 * E20;
         contract.claim_stnear(claim_amount.into());
         assert_eq!(
             contract.total_unclaimed_stnear,
