@@ -45,6 +45,10 @@ pub struct MetaVoteContract {
     pub accum_distributed_stnear_for_claims: u128,      // accumulated total stNEAR distributed
     pub total_unclaimed_stnear: u128,                   // currently unclaimed stNEAR
 
+    // airdrop users encrypted data
+    pub registration_cost: u128,
+    pub airdrop_user_data: UnorderedMap<VoterId, String>,
+
 }
 
 #[near_bindgen]
@@ -59,6 +63,7 @@ impl MetaVoteContract {
         max_voting_positions: u8,
         meta_token_contract_address: ContractAddress,
         stnear_token_contract_address: ContractAddress,
+        registration_cost: U128
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
         require!(
@@ -83,7 +88,24 @@ impl MetaVoteContract {
             claimable_stnear: UnorderedMap::new(StorageKey::ClaimableStNear),
             accum_distributed_stnear_for_claims: 0,
             total_unclaimed_stnear: 0,
+            registration_cost: registration_cost.0,
+            airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
         }
+    }
+
+    // ***********
+    // * Airdrop *
+    // ***********
+
+    pub fn update_registration_cost(&mut self, new_cost: U128) {
+        self.assert_only_owner();
+        self.registration_cost = new_cost.0;
+    }
+
+    #[payable]
+    pub fn update_airdrop_user_data(&mut self, encrypted_data: &str) {
+        require!(env::attached_deposit() == self.registration_cost, "Pay for the registration cost");
+        self.airdrop_user_data.insert(&env::predecessor_account_id(), &encrypted_data.to_string());
     }
 
     // ****************

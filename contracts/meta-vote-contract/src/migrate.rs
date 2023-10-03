@@ -45,7 +45,9 @@ impl MetaVoteContract {
             stnear_token_contract_address: "meta-pool.near".parse().unwrap(),
             claimable_stnear: UnorderedMap::new(StorageKey::ClaimableStNear),
             accum_distributed_stnear_for_claims: 0,
-            total_unclaimed_stnear: 0
+            total_unclaimed_stnear: 0,
+            registration_cost: 0,
+            airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
         }
     }
 }
