@@ -19,7 +19,7 @@ fn new_metavote_contract() -> MetaVoteContract {
         MAX_VOTING_POSITIONS,
         meta_token_account(),
         meta_pool_account(),
-        U128::from(6 * E20)
+        U128::from(6_000 * E20) // 0.6 Near
     )
 }
 
