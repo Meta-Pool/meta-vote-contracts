@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::{env, near_bindgen};
+use near_sdk::{env, near_bindgen, ONE_NEAR};
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct OldState {
@@ -46,7 +46,7 @@ impl MetaVoteContract {
             claimable_stnear: UnorderedMap::new(StorageKey::ClaimableStNear),
             accum_distributed_stnear_for_claims: 0,
             total_unclaimed_stnear: 0,
-            registration_cost: 0,
+            registration_cost: ONE_NEAR/10,
             airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
         }
     }

@@ -36,19 +36,18 @@ pub struct MetaVoteContract {
 
     // added v0.1.3
     pub claimable_meta: UnorderedMap<VoterId, u128>,
-    pub accumulated_distributed_for_claims: u128,       // accumulated total META distributed
-    pub total_unclaimed_meta: u128,                     // currently unclaimed META
+    pub accumulated_distributed_for_claims: u128, // accumulated total META distributed
+    pub total_unclaimed_meta: u128,               // currently unclaimed META
 
     // added v0.1.4
     pub stnear_token_contract_address: ContractAddress,
     pub claimable_stnear: UnorderedMap<VoterId, u128>,
-    pub accum_distributed_stnear_for_claims: u128,      // accumulated total stNEAR distributed
-    pub total_unclaimed_stnear: u128,                   // currently unclaimed stNEAR
+    pub accum_distributed_stnear_for_claims: u128, // accumulated total stNEAR distributed
+    pub total_unclaimed_stnear: u128,              // currently unclaimed stNEAR
 
     // airdrop users encrypted data
     pub registration_cost: u128,
     pub airdrop_user_data: UnorderedMap<VoterId, String>,
-
 }
 
 #[near_bindgen]
@@ -63,7 +62,7 @@ impl MetaVoteContract {
         max_voting_positions: u8,
         meta_token_contract_address: ContractAddress,
         stnear_token_contract_address: ContractAddress,
-        registration_cost: U128
+        registration_cost: U128,
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
         require!(
@@ -103,9 +102,34 @@ impl MetaVoteContract {
     }
 
     #[payable]
-    pub fn update_airdrop_user_data(&mut self, encrypted_data: &str) {
-        require!(env::attached_deposit() == self.registration_cost, "Pay for the registration cost");
-        self.airdrop_user_data.insert(&env::predecessor_account_id(), &encrypted_data.to_string());
+    pub fn update_airdrop_user_data(&mut self, encrypted_data: &String) {
+        assert!(
+            env::attached_deposit() == self.registration_cost,
+            "Pay {} yoctos for the registration cost",
+            self.registration_cost
+        );
+        self.airdrop_user_data
+            .insert(&env::predecessor_account_id(), encrypted_data);
+    }
+
+    /// Returns a single airdrop data
+    pub fn get_airdrop_account(&self, account_id: &AccountId) -> String {
+        self.airdrop_user_data.get(&account_id).unwrap()
+    }
+
+    /// Returns a list of airdrop data
+    pub fn get_airdrop_accounts(&self, from_index: u32, limit: u32) -> Vec<(String, String)> {
+        let keys = self.airdrop_user_data.keys_as_vector();
+        let voters_len = keys.len() as u64;
+        let start = from_index as u64;
+        let limit = limit as u64;
+        let mut results = Vec::<(String,String)>::new();
+        for index in start..std::cmp::min(start + limit, voters_len) {
+            let voter_id = keys.get(index).unwrap();
+            let airdrop_data = self.airdrop_user_data.get(&voter_id).unwrap();
+            results.push((voter_id.to_string(), airdrop_data));
+        }
+        results
     }
 
     // ****************
