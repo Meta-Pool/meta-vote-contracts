@@ -101,6 +101,14 @@ impl MetaVoteContract {
         self.registration_cost = new_cost.0;
     }
 
+    pub fn get_registration_cost(&self) -> U128 {
+        U128::from(self.registration_cost)
+    }
+
+    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+        self.airdrop_user_data.get(account_id).is_some()
+    }
+
     #[payable]
     pub fn update_airdrop_user_data(&mut self, encrypted_data: &String) {
         assert!(
