@@ -92,9 +92,17 @@ impl MetaVoteContract {
         }
     }
 
-    // ***********
-    // * Airdrop *
-    // ***********
+    // ***************
+    // * owner config
+    // ***************
+    pub fn set_stnear_contract(&mut self, stnear_contract: AccountId) {
+        self.assert_only_owner();
+        self.stnear_token_contract_address = stnear_contract;
+    }
+
+    // *******************************
+    // * Register for Airdrops/Gifts *
+    // *******************************
 
     pub fn update_registration_cost(&mut self, new_cost: U128) {
         self.assert_only_owner();
@@ -131,7 +139,7 @@ impl MetaVoteContract {
         let voters_len = keys.len() as u64;
         let start = from_index as u64;
         let limit = limit as u64;
-        let mut results = Vec::<(String,String)>::new();
+        let mut results = Vec::<(String, String)>::new();
         for index in start..std::cmp::min(start + limit, voters_len) {
             let voter_id = keys.get(index).unwrap();
             let airdrop_data = self.airdrop_user_data.get(&voter_id).unwrap();
