@@ -14,12 +14,12 @@ TOTAL_PREPAID_GAS="300000000000000"
 # NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM  --initFunction new --initArgs '{"admin_id": "'$ADMIN_ADDRESS'", "operator_id": "'$OPERATOR_ADDRESS'", "meta_token_contract_address": "'$METATOKEN_CONTRACT_ADDRESS'", "meta_vote_contract_address": "'$METAVOTE_CONTRACT_ADDRESS'", "voting_period":'$VOTING_PERIOD', "min_voting_power_amount": "'$MIN_VOTING_POWER_AMOUNT'", "mpip_storage_near_cost_per_kilobytes": "'$MPIP_STOGARE_COST_KB'", "quorum_floor": '$QUORUM_FLOOR' }' --accountId $METAVOTE_CONTRACT_ADDRESS
 
 # Redeploy Contract
-# echo Re-DEPLOY ONLY
-# NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
+echo Re-DEPLOY ONLY
+NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
 
 # Deploy with MIGRATION
-echo DEPLOY AND MIGRATION
-near deploy metavote.testnet --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {}
+#echo DEPLOY AND MIGRATION
+#near deploy metavote.testnet --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {}
 
 # NEAR_ENV=testnet near deploy -f --wasmFile $METAVOTE_WASM --accountId metavote.testnet
 # NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId metavote.testnet
@@ -28,3 +28,4 @@ near deploy metavote.testnet --wasmFile $METAVOTE_WASM --initFunction migrate --
 # NEAR_ENV=testnet near view metavote.testnet get_locking_period '{}' --accountId metavote.testnet
 # NEAR_ENV=testnet near view metavote.testnet get_test '{}' --accountId metavote.testnet
 # NEAR_ENV=testnet near call metavote.testnet update_min_locking_period '{"new_period": 1}' --accountId metavote.testnet
+# NEAR_ENV=testnet near call metavote.testnet set_stnear_contract '{"stnear_contract": "meta-v2.pool.testnet"}' --accountId metavote.testnet
