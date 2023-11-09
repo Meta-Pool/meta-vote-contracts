@@ -98,18 +98,8 @@ impl MetaVoteContract {
                     "FAILED: {} stNEAR not transferred. Recovering {} state.",
                     amount, &voter_id.to_string()
                 );
-                self.restore_transfer_to_stnear(amount, voter_id);
+                self.add_claimable_stnear(&voter_id, amount);
             },
         };
-    }
-
-    fn restore_transfer_to_stnear(
-        &mut self,
-        amount: Balance,
-        voter_id: VoterId
-    ) {
-        let mut voter = self.internal_get_voter(&voter_id);
-        voter.balance += amount;
-        self.voters.insert(&voter_id, &voter);
     }
 }
