@@ -174,7 +174,7 @@ impl MetaVoteContract {
         self.transfer_stnear_to_voter(voter_id, amount);
     }
 
-    pub fn fix_user_2(&mut self, amount: U128, account: AccountId) {
+    pub fn fix_user(&mut self, amount: U128, account: AccountId) {
         self.assert_only_owner();
         self.add_claimable_stnear(&account, amount.0);
     }
