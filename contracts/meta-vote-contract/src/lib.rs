@@ -411,6 +411,10 @@ impl MetaVoteContract {
             assert!(new_amount > 0, "Use relock_position() function instead.");
 
             locking_position.amount = new_amount;
+            locking_position.voting_power = self.calculate_voting_power(
+                new_amount,
+                locking_position.locking_period
+            );
             voter.locking_positions.replace(index, &locking_position);
         } else {
             voter.balance += locking_position.amount - amount_from_position;

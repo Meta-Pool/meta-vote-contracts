@@ -1319,3 +1319,50 @@ fn test_claim_stnear() {
         assert_eq!(claim_balance_post, claim_balance_pre - claim_amount);
     }
 }
+
+#[test]
+/// This issue was discovered by Rodrigo.
+fn test_transfer_unlock_relock() {
+    let mut contract = setup_new_test();
+
+    let sender_id: AccountId = voter_account();
+    let amount = U128::from(5 * E24);
+    let msg: String = "30".to_owned();
+
+    contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+
+    set_context_caller(&sender_id);
+    contract.unlock_partial_position(0, U128::from(3*E24));
+
+    testing_env!(get_context(
+        &sender_id,
+        ntoy(TEST_INITIAL_BALANCE),
+        0,
+        to_ts(GENESIS_TIME_IN_DAYS + 10),
+    ));
+    contract.relock_partial_position(
+        1,
+        U128::from(2*E24),
+        30,
+        U128::from(0)
+    );
+
+    // let res = contract.get_all_locking_positions(sender_id);
+    let res = contract.get_locking_position(1, sender_id).unwrap();
+
+    // println!("{:?}", res);
+    // println!("{:?}", res.unwrap().amount);
+
+    // let voter = contract.internal_get_staker(sender_id);
+    assert_eq!(
+        &res.amount,
+        &U128::from(1 * E24),
+        "Calculation error"
+    );
+
+    assert_eq!(
+        &res.voting_power,
+        &U128::from(1 * E24),
+        "Calculation error"
+    );
+}
