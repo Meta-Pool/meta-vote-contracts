@@ -2,8 +2,8 @@
 set -e
 export NEAR_ENV="testnet"
 
-METAVOTE_CONTRACT_ADDRESS="metavote.testnet"
-METAVOTE_WASM="contracts/res/meta_vote_contract.wasm"
+METAVOTE_CONTRACT_ADDRESS="mpdao-vote.testnet"
+METAVOTE_WASM="contracts/res/mpdao_vote_contract.wasm"
 
 echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $(date) 
 

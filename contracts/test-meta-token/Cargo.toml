@@ -1,15 +1,15 @@
 [package]
-name = "test-meta-token"
-version = "0.1.2"
-edition = "2018"
-authors = ["Narwallets.com <hello@narwallets.com>"]
+name = "test-mpdao-token"
+version = "0.1.0"
+edition = "2021"
+authors = ["metapool.app <hello@metapool.app>"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-near-sdk = "4.0.0-pre.7"
-near-contract-standards = "4.0.0-pre.7"
+near-sdk = "5.0.0"
+near-contract-standards = "5.0.0"
 
 [profile.release]
 codegen-units=1

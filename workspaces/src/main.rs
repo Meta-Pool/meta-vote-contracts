@@ -15,7 +15,7 @@ use workspaces::{Account, AccountId, Contract, Worker, DevNetwork};
 
 const METAVOTE_FILEPATH: &str = "../res/meta_vote_contract.wasm";
 const MPIP_FILEPATH: &str = "../res/mpip_contract.wasm";
-const METATOKEN_FILEPATH: &str = "../res/test_meta_token.wasm";
+const MPDAO_TEST_TOKEN_FILEPATH: &str = "../res/test_meta_token.wasm";
 
 pub const NEAR: u128 = 1_000_000_000_000_000_000_000_000;
 
@@ -32,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
     // Stage 1: Deploy relevant contracts
     ///////////////////////////////////////
 
-    let metatoken_contract = create_metatoken(&owner, &worker).await?;
+    let metatoken_contract = create_mpdao_token(&owner, &worker).await?;
     let metavote_contract = create_metavote(&owner, metatoken_contract.id(), &worker).await?;
     let mpip_contract = create_mpip(
         &owner,
@@ -391,8 +391,7 @@ async fn main() -> anyhow::Result<()> {
     assert_eq!(res["abstain_votes"], "0");
 
     // Remove Vote
-
-    let res = voter
+    let _res = voter
         .call(mpip_contract.id(), "remove_vote_proposal")
         .args_json(serde_json::json!({
             "mpip_id": 0
@@ -466,24 +465,25 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn create_metatoken(
+async fn create_mpdao_token(
     owner: &Account,
     worker: &Worker<impl DevNetwork>,
 ) -> anyhow::Result<Contract> {
-    let token_contract_wasm = std::fs::read(METATOKEN_FILEPATH)?;
+    let token_contract_wasm = std::fs::read(MPDAO_TEST_TOKEN_FILEPATH)?;
     let token_contract = worker.dev_deploy(&token_contract_wasm).await?;
-
+    println!("after worker.dev_deploy, about to call new_default_meta {} {}",owner.id(),format!("{}", "200000000000000") );
     let res = token_contract
         .call("new_default_meta")
         .args_json(serde_json::json!({
             "owner_id": owner.id(),
-            "decimals": 24,
-            "symbol": "mpDAO",
-            "total_supply": format!("{}", parse_near!("1000 N"))
+            "total_supply": "200000000000000"
         }))
         .transact()
         .await?;
-    println!("mpDAO TOKEN: {:#?}", res);
+    if res.is_failure() {
+        println!("mpDAO TOKEN new_default_meta result: {:#?}", res);
+        panic!("err on init")
+    }
 
     Ok(token_contract)
 }
