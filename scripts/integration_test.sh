@@ -33,10 +33,10 @@ echo "------------------ Registering accounts"
 NEAR_ENV=testnet near call $META_CONTRACT_ADDRESS register_account '{"account_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
 NEAR_ENV=testnet near call $META_CONTRACT_ADDRESS register_account '{"account_id": "'$METAVOTE_CONTRACT_ADDRESS'"}' --accountId $METAVOTE_CONTRACT_ADDRESS
 
-echo "------------------ Sending META token to the voter"
+echo "------------------ Sending mpDAO token to the voter"
 NEAR_ENV=testnet near call $META_CONTRACT_ADDRESS ft_transfer '{"receiver_id": "'$VOTER_ID'", "amount": "'15$YOCTO_UNITS'"}' --accountId $NEAR_ACCOUNT --depositYocto 1 --gas $TOTAL_PREPAID_GAS
 
-echo "------------------ Checking META stNear balance"
+echo "------------------ Checking mpDAO stNear balance"
 NEAR_ENV=testnet near view $META_CONTRACT_ADDRESS ft_balance_of '{"account_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
 
 # # Generating 3 locking positions: 0, 1, 2 days

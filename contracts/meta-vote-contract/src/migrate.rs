@@ -1,23 +1,33 @@
 use crate::*;
-use near_sdk::{env, near_bindgen, ONE_NEAR};
+use near_sdk::{env, near_bindgen};
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct OldState {
     pub owner_id: AccountId,
     pub voters: UnorderedMap<VoterId, Voter>,
-    pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>,
-    pub min_locking_period: Days,
-    pub max_locking_period: Days,
-    pub min_deposit_amount: Meta,
+    pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
+    pub min_unbound_period: Days,
+    pub max_unbound_period: Days,
+    pub min_deposit_amount: MpDAOAmount,
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
-    pub meta_token_contract_address: ContractAddress,
-    pub total_voting_power: VotingPower,
+    pub mpdao_token_contract_address: ContractAddress, // governance tokens
+    pub total_voting_power: u128,
 
-    // added v0.1.3
-    pub claimable_meta: UnorderedMap<VoterId, u128>,
-    pub accumulated_distributed_for_claims: u128,
-    pub total_unclaimed_meta: u128,
+    // mpdao as rewards
+    pub claimable_mpdao: UnorderedMap<VoterId, u128>,
+    pub accumulated_mpdao_distributed_for_claims: u128, // accumulated total mpDAO distributed
+    pub total_unclaimed_mpdao: u128,                    // currently unclaimed mpDAO
+
+    // stNear as rewards
+    pub stnear_token_contract_address: ContractAddress,
+    pub claimable_stnear: UnorderedMap<VoterId, u128>,
+    pub accum_distributed_stnear_for_claims: u128, // accumulated total stNEAR distributed
+    pub total_unclaimed_stnear: u128,              // currently unclaimed stNEAR
+
+    // association with other blockchain addresses, users' encrypted data
+    pub registration_cost: u128,
+    pub associated_user_data: UnorderedMap<VoterId, String>,
 }
 
 #[near_bindgen]
@@ -26,28 +36,34 @@ impl MetaVoteContract {
     #[private] // only contract account can call this fn
     pub fn migrate() -> Self {
         // retrieve the current state from the contract
-        let old_state: OldState = env::state_read().expect("failed");
+        let old: OldState = env::state_read().expect("failed");
         // return the new state
         Self {
-            owner_id: old_state.owner_id,
-            voters: old_state.voters,
-            votes: old_state.votes,
-            min_locking_period: old_state.min_locking_period,
-            max_locking_period: old_state.max_locking_period,
-            min_deposit_amount: old_state.min_deposit_amount,
-            max_locking_positions: old_state.max_locking_positions,
-            max_voting_positions: old_state.max_voting_positions,
-            meta_token_contract_address: old_state.meta_token_contract_address,
-            total_voting_power: old_state.total_voting_power,
-            accumulated_distributed_for_claims: old_state.accumulated_distributed_for_claims,
-            total_unclaimed_meta: old_state.total_unclaimed_meta,
-            claimable_meta: old_state.claimable_meta,
-            stnear_token_contract_address: "meta-pool.near".parse().unwrap(),
-            claimable_stnear: UnorderedMap::new(StorageKey::ClaimableStNear),
-            accum_distributed_stnear_for_claims: 0,
-            total_unclaimed_stnear: 0,
-            registration_cost: ONE_NEAR/10,
-            airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
+            owner_id: old.owner_id,
+            voters: old.voters,
+            votes: old.votes,
+            min_unbound_period: old.min_unbound_period,
+            max_unbound_period: old.max_unbound_period,
+            min_deposit_amount: old.min_deposit_amount,
+            max_locking_positions: old.max_locking_positions,
+            max_voting_positions: old.max_voting_positions,
+            mpdao_token_contract_address: old.mpdao_token_contract_address,
+            total_voting_power: old.total_voting_power,
+
+            // mpdao as rewards
+            claimable_mpdao: old.claimable_mpdao,
+            accumulated_mpdao_distributed_for_claims: old.accumulated_mpdao_distributed_for_claims,
+            total_unclaimed_mpdao: old.total_unclaimed_mpdao,
+
+            // stNear as rewards
+            stnear_token_contract_address: old.stnear_token_contract_address,
+            claimable_stnear: old.claimable_stnear,
+            accum_distributed_stnear_for_claims: old.accum_distributed_stnear_for_claims,
+            total_unclaimed_stnear: old.total_unclaimed_stnear,
+
+            // association with other blockchain addresses, users' encrypted data
+            registration_cost: old.registration_cost,
+            associated_user_data: old.associated_user_data,
         }
     }
 }

@@ -54,8 +54,8 @@ pub struct MpipContract {
     /// The creation of new MPIPs could be stopped.
     pub open_for_new_mpips: bool,
 
-    /// Minimum number of $META circulating supply required for a governing body to approve a proposal.
-    /// If a quorum is set to 50%, this means that 50% of all circulating $META need to vote yes for the proposal to pass.
+    /// Minimum number of $mpDAO circulating supply required for a governing body to approve a proposal.
+    /// If a quorum is set to 50%, this means that 50% of all circulating $mpDAO need to vote yes for the proposal to pass.
     // Percent is denominated in basis points 100% equals 10_000 basis points.
     pub quorum_floor: BasisPoints,
 }

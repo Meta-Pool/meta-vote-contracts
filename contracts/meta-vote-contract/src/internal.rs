@@ -11,7 +11,7 @@ impl MetaVoteContract {
     pub(crate) fn assert_min_deposit_amount(&self, amount: Balance) {
         assert!(
             amount >= self.min_deposit_amount,
-            "Minimum deposit amount is {} META.",
+            "Minimum deposit amount is {} mpDAO.",
             self.min_deposit_amount
         );
     }
@@ -30,7 +30,7 @@ impl MetaVoteContract {
     fn internal_get_total_votes_for_address(
         &self,
         contract_address: &ContractAddress,
-    ) -> UnorderedMap<VotableObjId, VotingPower> {
+    ) -> UnorderedMap<VotableObjId, u128> {
         self.votes
             .get(&contract_address)
             .unwrap_or(UnorderedMap::new(StorageKey::ContractVotes {
@@ -40,7 +40,7 @@ impl MetaVoteContract {
 
     pub(crate) fn internal_increase_total_votes(
         &mut self,
-        voting_power: VotingPower,
+        voting_power: u128,
         contract_address: &ContractAddress,
         votable_object_id: &VotableObjId,
     ) {
@@ -54,7 +54,7 @@ impl MetaVoteContract {
 
     pub(crate) fn internal_decrease_total_votes(
         &mut self,
-        voting_power: VotingPower,
+        voting_power: u128,
         contract_address: &ContractAddress,
         votable_object_id: &VotableObjId,
     ) {
@@ -118,9 +118,9 @@ impl MetaVoteContract {
         *total_unclaimed -= amount;
     }
 
-    pub(crate) fn add_claimable_meta(&mut self, account: &AccountId, amount: u128) {
+    pub(crate) fn add_claimable_mpdao(&mut self, account: &AccountId, amount: u128) {
         assert!(amount > 0);
-        Self::add_claimable(&mut self.claimable_meta, &mut self.total_unclaimed_meta, account, amount);
+        Self::add_claimable(&mut self.claimable_mpdao, &mut self.total_unclaimed_mpdao, account, amount);
     }
 
     pub(crate) fn add_claimable_stnear(&mut self, account: &AccountId, amount: u128) {
@@ -128,8 +128,8 @@ impl MetaVoteContract {
         Self::add_claimable(&mut self.claimable_stnear, &mut self.total_unclaimed_stnear, account, amount);
     }
 
-    pub(crate) fn remove_claimable_meta(&mut self, account: &AccountId, amount: u128) {
-        Self::remove_claimable(&mut self.claimable_meta, &mut self.total_unclaimed_meta, account, amount, "META");
+    pub(crate) fn remove_claimable_mpdao(&mut self, account: &AccountId, amount: u128) {
+        Self::remove_claimable(&mut self.claimable_mpdao, &mut self.total_unclaimed_mpdao, account, amount, "mpDAO");
     }
 
     pub(crate) fn remove_claimable_stnear(&mut self, account: &AccountId, amount: u128) {

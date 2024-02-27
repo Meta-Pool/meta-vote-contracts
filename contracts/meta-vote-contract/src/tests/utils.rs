@@ -3,20 +3,24 @@
 #![allow(dead_code)]
 
 use near_sdk::{
-    testing_env, AccountId, Balance, Gas, MockedBlockchain, PromiseResult, PublicKey, VMContext,
+    testing_env, AccountId, Balance, Gas, MockedBlockchain, PromiseResult, PublicKey, VMContext, ONE_NEAR,
 };
 
-use crate::constants::E24;
 use crate::types::*;
 
+use super::E6;
+
+pub const E24: u128 = ONE_NEAR;
 pub const LOCKUP_NEAR: u128 = 1000;
 pub const GENESIS_TIME_IN_DAYS: u64 = 500;
 pub const YEAR: u64 = 365;
 pub const TEST_INITIAL_BALANCE: u128 = 100;
 
-pub const MIN_LOCKING_PERIOD: Days = 30;
-pub const MAX_LOCKING_PERIOD: Days = 300;
-pub const MIN_DEPOSIT_AMOUNT: Balance = 1 * E24;
+pub const MIN_UNBOUND_PERIOD: Days = 30;
+pub const MAX_UNBOUND_PERIOD: Days = 300;
+
+pub const MIN_DEPOSIT_AMOUNT: u128 = 1 * E6; // 1 mpDao
+
 pub const MAX_LOCKING_POSITIONS: u8 = 20;
 pub const MAX_VOTING_POSITIONS: u8 = 100;
 
@@ -48,8 +52,8 @@ pub fn operator_account() -> AccountId {
     AccountId::new_unchecked("operator.metavote.near".to_string())
 }
 
-pub fn meta_token_account() -> AccountId {
-    AccountId::new_unchecked("meta-token.metavote.near".to_string())
+pub fn mpdao_token_account() -> AccountId {
+    AccountId::new_unchecked("mpdao-token.metavote.near".to_string())
 }
 
 pub fn meta_pool_account() -> AccountId {

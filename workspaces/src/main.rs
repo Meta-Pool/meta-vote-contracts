@@ -41,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
         &worker
     ).await?;
 
-    println!("META token Contract: {}", metatoken_contract.id());
+    println!("mpDAO token Contract: {}", metatoken_contract.id());
     println!("Meta vote Contract: {}", metavote_contract.id());
     println!("MPIPs Contract: {}", mpip_contract.id());
 
@@ -80,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
         .deposit(1)
         .transact()
         .await?;
-    println!("META balance of {}: {:?}\n", voter.id(), res);
+    println!("mpDAO balance of {}: {:?}\n", voter.id(), res);
     let res = &res.raw_bytes().unwrap().clone();
     let res = str::from_utf8(res).unwrap();
     let res = json::parse(&res)?;
@@ -478,12 +478,12 @@ async fn create_metatoken(
         .args_json(serde_json::json!({
             "owner_id": owner.id(),
             "decimals": 24,
-            "symbol": "META",
+            "symbol": "mpDAO",
             "total_supply": format!("{}", parse_near!("1000 N"))
         }))
         .transact()
         .await?;
-    println!("META TOKEN: {:#?}", res);
+    println!("mpDAO TOKEN: {:#?}", res);
 
     Ok(token_contract)
 }

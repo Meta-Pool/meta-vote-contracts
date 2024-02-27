@@ -7,16 +7,16 @@ use near_sdk::serde::{Deserialize, Serialize};
 pub struct VoterJSON {
     pub voter_id: String,
     pub locking_positions: Vec<LockingPositionJSON>,
-    pub voting_power: U128,
+    pub voting_power: U128String,
     pub vote_positions: Vec<VotePositionJSON>,
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Voter {
-    pub balance: Meta,
+    pub balance: MpDAOAmount,
     pub locking_positions: Vector<LockingPosition>,
-    pub voting_power: VotingPower,
-    pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>,
+    pub voting_power: u128,
+    pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
 }
 
 impl Voter {
@@ -37,7 +37,7 @@ impl Voter {
         self.balance == 0 && self.locking_positions.is_empty()
     }
 
-    pub(crate) fn sum_locked(&self) -> Meta {
+    pub(crate) fn sum_locked(&self) -> MpDAOAmount {
         let mut result = 0_u128;
         for locking_position in self.locking_positions.iter() {
             if locking_position.is_locked() {
@@ -47,7 +47,7 @@ impl Voter {
         result
     }
 
-    pub(crate) fn sum_unlocking(&self) -> Meta {
+    pub(crate) fn sum_unlocking(&self) -> MpDAOAmount {
         let mut result = 0_u128;
         for locking_position in self.locking_positions.iter() {
             if locking_position.is_unlocking() {
@@ -57,7 +57,7 @@ impl Voter {
         result
     }
 
-    pub(crate) fn sum_unlocked(&self) -> Meta {
+    pub(crate) fn sum_unlocked(&self) -> MpDAOAmount {
         let mut result = 0_u128;
         for locking_position in self.locking_positions.iter() {
             if locking_position.is_unlocked() {
@@ -67,7 +67,7 @@ impl Voter {
         result
     }
 
-    pub(crate) fn sum_used_votes(&self) -> VotingPower {
+    pub(crate) fn sum_used_votes(&self) -> u128 {
         let mut result = 0_u128;
         for map in self.vote_positions.values() {
             result += map.values().sum::<u128>();
@@ -100,7 +100,7 @@ impl Voter {
         &self,
         voter_id: &VoterId,
         contract_address: &ContractAddress,
-    ) -> UnorderedMap<VotableObjId, VotingPower> {
+    ) -> UnorderedMap<VotableObjId, u128> {
         let id = format!("{}-{}", voter_id.to_string(), contract_address.as_str());
         self.vote_positions
             .get(&contract_address)
@@ -138,7 +138,7 @@ impl Voter {
                 vote_positions.push(VotePositionJSON {
                     votable_address: address.clone(),
                     votable_object_id: obj,
-                    voting_power: U128::from(value),
+                    voting_power: value.into(),
                 });
             }
         }
@@ -146,7 +146,7 @@ impl Voter {
         VoterJSON {
             voter_id: voter_id.to_string(),
             locking_positions,
-            voting_power: U128::from(self.voting_power),
+            voting_power: self.voting_power.into(),
             vote_positions,
         }
     }

@@ -3,7 +3,7 @@ use crate::{constants::*, locking_position::*};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
 use near_sdk::collections::Vector;
-use near_sdk::json_types::{U128, U64};
+use near_sdk::json_types::U64;
 use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
 use types::*;
 use utils::{generate_hash_id, get_current_epoch_millis};
@@ -25,29 +25,29 @@ mod withdraw;
 pub struct MetaVoteContract {
     pub owner_id: AccountId,
     pub voters: UnorderedMap<VoterId, Voter>,
-    pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>,
-    pub min_locking_period: Days,
-    pub max_locking_period: Days,
-    pub min_deposit_amount: Meta,
+    pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
+    pub min_unbound_period: Days,
+    pub max_unbound_period: Days,
+    pub min_deposit_amount: MpDAOAmount,
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
-    pub meta_token_contract_address: ContractAddress,
-    pub total_voting_power: VotingPower,
+    pub mpdao_token_contract_address: ContractAddress, // governance tokens
+    pub total_voting_power: u128,
 
-    // added v0.1.3
-    pub claimable_meta: UnorderedMap<VoterId, u128>,
-    pub accumulated_distributed_for_claims: u128, // accumulated total META distributed
-    pub total_unclaimed_meta: u128,               // currently unclaimed META
+    // mpdao as rewards
+    pub claimable_mpdao: UnorderedMap<VoterId, u128>,
+    pub accumulated_mpdao_distributed_for_claims: u128, // accumulated total mpDAO distributed
+    pub total_unclaimed_mpdao: u128,               // currently unclaimed mpDAO
 
-    // added v0.1.4
+    // stNear as rewards
     pub stnear_token_contract_address: ContractAddress,
     pub claimable_stnear: UnorderedMap<VoterId, u128>,
     pub accum_distributed_stnear_for_claims: u128, // accumulated total stNEAR distributed
     pub total_unclaimed_stnear: u128,              // currently unclaimed stNEAR
 
-    // airdrop users encrypted data
+    // association with other blockchain addresses, users' encrypted data
     pub registration_cost: u128,
-    pub airdrop_user_data: UnorderedMap<VoterId, String>,
+    pub associated_user_data: UnorderedMap<VoterId, String>,
 }
 
 #[near_bindgen]
@@ -55,40 +55,40 @@ impl MetaVoteContract {
     #[init]
     pub fn new(
         owner_id: AccountId,
-        min_locking_period: Days,
-        max_locking_period: Days,
-        min_deposit_amount: U128,
+        min_unbound_period: Days,
+        max_unbound_period: Days,
+        min_deposit_amount: U128String,
         max_locking_positions: u8,
         max_voting_positions: u8,
-        meta_token_contract_address: ContractAddress,
+        mpdao_token_contract_address: ContractAddress,
         stnear_token_contract_address: ContractAddress,
-        registration_cost: U128,
+        registration_cost: U128String,
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
         require!(
-            min_locking_period < max_locking_period,
+            min_unbound_period < max_unbound_period,
             "Review the min and max locking period"
         );
         Self {
             owner_id,
             voters: UnorderedMap::new(StorageKey::Voters),
             votes: UnorderedMap::new(StorageKey::Votes),
-            min_locking_period,
-            max_locking_period,
-            min_deposit_amount: Meta::from(min_deposit_amount),
+            min_unbound_period,
+            max_unbound_period,
+            min_deposit_amount: MpDAOAmount::from(min_deposit_amount),
             max_locking_positions,
             max_voting_positions,
-            meta_token_contract_address,
+            mpdao_token_contract_address,
             total_voting_power: 0,
-            accumulated_distributed_for_claims: 0,
-            total_unclaimed_meta: 0,
-            claimable_meta: UnorderedMap::new(StorageKey::Claimable),
+            accumulated_mpdao_distributed_for_claims: 0,
+            total_unclaimed_mpdao: 0,
+            claimable_mpdao: UnorderedMap::new(StorageKey::Claimable),
             stnear_token_contract_address,
             claimable_stnear: UnorderedMap::new(StorageKey::ClaimableStNear),
             accum_distributed_stnear_for_claims: 0,
             total_unclaimed_stnear: 0,
             registration_cost: registration_cost.0,
-            airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
+            associated_user_data: UnorderedMap::new(StorageKey::AirdropData),
         }
     }
 
@@ -104,17 +104,17 @@ impl MetaVoteContract {
     // * Register for Airdrops/Gifts *
     // *******************************
 
-    pub fn update_registration_cost(&mut self, new_cost: U128) {
+    pub fn update_registration_cost(&mut self, new_cost: U128String) {
         self.assert_only_owner();
         self.registration_cost = new_cost.0;
     }
 
-    pub fn get_registration_cost(&self) -> U128 {
-        U128::from(self.registration_cost)
+    pub fn get_registration_cost(&self) -> U128String {
+        U128String::from(self.registration_cost)
     }
 
     pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
-        self.airdrop_user_data.get(account_id).is_some()
+        self.associated_user_data.get(account_id).is_some()
     }
 
     #[payable]
@@ -124,25 +124,25 @@ impl MetaVoteContract {
             "Pay {} yoctos for the registration cost",
             self.registration_cost
         );
-        self.airdrop_user_data
+        self.associated_user_data
             .insert(&env::predecessor_account_id(), encrypted_data);
     }
 
     /// Returns a single airdrop data
     pub fn get_airdrop_account(&self, account_id: &AccountId) -> String {
-        self.airdrop_user_data.get(&account_id).unwrap()
+        self.associated_user_data.get(&account_id).unwrap()
     }
 
     /// Returns a list of airdrop data
     pub fn get_airdrop_accounts(&self, from_index: u32, limit: u32) -> Vec<(String, String)> {
-        let keys = self.airdrop_user_data.keys_as_vector();
+        let keys = self.associated_user_data.keys_as_vector();
         let voters_len = keys.len() as u64;
         let start = from_index as u64;
         let limit = limit as u64;
         let mut results = Vec::<(String, String)>::new();
         for index in start..std::cmp::min(start + limit, voters_len) {
             let voter_id = keys.get(index).unwrap();
-            let airdrop_data = self.airdrop_user_data.get(&voter_id).unwrap();
+            let airdrop_data = self.associated_user_data.get(&voter_id).unwrap();
             results.push((voter_id.to_string(), airdrop_data));
         }
         results
@@ -152,19 +152,19 @@ impl MetaVoteContract {
     // * claim & Lock *
     // ****************
 
-    // claim META and create/update a locking position
-    pub fn claim_and_lock(&mut self, amount: U128, locking_period: u16) {
+    // claim mpDAO and create/update a locking position
+    pub fn claim_and_lock(&mut self, amount: U128String, locking_period: u16) {
         let amount = amount.0;
         self.assert_min_deposit_amount(amount);
         let voter_id = VoterId::from(env::predecessor_account_id());
-        self.remove_claimable_meta(&voter_id, amount);
+        self.remove_claimable_mpdao(&voter_id, amount);
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         // create/update locking position
         self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
     }
 
     // claim stNear
-    pub fn claim_stnear(&mut self, amount: U128) {
+    pub fn claim_stnear(&mut self, amount: U128String) {
         let amount = amount.0;
         let voter_id = VoterId::from(env::predecessor_account_id());
         self.remove_claimable_stnear(&voter_id, amount);
@@ -203,13 +203,13 @@ impl MetaVoteContract {
         self.voters.insert(&voter_id, &voter);
     }
 
-    pub fn unlock_partial_position(&mut self, index: PositionIndex, amount: U128) {
+    pub fn unlock_partial_position(&mut self, index: PositionIndex, amount: U128String) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
         let locking_period = locking_position.locking_period;
-        let amount = Meta::from(amount);
+        let amount = MpDAOAmount::from(amount);
 
         // If the amount equals the total, then the unlock is not partial.
         if amount == locking_position.amount {
@@ -218,7 +218,7 @@ impl MetaVoteContract {
         require!(locking_position.amount > amount, "Amount too large!");
         assert!(
             (locking_position.amount - amount) >= self.min_deposit_amount,
-            "A locking position cannot have less than {} META",
+            "A locking position cannot have less than {} mpDAO",
             self.min_deposit_amount
         );
         let remove_voting_power = self.calculate_voting_power(amount, locking_period);
@@ -306,7 +306,7 @@ impl MetaVoteContract {
         &mut self,
         index: PositionIndex,
         locking_period: Days,
-        amount_from_balance: U128,
+        amount_from_balance: U128String,
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
@@ -316,7 +316,7 @@ impl MetaVoteContract {
         let amount_from_balance = amount_from_balance.0;
         assert!(
             voter.balance >= amount_from_balance,
-            "Not enough balance. You have {} META in balance, required {}.",
+            "Not enough balance. You have {} mpDAO in balance, required {}.",
             voter.balance,
             amount_from_balance
         );
@@ -354,9 +354,9 @@ impl MetaVoteContract {
     pub fn relock_partial_position(
         &mut self,
         index: PositionIndex,
-        amount_from_position: U128,
+        amount_from_position: U128String,
         locking_period: Days,
-        amount_from_balance: U128,
+        amount_from_balance: U128String,
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
@@ -367,20 +367,20 @@ impl MetaVoteContract {
         let amount_from_position = amount_from_position.0;
         assert!(
             voter.balance >= amount_from_balance,
-            "Not enough balance. You have {} META in balance, required {}.",
+            "Not enough balance. You have {} mpDAO in balance, required {}.",
             voter.balance,
             amount_from_balance
         );
         assert!(
             locking_position.amount >= amount_from_position,
-            "Locking position amount is not enough. Locking position has {} META, required {}.",
+            "Locking position amount is not enough. Locking position has {} mpDAO, required {}.",
             locking_position.amount,
             amount_from_position
         );
         let amount = amount_from_balance + amount_from_position;
         assert!(
             amount >= self.min_deposit_amount,
-            "A locking position cannot have less than {} META.",
+            "A locking position cannot have less than {} mpDAO.",
             self.min_deposit_amount
         );
         // Check if position is unlocking.
@@ -405,7 +405,7 @@ impl MetaVoteContract {
             let new_amount = locking_position.amount - amount_from_position;
             assert!(
                 amount >= self.min_deposit_amount,
-                "A locking position cannot have less than {} META.",
+                "A locking position cannot have less than {} mpDAO.",
                 self.min_deposit_amount
             );
             assert!(new_amount > 0, "Use relock_position() function instead.");
@@ -430,20 +430,20 @@ impl MetaVoteContract {
         self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
     }
 
-    pub fn relock_from_balance(&mut self, locking_period: Days, amount_from_balance: U128) {
+    pub fn relock_from_balance(&mut self, locking_period: Days, amount_from_balance: U128String) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
 
         let amount = amount_from_balance.0;
         assert!(
             voter.balance >= amount,
-            "Not enough balance. You have {} META in balance, required {}.",
+            "Not enough balance. You have {} mpDAO in balance, required {}.",
             voter.balance,
             amount
         );
         assert!(
             amount >= self.min_deposit_amount,
-            "A locking position cannot have less than {} META.",
+            "A locking position cannot have less than {} mpDAO.",
             self.min_deposit_amount
         );
 
@@ -479,13 +479,13 @@ impl MetaVoteContract {
     // * Withdraw *
     // ************
 
-    pub fn withdraw(&mut self, position_index_list: Vec<PositionIndex>, amount_from_balance: U128) {
+    pub fn withdraw(&mut self, position_index_list: Vec<PositionIndex>, amount_from_balance: U128String) {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter_or_panic(&voter_id);
-        let amount_from_balance = Meta::from(amount_from_balance);
+        let amount_from_balance = MpDAOAmount::from(amount_from_balance);
         assert!(
             voter.balance >= amount_from_balance,
-            "Not enough balance. You have {} META in balance, required {}.",
+            "Not enough balance. You have {} mpDAO in balance, required {}.",
             voter.balance,
             amount_from_balance
         );
@@ -506,7 +506,7 @@ impl MetaVoteContract {
         } else {
             self.voters.insert(&voter_id, &voter);
         }
-        self.transfer_meta_to_voter(voter_id, total_to_withdraw);
+        self.transfer_mpdao_to_voter(voter_id, total_to_withdraw);
     }
 
     pub fn withdraw_all(&mut self) {
@@ -530,7 +530,7 @@ impl MetaVoteContract {
         } else {
             self.voters.insert(&voter_id, &voter);
         }
-        self.transfer_meta_to_voter(voter_id, total_to_withdraw);
+        self.transfer_mpdao_to_voter(voter_id, total_to_withdraw);
     }
 
     // **********
@@ -539,13 +539,13 @@ impl MetaVoteContract {
 
     pub fn vote(
         &mut self,
-        voting_power: U128,
+        voting_power: U128String,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
-        let voting_power = VotingPower::from(voting_power);
+        let voting_power = u128::from(voting_power);
         assert!(
             voter.voting_power >= voting_power,
             "Not enough free voting power. You have {}, requested {}.",
@@ -583,13 +583,13 @@ impl MetaVoteContract {
 
     pub fn rebalance(
         &mut self,
-        voting_power: U128,
+        voting_power: U128String,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
-        let voting_power = VotingPower::from(voting_power);
+        let voting_power = u128::from(voting_power);
 
         let mut votes_for_address = voter.get_votes_for_address(&voter_id, &contract_address);
         let mut votes = votes_for_address
@@ -690,7 +690,7 @@ impl MetaVoteContract {
 
     pub fn update_min_locking_period(&mut self, new_period: Days) {
         self.assert_only_owner();
-        self.min_locking_period = new_period;
+        self.min_unbound_period = new_period;
     }
 
     /**********************/
@@ -705,8 +705,8 @@ impl MetaVoteContract {
         self.voters.len().into()
     }
 
-    pub fn get_total_voting_power(&self) -> U128 {
-        U128::from(self.total_voting_power)
+    pub fn get_total_voting_power(&self) -> U128String {
+        U128String::from(self.total_voting_power)
     }
 
     // get all information for a single voter: voter + locking-positions + voting-positions
@@ -731,56 +731,60 @@ impl MetaVoteContract {
         results
     }
 
-    pub fn get_balance(&self, voter_id: VoterId) -> U128 {
+    pub fn get_balance(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
         let balance = voter.balance + voter.sum_unlocked();
-        U128::from(balance)
+        U128String::from(balance)
     }
 
-    pub fn get_claimable_meta(&self, voter_id: &VoterId) -> U128 {
-        U128::from(self.claimable_meta.get(&voter_id).unwrap_or_default())
+    pub fn get_claimable_mpdao(&self, voter_id: &VoterId) -> U128String {
+        U128String::from(self.claimable_mpdao.get(&voter_id).unwrap_or_default())
+    }
+    // kept to not break public interface
+    pub fn get_claimable_meta(&self, voter_id: &VoterId) -> U128String {
+        self.get_claimable_mpdao(voter_id)
     }
 
-    pub fn get_claimable_stnear(&self, voter_id: &VoterId) -> U128 {
-        U128::from(self.claimable_stnear.get(&voter_id).unwrap_or_default())
+    pub fn get_claimable_stnear(&self, voter_id: &VoterId) -> U128String {
+        U128String::from(self.claimable_stnear.get(&voter_id).unwrap_or_default())
     }
 
     // get all claims
-    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128)> {
-        let mut results = Vec::<(AccountId, U128)>::new();
-        let keys = self.claimable_meta.keys_as_vector();
+    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+        let mut results = Vec::<(AccountId, U128String)>::new();
+        let keys = self.claimable_mpdao.keys_as_vector();
         let start = from_index as u64;
         let limit = limit as u64;
         for index in start..std::cmp::min(start + limit, keys.len()) {
             let voter_id = keys.get(index).unwrap();
-            let amount = self.claimable_meta.get(&voter_id).unwrap();
+            let amount = self.claimable_mpdao.get(&voter_id).unwrap();
             results.push((voter_id, amount.into()));
         }
         results
     }
 
-    pub fn get_locked_balance(&self, voter_id: VoterId) -> U128 {
+    pub fn get_locked_balance(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.sum_locked())
+        U128String::from(voter.sum_locked())
     }
 
-    pub fn get_unlocking_balance(&self, voter_id: VoterId) -> U128 {
+    pub fn get_unlocking_balance(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.sum_unlocking())
+        U128String::from(voter.sum_unlocking())
     }
 
-    pub fn get_available_voting_power(&self, voter_id: VoterId) -> U128 {
+    pub fn get_available_voting_power(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.voting_power)
+        U128String::from(voter.voting_power)
     }
 
-    pub fn get_used_voting_power(&self, voter_id: VoterId) -> U128 {
+    pub fn get_used_voting_power(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128::from(voter.sum_used_votes())
+        U128String::from(voter.sum_used_votes())
     }
 
     pub fn get_locking_period(&self) -> (Days, Days) {
-        (self.min_locking_period, self.max_locking_period)
+        (self.min_unbound_period, self.max_unbound_period)
     }
 
     // all locking positions for a voter
@@ -814,12 +818,12 @@ impl MetaVoteContract {
         &self,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
-    ) -> U128 {
+    ) -> U128String {
         let votes = match self.votes.get(&contract_address) {
             Some(object) => object.get(&votable_object_id).unwrap_or(0_u128),
             None => 0_u128,
         };
-        U128::from(votes)
+        U128String::from(votes)
     }
 
     // votes by app (contract)
@@ -837,7 +841,7 @@ impl MetaVoteContract {
             results.push(VotableObjectJSON {
                 votable_contract: contract_address.to_string(),
                 id,
-                current_votes: U128::from(voting_power),
+                current_votes: U128String::from(voting_power),
             })
         }
         results.sort_by_key(|v| v.current_votes.0);
@@ -854,7 +858,7 @@ impl MetaVoteContract {
                 results.push(VotableObjectJSON {
                     votable_contract: contract_address.to_string(),
                     id,
-                    current_votes: U128::from(voting_power),
+                    current_votes: U128String::from(voting_power),
                 })
             }
         }
@@ -867,22 +871,30 @@ impl MetaVoteContract {
         voter_id: VoterId,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
-    ) -> U128 {
+    ) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
         let votes = match voter.vote_positions.get(&contract_address) {
             Some(votes_for_address) => votes_for_address.get(&votable_object_id).unwrap_or(0_u128),
             None => 0_u128,
         };
-        U128::from(votes)
+        U128String::from(votes)
     }
 
     // query current meta ready for distribution
-    pub fn get_total_unclaimed_meta(&self) -> U128 {
-        self.total_unclaimed_meta.into()
+    pub fn get_total_unclaimed_mpdao(&self) -> U128String {
+        self.total_unclaimed_mpdao.into()
     }
-    // query total_distributed meta for claims
-    pub fn get_accumulated_distributed_for_claims(&self) -> U128 {
-        self.accumulated_distributed_for_claims.into()
+    // kept to not break public interface
+    pub fn get_total_unclaimed_meta(&self) -> U128String {
+        self.get_total_unclaimed_mpdao()
+    }
+    // query total_distributed mpdao for claims
+    pub fn get_accumulated_mpdao_distributed_for_claims(&self) -> U128String {
+        self.accumulated_mpdao_distributed_for_claims.into()
+    }
+    // kept to not break public interface
+    pub fn get_accumulated_distributed_for_claims(&self) -> U128String {
+        self.get_accumulated_mpdao_distributed_for_claims()
     }
 }
 

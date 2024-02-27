@@ -1,8 +1,8 @@
 use near_sdk::{BorshStorageKey, Gas, CryptoHash};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 
-pub const E24: u128 = 1_000_000_000_000_000_000_000_000;
-pub const YOCTO_UNITS: u128 = E24;
+pub const ONE_MPDAO: u128 = 1_000_000; // MPDAO has 6 decimals
+pub const E18: u128 = 1_000_000_000_000_000_000; // to convert 6 decimals to 24 decimals
 pub const TGAS: u64 = 1_000_000_000_000;
 
 /// Amount of gas for fungible token transfers.

@@ -2,11 +2,11 @@
 
 ![Meta Vote Logo](media/logo.png)
 
-Implementation of a general voting system using the $META token.
+Implementation of a general voting system for metapool.app DAO using the mpDAO token.
 
 ## Versions
 
-The last version of the deployed contract, in Near `mainnet`, is in the `stable` branch.
+The last version of the deployed contract, in Near `mainnet`, is in the `main` branch.
 
 Current stable version: [**v0.1.1**](https://github.com/Meta-Pool/meta-vote-contracts/releases/tag/v0.1.1)
 Check all releases in [Meta Vote Releases](https://github.com/Meta-Pool/meta-vote-contracts/releases).
@@ -38,7 +38,7 @@ pub type PositionIndex = u64;
 pub struct LockingPositionJSON {
     pub index: Option<PositionIndex>,
     pub amount: U128,
-    pub locking_period: Days,
+    pub locking_period: Days, // unbound required days
     pub voting_power: U128,
     pub unlocking_started_at: Option<EpochMillis>,
     pub is_unlocked: bool,
@@ -75,7 +75,7 @@ The best way to deploy Meta Vote is using the scripts for `mainnet` and `testnet
 
 ## Deposit & Locking
 
-* Use ft_transfer_call on META token NEP-141 contract, in the `msg` field set the number of days for the auto-lock
+* Use ft_transfer_call on mpDAO token NEP-141 contract, in the `msg` field set the number of days for the unbound period
 
 * to see how this contract process deposits check `fn ft_on_transfer()`
 
@@ -220,12 +220,12 @@ pub fn unvote(
 
 ## Locking and Unlocking process
 
-To Lock funds into the Meta Vote contract, the user must define an amount in the $META token and a number of days (between 30 and 300 days) to lock the funds.
+To Lock funds into the Meta Vote contract, the user must define an amount in the $mpDAO token and a number of days (between 30 and 300 days) to lock the funds.
 
 ![Locking and Unlocking process](media/process.png)
 
 ## Consider:
 
-- To reclaim the META tokens, you will have to wait the period selected in the locking period.
+- To reclaim the mpDAO tokens, you will have to wait the period selected in the locking period.
 - Implement **NEP264** for cross-contract calls: https://github.com/near/near-sdk-rs/issues/740
 - Release notes for `near-sdk = "4.0.0"`: https://github.com/near/near-sdk-rs/discussions/797

@@ -1,11 +1,9 @@
 use crate::*;
 use near_sdk::json_types::U128;
-use near_sdk::{env, log, near_bindgen, PromiseOrValue};
-use near_sdk::{serde_json, ONE_NEAR};
+use near_sdk::{env, log, near_bindgen, PromiseOrValue, serde_json};
 
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 
-const E24: u128 = ONE_NEAR;
 const E20: Balance = 100_000_000_000_000_000_000;
 
 #[near_bindgen]
@@ -18,7 +16,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
     ) -> PromiseOrValue<U128> {
         let amount = amount.0;
 
-        // deposit for-claims, msg == "for-claims" means META to be later distributed to voters
+        // deposit for-claims, msg == "for-claims" means mpDAO to be later distributed to voters
         if msg.len() >= 11 && &msg[..11] == "for-claims:" {
             match serde_json::from_str(&msg[11..]) {
                 Ok(info) => self.distribute_for_claims(amount, &info),
@@ -35,13 +33,13 @@ impl FungibleTokenReceiver for MetaVoteContract {
             let voter_id = VoterId::from(sender_id);
             assert_eq!(
                 env::predecessor_account_id(),
-                self.meta_token_contract_address,
-                "This contract only works with META from {}",
-                self.meta_token_contract_address.to_string()
+                self.mpdao_token_contract_address,
+                "This contract only works with mpDAO from {}",
+                self.mpdao_token_contract_address.to_string()
             );
 
             self.assert_min_deposit_amount(amount);
-            log!("DEPOSIT: {} META deposited from {}", amount, &voter_id,);
+            log!("DEPOSIT: {} mpDAO deposited from {}", amount, &voter_id,);
             let mut voter = self.internal_get_voter(&voter_id);
             self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
         }
@@ -62,14 +60,14 @@ impl MetaVoteContract {
         let token_address = env::predecessor_account_id();
 
         // Meta Token
-        if token_address == self.meta_token_contract_address {
+        if token_address == self.mpdao_token_contract_address {
             for item in distribute_info {
-                // in case of META, item.1 is integer META
-                let amount = item.1 as u128 * E24;
-                self.add_claimable_meta(&AccountId::new_unchecked(item.0.clone()), amount);
+                // in case of mpDAO, item.1 is integer mpDAO - mpDAO has 6 decimals
+                let amount = item.1 as u128 * 1_000_000;
+                self.add_claimable_mpdao(&AccountId::new_unchecked(item.0.clone()), amount);
                 total_distributed += amount;
             }
-            self.accumulated_distributed_for_claims += total_distributed;
+            self.accumulated_mpdao_distributed_for_claims += total_distributed;
 
         // stNear Token
         } else if token_address == self.stnear_token_contract_address {

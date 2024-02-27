@@ -21,7 +21,7 @@ pub trait FungibleTokenCore {
 
 #[ext_contract(ext_self)]
 pub trait SelfMetaVote {
-    fn after_transfer_meta_callback(
+    fn after_transfer_mpdao_callback(
         &mut self,
         voter_id: AccountId,
         amount: U128
