@@ -2,7 +2,7 @@
 name = "test-meta-token"
 version = "0.1.2"
 edition = "2018"
-authors = ["Narwallets.com <hello@narwallets.com>"]
+authors = ["metapool.app <hello@metapoool.app>"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

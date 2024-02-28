@@ -2,13 +2,14 @@
 // use meta_tools::types::{EpochMillis, VaultId};
 // use meta_tools::utils::proportional;
 // use meta_tools::bond::BondLoaderJSON;
-use near_units::{parse_gas, parse_near};
+use near_units::parse_near;
 // use json;
 use std::str;
 // use near_sdk::json_types::{U128, U64};
 
 // use workspaces::network::Sandbox;
-use workspaces::{Account, AccountId, Contract, Worker, DevNetwork};
+use near_workspaces::{types::NearToken, Account, AccountId, Contract, DevNetwork, Worker};
+use near_gas::*;
 
 // use meta_test_utils::now::Now;
 // use meta_test_utils::now;
@@ -21,7 +22,7 @@ pub const NEAR: u128 = 1_000_000_000_000_000_000_000_000;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let worker = workspaces::sandbox().await?;
+    let worker = near_workspaces::sandbox().await?;
 
     // Creating Accounts.
     let owner = worker.dev_create_account().await?;
@@ -65,8 +66,8 @@ async fn main() -> anyhow::Result<()> {
            "receiver_id": voter.id(),
             "amount": format!("{}", parse_near!("15 N"))
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     println!("Transfer stNEAR: {:?}\n", res);
@@ -76,8 +77,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "account_id": voter.id()
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     println!("META balance of {}: {:?}\n", voter.id(), res);
@@ -92,8 +93,8 @@ async fn main() -> anyhow::Result<()> {
            "receiver_id": proposer.id(),
             "amount": format!("{}", parse_near!("15 N"))
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     println!("Transfer stNEAR: {:?}\n", res);
@@ -103,8 +104,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "voter_id": voter.id()
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -121,8 +122,8 @@ async fn main() -> anyhow::Result<()> {
             "data": "data1",
             "extra": "extra1"
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     assert!(res.is_failure(), "Not enough deposit");
@@ -136,8 +137,8 @@ async fn main() -> anyhow::Result<()> {
             "data": "data1",
             "extra": "extra1"
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     // Due to Workspaces nuances, this is the way to see if a receipt in the tx failed.
@@ -149,8 +150,8 @@ async fn main() -> anyhow::Result<()> {
             "from_index": 0,
             "limit": 100
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -163,8 +164,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "proposer_id": voter.id()
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -183,8 +184,8 @@ async fn main() -> anyhow::Result<()> {
             "amount": format!("{}", parse_near!("3 N")),
             "msg": "2"
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     println!("Transfer stNEAR: {:?}\n", res);
@@ -194,8 +195,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "voter_id": voter.id()
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -213,8 +214,8 @@ async fn main() -> anyhow::Result<()> {
             "amount": format!("{}", parse_near!("3 N")),
             "msg": "2"
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     println!("Transfer stNEAR: {:?}\n", res);
@@ -224,8 +225,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "voter_id": proposer.id()
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(1)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -245,8 +246,8 @@ async fn main() -> anyhow::Result<()> {
             "data": "data1",
             "extra": "extra1"
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     // Due to Workspaces nuances, this is the way to see if a receipt in the tx failed.
@@ -258,8 +259,8 @@ async fn main() -> anyhow::Result<()> {
             "from_index": 0,
             "limit": 100
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -276,8 +277,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -290,8 +291,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -304,7 +305,7 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
+        .gas(NearGas::from_tgas(200))
         .transact()
         .await?;
     println!("Starting Voting Period: {:?}\n", res);
@@ -314,8 +315,8 @@ async fn main() -> anyhow::Result<()> {
     //     .args_json(serde_json::json!({
     //         "mpip_id": 0
     //     }))
-    //     .gas(parse_gas!("200 Tgas") as u64)
-    //     // .deposit(parse_gas!("300 Tgas") as u128)
+    //     .gas(NearGas::from_tgas(200))
+    //     // .deposit(NearToken::from_millinear(3))
     //     .transact()
     //     .await?;
     // let res = &res.raw_bytes().unwrap().clone();
@@ -328,8 +329,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -342,8 +343,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -362,8 +363,8 @@ async fn main() -> anyhow::Result<()> {
             "vote": "Against",
             "memo": ""
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     // let res = &res.raw_bytes().unwrap().clone();
@@ -376,8 +377,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -392,13 +393,13 @@ async fn main() -> anyhow::Result<()> {
 
     // Remove Vote
 
-    let res = voter
+    let _res = voter
         .call(mpip_contract.id(), "remove_vote_proposal")
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     // let res = &res.raw_bytes().unwrap().clone();
@@ -414,8 +415,8 @@ async fn main() -> anyhow::Result<()> {
             "vote": "For",
             "memo": ""
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     // let res = &res.raw_bytes().unwrap().clone();
@@ -428,8 +429,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -452,8 +453,8 @@ async fn main() -> anyhow::Result<()> {
         .args_json(serde_json::json!({
             "mpip_id": 0
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
-        // .deposit(parse_gas!("300 Tgas") as u128)
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
         .transact()
         .await?;
     let res = &res.raw_bytes().unwrap().clone();
@@ -556,7 +557,7 @@ async fn registering_accounts(
         .args_json(serde_json::json!({
             "account_id": voter.id(),
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
+        .gas(NearGas::from_tgas(200))
         .transact()
         .await?;
     println!("Register 1: {:?}\n", res);
@@ -566,7 +567,7 @@ async fn registering_accounts(
         .args_json(serde_json::json!({
             "account_id": metavote_contract.id(),
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
+        .gas(NearGas::from_tgas(200))
         .transact()
         .await?;
     println!("Register 2: {:?}\n", res);
@@ -576,7 +577,7 @@ async fn registering_accounts(
         .args_json(serde_json::json!({
             "account_id": mpip_contract.id(),
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
+        .gas(NearGas::from_tgas(200))
         .transact()
         .await?;
     println!("Register 3: {:?}\n", res);
@@ -586,7 +587,7 @@ async fn registering_accounts(
         .args_json(serde_json::json!({
             "account_id": proposer.id(),
         }))
-        .gas(parse_gas!("200 Tgas") as u64)
+        .gas(NearGas::from_tgas(200))
         .transact()
         .await?;
     println!("Register 4: {:?}\n", res);
