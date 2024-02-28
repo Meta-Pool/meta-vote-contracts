@@ -25,12 +25,6 @@ publish-dev-init: build
 	rm -rf neardev/
 	NEAR_ENV=testnet near dev-deploy --wasmFile res/katherine_fundraising_contract.wasm --initFunction new --initArgs '{"owner_id": ${NEAR_ACCOUNT}, "min_deposit_amount": "2000000000000", "metapool_contract_address": "meta-v2.pool.testnet", "katherine_fee_percent": 100 }'
 
-integration-test: build
-	./scripts/integration_test.sh
-
-integration: build
-	scripts/integration.sh
-
 install:
 	cp target/release/libcfdi.so /usr/local/lib64/
 
