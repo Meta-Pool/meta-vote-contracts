@@ -2,30 +2,40 @@
 set -e
 export NEAR_ENV="testnet"
 
-METAVOTE_CONTRACT_ADDRESS="mpdao-vote.testnet"
-METAVOTE_WASM="contracts/res/mpdao_vote_contract.wasm"
+METAVOTE_CONTRACT_ADDRESS=mpdao-vote.testnet
+METAVOTE_WASM="res/meta_vote_contract.wasm"
 
 echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $(date) 
 
 YOCTO_UNITS="000000000000000000000000"
 TOTAL_PREPAID_GAS="300000000000000"
 
-# # Deploy Contract
-# NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM  --initFunction new --initArgs '{"admin_id": "'$ADMIN_ADDRESS'", "operator_id": "'$OPERATOR_ADDRESS'", "meta_token_contract_address": "'$METATOKEN_CONTRACT_ADDRESS'", "meta_vote_contract_address": "'$METAVOTE_CONTRACT_ADDRESS'", "voting_period":'$VOTING_PERIOD', "min_voting_power_amount": "'$MIN_VOTING_POWER_AMOUNT'", "mpip_storage_near_cost_per_kilobytes": "'$MPIP_STOGARE_COST_KB'", "quorum_floor": '$QUORUM_FLOOR' }' --accountId $METAVOTE_CONTRACT_ADDRESS
-
+# 1st Deploy Contract & init
+OWNER_ID=$METAVOTE_CONTRACT_ADDRESS
+MPDAO_TESTNET_TOKEN_ADDRESS="mpdao-token.testnet"
+STNEAR_TESTNET_TOKEN_ADDRESS="meta-v2.pool.testnet"
+        # owner_id: AccountId,
+        # min_unbound_period: Days,
+        # max_unbound_period: Days,
+        # min_deposit_amount: U128String,
+        # max_locking_positions: u8,
+        # max_voting_positions: u8,
+        # mpdao_token_contract_address: ContractAddress,
+        # stnear_token_contract_address: ContractAddress,
+        # registration_cost: U128String,
+ARGS='{"owner_id":"'$OWNER_ID'","min_unbound_period":1,"max_unbound_period":300,"min_deposit_amount":"1000000",'
+ARGS=$ARGS'"max_locking_positions":32,"max_voting_positions":32,'
+ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TESTNET_TOKEN_ADDRESS'",'
+ARGS=$ARGS'"registration_cost":"100000"}'
+echo $METAVOTE_CONTRACT_ADDRESS
+echo $ARGS
+##{"owner_id":"mpdao-vote.testnet","min_unbound_period":1,"max_unbound_period":300,"min_deposit_amount":"1000000","max_locking_positions":32, "max_voting_positions":32,"mpdao_token_contract_address": "mpdao-token.testnet","stnear_token_contract_address":"meta-v2.pool.testnet","registration_cost":"100000"}
+NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM  \
+    --initFunction new --initArgs $ARGS
 # Redeploy Contract
-echo Re-DEPLOY ONLY
-NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
+# echo Re-DEPLOY ONLY
+# NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
 
 # Deploy with MIGRATION
 #echo DEPLOY AND MIGRATION
 #near deploy metavote.testnet --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {}
-
-# NEAR_ENV=testnet near deploy -f --wasmFile $METAVOTE_WASM --accountId metavote.testnet
-# NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId metavote.testnet
-# NEAR_ENV=testnet near view metavote.testnet get_all_locking_positions '{"voter_id": "test123512.testnet"}' --accountId metavote.testnet
-# NEAR_ENV=testnet near view metavote.testnet get_total_voting_power '{}' --accountId metavote.testnet
-# NEAR_ENV=testnet near view metavote.testnet get_locking_period '{}' --accountId metavote.testnet
-# NEAR_ENV=testnet near view metavote.testnet get_test '{}' --accountId metavote.testnet
-# NEAR_ENV=testnet near call metavote.testnet update_min_locking_period '{"new_period": 1}' --accountId metavote.testnet
-# NEAR_ENV=testnet near call metavote.testnet set_stnear_contract '{"stnear_contract": "meta-v2.pool.testnet"}' --accountId metavote.testnet
