@@ -27,14 +27,11 @@ ARGS='{"owner_id":"'$OWNER_ID'","min_unbound_period":1,"max_unbound_period":300,
 ARGS=$ARGS'"max_locking_positions":32,"max_voting_positions":32,'
 ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TESTNET_TOKEN_ADDRESS'",'
 ARGS=$ARGS'"registration_cost":"100000"}'
-echo $METAVOTE_CONTRACT_ADDRESS
-echo $ARGS
-##{"owner_id":"mpdao-vote.testnet","min_unbound_period":1,"max_unbound_period":300,"min_deposit_amount":"1000000","max_locking_positions":32, "max_voting_positions":32,"mpdao_token_contract_address": "mpdao-token.testnet","stnear_token_contract_address":"meta-v2.pool.testnet","registration_cost":"100000"}
-NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM  \
-    --initFunction new --initArgs $ARGS
+#NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM  \
+#    --initFunction new --initArgs $ARGS
 # Redeploy Contract
-# echo Re-DEPLOY ONLY
-# NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
+echo Re-DEPLOY ONLY
+NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM
 
 # Deploy with MIGRATION
 #echo DEPLOY AND MIGRATION

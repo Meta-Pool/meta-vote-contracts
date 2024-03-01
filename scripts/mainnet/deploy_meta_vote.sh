@@ -31,7 +31,6 @@ ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stne
 ARGS=$ARGS'"registration_cost":"100000000000000000000000"}'
 echo $METAVOTE_CONTRACT_ADDRESS
 echo $ARGS
-##{"owner_id":"mpdao-vote.testnet","min_unbound_period":1,"max_unbound_period":300,"min_deposit_amount":"1000000","max_locking_positions":32, "max_voting_positions":32,"mpdao_token_contract_address": "mpdao-token.testnet","stnear_token_contract_address":"meta-v2.pool.testnet","registration_cost":"100000"}
 NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM  \
     --initFunction new --initArgs $ARGS
 # Redeploy Contract
