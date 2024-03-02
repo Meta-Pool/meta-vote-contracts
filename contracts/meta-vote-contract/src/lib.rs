@@ -1,12 +1,12 @@
-use crate::utils::{days_to_millis, millis_to_days};
-use crate::{constants::*, locking_position::*};
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::unordered_map::UnorderedMap;
-use near_sdk::collections::Vector;
-use near_sdk::json_types::U64;
-use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
+use crate::{constants::*, locking_position::*, utils::{days_to_millis, millis_to_days, generate_hash_id, get_current_epoch_millis}};
+use near_sdk::{
+    borsh::{self, BorshDeserialize, BorshSerialize},
+    collections::{unordered_map::UnorderedMap, Vector},
+    env,
+    json_types::U64,
+    log, near_bindgen, require, AccountId, Balance, PanicOnDefault,
+};
 use types::*;
-use utils::{generate_hash_id, get_current_epoch_millis};
 use voter::{Voter, VoterJSON};
 
 mod constants;
@@ -37,7 +37,7 @@ pub struct MetaVoteContract {
     // mpdao as rewards
     pub claimable_mpdao: UnorderedMap<VoterId, u128>,
     pub accumulated_mpdao_distributed_for_claims: u128, // accumulated total mpDAO distributed
-    pub total_unclaimed_mpdao: u128,               // currently unclaimed mpDAO
+    pub total_unclaimed_mpdao: u128,                    // currently unclaimed mpDAO
 
     // stNear as rewards
     pub stnear_token_contract_address: ContractAddress,
@@ -104,17 +104,23 @@ impl MetaVoteContract {
     // * Register for Airdrops/Gifts *
     // *******************************
 
+    // for airdrops/rewards
     pub fn update_registration_cost(&mut self, new_cost: U128String) {
         self.assert_only_owner();
         self.registration_cost = new_cost.0;
     }
 
+    // for airdrops/rewards
     pub fn get_registration_cost(&self) -> U128String {
         U128String::from(self.registration_cost)
     }
 
-    // "registerd" kept for backward compat
+    pub fn check_if_registered_for_airdrops(&self, account_id: &AccountId) -> bool {
+        self.associated_user_data.get(account_id).is_some()
+    }
+    // Check_if_user_is_"registerd" (sic) kept for backward compat, same fn as the one above (cspell:disable-line)
     pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+        // cspell:disable-line
         self.associated_user_data.get(account_id).is_some()
     }
 
@@ -412,10 +418,8 @@ impl MetaVoteContract {
             assert!(new_amount > 0, "Use relock_position() function instead.");
 
             locking_position.amount = new_amount;
-            locking_position.voting_power = self.calculate_voting_power(
-                new_amount,
-                locking_position.locking_period
-            );
+            locking_position.voting_power =
+                self.calculate_voting_power(new_amount, locking_position.locking_period);
             voter.locking_positions.replace(index, &locking_position);
         } else {
             voter.balance += locking_position.amount - amount_from_position;
@@ -480,7 +484,11 @@ impl MetaVoteContract {
     // * Withdraw *
     // ************
 
-    pub fn withdraw(&mut self, position_index_list: Vec<PositionIndex>, amount_from_balance: U128String) {
+    pub fn withdraw(
+        &mut self,
+        position_index_list: Vec<PositionIndex>,
+        amount_from_balance: U128String,
+    ) {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter_or_panic(&voter_id);
         let amount_from_balance = MpDAOAmount::from(amount_from_balance);
@@ -548,7 +556,13 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let voting_power = u128::from(voting_power);
 
-        self.internal_create_voting_position(&voter_id, &mut voter, voting_power, &contract_address, &votable_object_id);
+        self.internal_create_voting_position(
+            &voter_id,
+            &mut voter,
+            voting_power,
+            &contract_address,
+            &votable_object_id,
+        );
 
         // save voter info
         self.voters.insert(&voter_id, &voter);
@@ -560,7 +574,6 @@ impl MetaVoteContract {
             &votable_object_id,
             contract_address.as_str()
         );
-
     }
 
     fn internal_create_voting_position(
@@ -668,8 +681,13 @@ impl MetaVoteContract {
         self.voters.insert(&voter_id, &voter);
     }
 
-    fn internal_remove_voting_position(&mut self, voter_id: &AccountId, voter:&mut Voter, contract_address: &ContractAddress, votable_object_id: &VotableObjId) {
-
+    fn internal_remove_voting_position(
+        &mut self,
+        voter_id: &AccountId,
+        voter: &mut Voter,
+        contract_address: &ContractAddress,
+        votable_object_id: &VotableObjId,
+    ) {
         let mut votes_for_address = voter.get_votes_for_address(&voter_id, &contract_address);
         let votes = votes_for_address
             .get(&votable_object_id)
@@ -692,7 +710,12 @@ impl MetaVoteContract {
     pub fn unvote(&mut self, contract_address: ContractAddress, votable_object_id: VotableObjId) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
-        self.internal_remove_voting_position(&voter_id, &mut voter, &contract_address, &votable_object_id);
+        self.internal_remove_voting_position(
+            &voter_id,
+            &mut voter,
+            &contract_address,
+            &votable_object_id,
+        );
 
         // save voter
         self.voters.insert(&voter_id, &voter);
@@ -703,7 +726,6 @@ impl MetaVoteContract {
             &votable_object_id,
             contract_address.as_str()
         );
-
     }
 
     // *********
@@ -719,32 +741,53 @@ impl MetaVoteContract {
         self.max_unbound_period = new_max_unbound_period;
     }
 
-    // migration: create a locking position 
+    // migration create lp & vp
     pub fn migration_create(&mut self, data: VoterJSON) {
         self.assert_only_owner();
         let voter_id = AccountId::new_unchecked(data.voter_id);
         let mut voter = self.internal_get_voter(&voter_id);
-        assert!(voter.locking_positions.is_empty(),"voter record not empty");
+        assert!(voter.locking_positions.is_empty(), "voter record not empty");
         // create locking positions
         for lp in &data.locking_positions {
             // migrate with old voting power calculation
-            self.internal_create_locking_position(&mut voter,lp.amount.0, lp.locking_period, lp.voting_power.0, lp.unlocking_started_at);
+            self.internal_create_locking_position(
+                &mut voter,
+                lp.amount.0,
+                lp.locking_period,
+                lp.voting_power.0,
+                lp.unlocking_started_at,
+            );
         }
         // create voting positions
         for vp in &data.vote_positions {
-            self.internal_create_voting_position(&voter_id, &mut voter, vp.voting_power.0, &vp.votable_address, &vp.votable_object_id);
+            self.internal_create_voting_position(
+                &voter_id,
+                &mut voter,
+                vp.voting_power.0,
+                &vp.votable_address,
+                &vp.votable_object_id,
+            );
         }
         // save voter
         self.voters.insert(&voter_id, &voter);
+        // ----
+    }
+
+    // migration create lp & vp
+    pub fn migration_set_associated_data(&mut self, data: Vec<(String, String)>) {
+        for user_data in data {
+            // migrate associated user data
+            self.associated_user_data.insert(&AccountId::new_unchecked(user_data.0), &user_data.1);
+        }
     }
 
     // ONLY-FOR-MIGRATION-TESTING -- clear contract state
-    // #[private]
-    // pub fn clean(keys: Vec<Base64VecU8>) {
-    //     for key in keys.iter() {
-    //         env::storage_remove(&key.0);
-    //     }
-    // }    
+    #[private]
+    pub fn clean(keys: Vec<near_sdk::json_types::Base64VecU8>) {
+        for key in keys.iter() {
+            env::storage_remove(&key.0);
+        }
+    }
 
     /**********************/
     /*   View functions   */

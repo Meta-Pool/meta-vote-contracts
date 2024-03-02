@@ -5,7 +5,7 @@ const keyStore = new keyStores.UnencryptedFileSystemKeyStore(__dirname);
 const config = {
   keyStore,
   networkId: 'testnet',
-  nodeUrl: 'https://rpc.testnet.near.org',
+  nodeUrl: 'https://endpoints.omniatech.io/v1/near/testnet/public',
   walletUrl: 'https://wallet.testnet.near.org',
   helperUrl: 'https://helper.testnet.near.org',
   explorerUrl: 'https://explorer.testnet.near.org',

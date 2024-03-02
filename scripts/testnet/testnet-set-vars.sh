@@ -27,17 +27,5 @@ ARGS='{"owner_id":"'$OWNER_ID'","min_unbound_period":1,"max_unbound_period":300,
 ARGS=$ARGS'"max_locking_positions":32,"max_voting_positions":32,'
 ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TESTNET_TOKEN_ADDRESS'",'
 ARGS=$ARGS'"registration_cost":"100000"}'
-#NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM  \
-#    --initFunction new --initArgs $ARGS
 
-# Redeploy Contract
-echo Re-DEPLOY ONLY
-NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM
-
-# init Contract
-# echo INIT ONLY
-# NEAR_ENV=testnet near call $METAVOTE_CONTRACT_ADDRESS new $ARGS --useAccount $METAVOTE_CONTRACT_ADDRESS
-
-# Deploy with MIGRATION
-#echo DEPLOY AND MIGRATION
-#near deploy metavote.testnet --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {}
+echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $OWNER_ID
