@@ -29,9 +29,14 @@ ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stne
 ARGS=$ARGS'"registration_cost":"100000"}'
 #NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM  \
 #    --initFunction new --initArgs $ARGS
+
 # Redeploy Contract
 echo Re-DEPLOY ONLY
 NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM
+
+# init Contract
+# echo INIT ONLY
+# NEAR_ENV=testnet near call $METAVOTE_CONTRACT_ADDRESS new $ARGS --useAccount $METAVOTE_CONTRACT_ADDRESS
 
 # Deploy with MIGRATION
 #echo DEPLOY AND MIGRATION

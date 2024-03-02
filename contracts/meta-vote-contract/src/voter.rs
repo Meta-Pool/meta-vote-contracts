@@ -15,7 +15,7 @@ pub struct VoterJSON {
 pub struct Voter {
     pub balance: MpDAOAmount,
     pub locking_positions: Vector<LockingPosition>,
-    pub voting_power: u128,
+    pub voting_power: u128, // available voting power, equals to sum(lp.voting_power)-sum(vp.voting_power)
     pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
 }
 

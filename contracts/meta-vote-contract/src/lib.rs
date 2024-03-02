@@ -113,6 +113,7 @@ impl MetaVoteContract {
         U128String::from(self.registration_cost)
     }
 
+    // "registerd" kept for backward compat
     pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
         self.associated_user_data.get(account_id).is_some()
     }
@@ -160,7 +161,7 @@ impl MetaVoteContract {
         self.remove_claimable_mpdao(&voter_id, amount);
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         // create/update locking position
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     // claim stNear
@@ -348,7 +349,7 @@ impl MetaVoteContract {
         let amount = locking_position.amount + amount_from_balance;
         voter.remove_position(index);
         voter.balance -= amount_from_balance;
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     pub fn relock_partial_position(
@@ -427,7 +428,7 @@ impl MetaVoteContract {
             index
         );
         voter.balance -= amount_from_balance;
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     pub fn relock_from_balance(&mut self, locking_period: Days, amount_from_balance: U128String) {
@@ -449,7 +450,7 @@ impl MetaVoteContract {
 
         log!("RELOCK: {} relocked position.", &voter_id.to_string());
         voter.balance -= amount;
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     // ******************
@@ -546,6 +547,30 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let voting_power = u128::from(voting_power);
+
+        self.internal_create_voting_position(&voter_id, &mut voter, voting_power, &contract_address, &votable_object_id);
+
+        // save voter info
+        self.voters.insert(&voter_id, &voter);
+
+        log!(
+            "VOTE: {} gave {} votes for object {} at address {}.",
+            &voter_id,
+            voting_power.to_string(),
+            &votable_object_id,
+            contract_address.as_str()
+        );
+
+    }
+
+    fn internal_create_voting_position(
+        &mut self,
+        voter_id: &AccountId,
+        voter: &mut Voter,
+        voting_power: u128,
+        contract_address: &ContractAddress,
+        votable_object_id: &VotableObjId,
+    ) {
         assert!(
             voter.voting_power >= voting_power,
             "Not enough free voting power. You have {}, requested {}.",
@@ -567,15 +592,6 @@ impl MetaVoteContract {
         voter
             .vote_positions
             .insert(&contract_address, &votes_for_address);
-        self.voters.insert(&voter_id, &voter);
-
-        log!(
-            "VOTE: {} gave {} votes for object {} at address {}.",
-            &voter_id,
-            voting_power.to_string(),
-            &votable_object_id,
-            contract_address.as_str()
-        );
 
         // Update Meta Vote state.
         self.internal_increase_total_votes(voting_power, &contract_address, &votable_object_id);
@@ -652,9 +668,7 @@ impl MetaVoteContract {
         self.voters.insert(&voter_id, &voter);
     }
 
-    pub fn unvote(&mut self, contract_address: ContractAddress, votable_object_id: VotableObjId) {
-        let voter_id = env::predecessor_account_id();
-        let mut voter = self.internal_get_voter_or_panic(&voter_id);
+    fn internal_remove_voting_position(&mut self, voter_id: &AccountId, voter:&mut Voter, contract_address: &ContractAddress, votable_object_id: &VotableObjId) {
 
         let mut votes_for_address = voter.get_votes_for_address(&voter_id, &contract_address);
         let votes = votes_for_address
@@ -671,6 +685,16 @@ impl MetaVoteContract {
                 .vote_positions
                 .insert(&contract_address, &votes_for_address);
         }
+        // Update Meta Vote state.
+        self.internal_decrease_total_votes(votes, &contract_address, &votable_object_id);
+    }
+
+    pub fn unvote(&mut self, contract_address: ContractAddress, votable_object_id: VotableObjId) {
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter_or_panic(&voter_id);
+        self.internal_remove_voting_position(&voter_id, &mut voter, &contract_address, &votable_object_id);
+
+        // save voter
         self.voters.insert(&voter_id, &voter);
 
         log!(
@@ -680,18 +704,47 @@ impl MetaVoteContract {
             contract_address.as_str()
         );
 
-        // Update Meta Vote state.
-        self.internal_decrease_total_votes(votes, &contract_address, &votable_object_id);
     }
 
     // *********
     // * Admin *
     // *********
 
-    pub fn update_min_locking_period(&mut self, new_period: Days) {
+    pub fn update_min_unbound_period(&mut self, new_min_unbound_period: Days) {
         self.assert_only_owner();
-        self.min_unbound_period = new_period;
+        self.min_unbound_period = new_min_unbound_period;
     }
+    pub fn update_max_unbound_period(&mut self, new_max_unbound_period: Days) {
+        self.assert_only_owner();
+        self.max_unbound_period = new_max_unbound_period;
+    }
+
+    // migration: create a locking position 
+    pub fn migration_create(&mut self, data: VoterJSON) {
+        self.assert_only_owner();
+        let voter_id = AccountId::new_unchecked(data.voter_id);
+        let mut voter = self.internal_get_voter(&voter_id);
+        assert!(voter.locking_positions.is_empty(),"voter record not empty");
+        // create locking positions
+        for lp in &data.locking_positions {
+            // migrate with old voting power calculation
+            self.internal_create_locking_position(&mut voter,lp.amount.0, lp.locking_period, lp.voting_power.0, lp.unlocking_started_at);
+        }
+        // create voting positions
+        for vp in &data.vote_positions {
+            self.internal_create_voting_position(&voter_id, &mut voter, vp.voting_power.0, &vp.votable_address, &vp.votable_object_id);
+        }
+        // save voter
+        self.voters.insert(&voter_id, &voter);
+    }
+
+    // ONLY-FOR-MIGRATION-TESTING -- clear contract state
+    // #[private]
+    // pub fn clean(keys: Vec<Base64VecU8>) {
+    //     for key in keys.iter() {
+    //         env::storage_remove(&key.0);
+    //     }
+    // }    
 
     /**********************/
     /*   View functions   */

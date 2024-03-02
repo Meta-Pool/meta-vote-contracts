@@ -20,12 +20,13 @@ impl LockingPosition {
         amount: MpDAOAmount,
         locking_period: Days,
         voting_power: u128,
+        unlocking_started_at: Option<EpochMillis>
     ) -> Self {
         LockingPosition {
             amount,
             locking_period,
             voting_power,
-            unlocking_started_at: None,
+            unlocking_started_at,
         }
     }
 
@@ -96,19 +97,20 @@ impl MetaVoteContract {
         self.total_voting_power += voting_power;
     }
 
-    fn create_locking_position(
+    pub(crate) fn internal_create_locking_position(
         &mut self,
         voter: &mut Voter,
         mpdao_amount: MpDAOAmount,
         unbound_days: Days,
+        voting_power: u128,
+        unlocking_started_at: Option<EpochMillis>
     ) {
         assert!(
             (voter.locking_positions.len() as u8) < self.max_locking_positions,
             "The max number of locking positions is {}",
             self.max_locking_positions
         );
-        let voting_power = self.calculate_voting_power(mpdao_amount, unbound_days);
-        let locking_position = LockingPosition::new(mpdao_amount, unbound_days, voting_power);
+        let locking_position = LockingPosition::new(mpdao_amount, unbound_days, voting_power,unlocking_started_at);
         voter.locking_positions.push(&locking_position);
         voter.voting_power += voting_power;
         self.total_voting_power += voting_power;
@@ -118,7 +120,7 @@ impl MetaVoteContract {
         &mut self,
         mpdao_amount: MpDAOAmount,
         unbound_days: Days,
-        voter_id: VoterId,
+        voter_id: &VoterId,
         voter: &mut Voter,
     ) {
         assert!(
@@ -134,7 +136,8 @@ impl MetaVoteContract {
                 self.increase_locking_position(voter, index, mpdao_amount, unbound_days);
             }
             None => {
-                self.create_locking_position(voter, mpdao_amount, unbound_days);
+                let voting_power = self.calculate_voting_power(mpdao_amount, unbound_days);
+                self.internal_create_locking_position(voter, mpdao_amount, unbound_days, voting_power, None);
             }
         };
         self.voters.insert(&voter_id, &voter);
@@ -155,8 +158,7 @@ impl MetaVoteContract {
             "The max number of locking positions is {}",
             self.max_locking_positions
         );
-        let mut unlocking_position = LockingPosition::new(mpdao_amount, unbound_days, voting_power);
-        unlocking_position.unlocking_started_at = Some(get_current_epoch_millis());
+        let unlocking_position = LockingPosition::new(mpdao_amount, unbound_days, voting_power, Some(get_current_epoch_millis()));
         voter.locking_positions.push(&unlocking_position);
     }
 }
