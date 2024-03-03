@@ -109,7 +109,7 @@ impl Voter {
             }))
     }
 
-    pub(crate) fn get_unlocked_position_index(&self) -> Vec<PositionIndex> {
+    pub(crate) fn get_unlocked_positions_indexes(&self) -> Vec<PositionIndex> {
         let mut result = Vec::new();
         for index in 0..self.locking_positions.len() {
             let locking_position = self

@@ -2,9 +2,11 @@ use crate::utils::{days_to_millis, millis_to_days};
 use crate::{constants::*, locking_position::*};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::unordered_map::UnorderedMap;
-use near_sdk::collections::Vector;
+use near_sdk::collections::{LookupSet, Vector};
 use near_sdk::json_types::{U128, U64};
-use near_sdk::{env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
+use near_sdk::{
+    env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault, PromiseResult,
+};
 use types::*;
 use utils::{generate_hash_id, get_current_epoch_millis};
 use voter::{Voter, VoterJSON};
@@ -48,6 +50,9 @@ pub struct MetaVoteContract {
     // airdrop users encrypted data
     pub registration_cost: u128,
     pub airdrop_user_data: UnorderedMap<VoterId, String>,
+
+    pub migrated_users: LookupSet<VoterId>,
+    pub new_governance_contract_id: AccountId,
 }
 
 #[near_bindgen]
@@ -89,6 +94,8 @@ impl MetaVoteContract {
             total_unclaimed_stnear: 0,
             registration_cost: registration_cost.0,
             airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
+            new_governance_contract_id: AccountId::new_unchecked("".into()),
+            migrated_users: LookupSet::new(StorageKey::MigratedUsers),
         }
     }
 
@@ -113,7 +120,8 @@ impl MetaVoteContract {
         U128::from(self.registration_cost)
     }
 
-    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool { // cSpell: ignore-line
+    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool { //cspell:disable-line
+        // cSpell: ignore-line
         self.airdrop_user_data.get(account_id).is_some()
     }
 
@@ -161,6 +169,9 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         // create/update locking position
         self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
+        //-----------------------
+        panic!("DEPRECATED");
+        //-----------------------
     }
 
     // claim stNear
@@ -179,7 +190,7 @@ impl MetaVoteContract {
     // *************
 
     pub fn unlock_position(&mut self, index: PositionIndex) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = self.pred_assert_not_migrated();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -204,7 +215,7 @@ impl MetaVoteContract {
     }
 
     pub fn unlock_partial_position(&mut self, index: PositionIndex, amount: U128) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = self.pred_assert_not_migrated();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -258,7 +269,7 @@ impl MetaVoteContract {
     // ********************************
 
     pub fn locking_position_extend_days(&mut self, index: PositionIndex, new_locking_period: Days) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = self.pred_assert_not_migrated();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -308,7 +319,7 @@ impl MetaVoteContract {
         locking_period: Days,
         amount_from_balance: U128,
     ) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = self.pred_assert_not_migrated();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let locking_position = voter.get_position(index);
 
@@ -358,7 +369,7 @@ impl MetaVoteContract {
         locking_period: Days,
         amount_from_balance: U128,
     ) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = self.pred_assert_not_migrated();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -411,10 +422,8 @@ impl MetaVoteContract {
             assert!(new_amount > 0, "Use relock_position() function instead.");
 
             locking_position.amount = new_amount;
-            locking_position.voting_power = self.calculate_voting_power(
-                new_amount,
-                locking_position.locking_period
-            );
+            locking_position.voting_power =
+                self.calculate_voting_power(new_amount, locking_position.locking_period);
             voter.locking_positions.replace(index, &locking_position);
         } else {
             voter.balance += locking_position.amount - amount_from_position;
@@ -431,7 +440,7 @@ impl MetaVoteContract {
     }
 
     pub fn relock_from_balance(&mut self, locking_period: Days, amount_from_balance: U128) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = self.pred_assert_not_migrated();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
 
         let amount = amount_from_balance.0;
@@ -456,7 +465,7 @@ impl MetaVoteContract {
     // * Clear Position *
     // ******************
 
-    // clear SEVERAL locking positions
+    // clear SEVERAL already unlocked positions -- to allow withdraw
     pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>) {
         require!(position_index_list.len() > 0, "Index list is empty.");
         let voter_id = env::predecessor_account_id();
@@ -513,7 +522,7 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter_or_panic(&voter_id);
 
-        let position_index_list = voter.get_unlocked_position_index();
+        let position_index_list = voter.get_unlocked_positions_indexes();
         // Clear locking positions could increase the voter balance.
         if position_index_list.len() > 0 {
             self.clear_locking_position(position_index_list);
@@ -581,6 +590,7 @@ impl MetaVoteContract {
         self.internal_increase_total_votes(voting_power, &contract_address, &votable_object_id);
     }
 
+    // rebalance voting power
     pub fn rebalance(
         &mut self,
         voting_power: U128,
@@ -692,6 +702,67 @@ impl MetaVoteContract {
         self.assert_only_owner();
         self.min_locking_period = new_period;
     }
+    pub fn set_new_governance_contract_id(&mut self, contract_id: AccountId) {
+        self.assert_only_owner();
+        self.new_governance_contract_id = contract_id;
+    }
+
+    // verify if the user has already migrated
+    pub fn is_user_migrated(&self, account_id: AccountId) -> bool {
+        self.migrated_users.contains(&account_id)
+    }
+
+    fn assert_user_not_migrated(&self, account_id: &AccountId){
+        if self.migrated_users.contains(&account_id){
+            panic!("user already migrated to new governance")
+        }
+    }
+    fn pred_assert_not_migrated(&self) -> AccountId {
+        let pred =env::predecessor_account_id();
+        self.assert_user_not_migrated(&pred);
+        pred
+    }
+    // migrate locked positions to a new governance
+    // call with 300 TGAS
+    // panics if there are unlocking positions -- user must relock before migration
+    pub fn migrate_to_new_governance(&mut self) {
+        self.assert_user_not_migrated(&env::signer_account_id());
+        let voter = self.internal_get_voter_or_panic(&env::signer_account_id());
+        let mut lps: Vec<(U128String, u16)> = vec![];
+        for lp in voter.locking_positions.iter() {
+            if lp.is_unlocking() {
+                panic!("relock all you unlocking positions before migration")
+            }
+            else if lp.amount > 0 && lp.is_locked() {
+                lps.push((U128String::from(lp.amount), lp.locking_period))
+            }
+        }
+        assert!(lps.len() != 0, "No valid locking positions to migrate");
+        // prevent double call
+        self.migrated_users.insert(&env::signer_account_id());
+        // schedule a call to migrate in the new contract
+        interface::ext_new_gov_contract::ext(self.new_governance_contract_id.clone())
+             .with_static_gas(interface::GAS_FOR_MIGRATION)
+             .migration_create_lps(env::signer_account_id(), lps)
+             .then(
+                 Self::ext(env::current_account_id())
+                     .with_static_gas(interface::GAS_FOR_RESOLVE_MIGRATION)
+                     .after_migration(),
+             );
+    }
+    #[private]
+    pub fn after_migration(&mut self) {
+        match env::promise_result(0) {
+            PromiseResult::NotReady => unreachable!(),
+            PromiseResult::Successful(_) => {
+                log!("{} MIGRATED OK");
+            }
+            PromiseResult::Failed => {
+                log!("FAILED: locked META not migrated",);
+                self.migrated_users.remove(&env::signer_account_id());
+            }
+        };
+    }
 
     /**********************/
     /*   View functions   */
@@ -746,7 +817,12 @@ impl MetaVoteContract {
     }
 
     // get all claims
-    fn internal_get_claims(&self, map: &UnorderedMap<VoterId, u128>, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+    fn internal_get_claims(
+        &self,
+        map: &UnorderedMap<VoterId, u128>,
+        from_index: u32,
+        limit: u32,
+    ) -> Vec<(AccountId, U128String)> {
         let mut results = Vec::<(AccountId, U128String)>::new();
         let keys = map.keys_as_vector();
         let start = from_index as u64;

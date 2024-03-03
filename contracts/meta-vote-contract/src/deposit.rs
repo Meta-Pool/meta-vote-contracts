@@ -33,6 +33,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
             };
 
             let voter_id = VoterId::from(sender_id);
+            self.assert_user_not_migrated(&voter_id);
             assert_eq!(
                 env::predecessor_account_id(),
                 self.meta_token_contract_address,

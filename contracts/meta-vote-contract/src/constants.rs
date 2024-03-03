@@ -19,6 +19,7 @@ pub enum StorageKey {
     VoterVotes { hash_id: CryptoHash },
     Claimable,
     ClaimableStNear,
-    AirdropData
+    AirdropData,
+    MigratedUsers
 }
 
