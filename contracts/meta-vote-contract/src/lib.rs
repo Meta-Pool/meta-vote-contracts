@@ -113,7 +113,7 @@ impl MetaVoteContract {
         U128::from(self.registration_cost)
     }
 
-    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool { // cSpell: ignore-line
         self.airdrop_user_data.get(account_id).is_some()
     }
 
@@ -160,7 +160,7 @@ impl MetaVoteContract {
         self.remove_claimable_meta(&voter_id, amount);
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         // create/update locking position
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     // claim stNear
@@ -348,7 +348,7 @@ impl MetaVoteContract {
         let amount = locking_position.amount + amount_from_balance;
         voter.remove_position(index);
         voter.balance -= amount_from_balance;
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     pub fn relock_partial_position(
@@ -427,7 +427,7 @@ impl MetaVoteContract {
             index
         );
         voter.balance -= amount_from_balance;
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     pub fn relock_from_balance(&mut self, locking_period: Days, amount_from_balance: U128) {
@@ -449,7 +449,7 @@ impl MetaVoteContract {
 
         log!("RELOCK: {} relocked position.", &voter_id.to_string());
         voter.balance -= amount;
-        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
+        self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
     }
 
     // ******************
@@ -746,17 +746,27 @@ impl MetaVoteContract {
     }
 
     // get all claims
-    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128)> {
-        let mut results = Vec::<(AccountId, U128)>::new();
-        let keys = self.claimable_meta.keys_as_vector();
+    fn internal_get_claims(&self, map: &UnorderedMap<VoterId, u128>, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+        let mut results = Vec::<(AccountId, U128String)>::new();
+        let keys = map.keys_as_vector();
         let start = from_index as u64;
         let limit = limit as u64;
         for index in start..std::cmp::min(start + limit, keys.len()) {
             let voter_id = keys.get(index).unwrap();
-            let amount = self.claimable_meta.get(&voter_id).unwrap();
+            let amount = map.get(&voter_id).unwrap();
             results.push((voter_id, amount.into()));
         }
         results
+    }
+
+    // get all stNEAR claims
+    pub fn get_stnear_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+        self.internal_get_claims(&self.claimable_stnear, from_index, limit)
+    }
+
+    // get all META claims
+    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+        self.internal_get_claims(&self.claimable_meta, from_index, limit)
     }
 
     pub fn get_locked_balance(&self, voter_id: VoterId) -> U128 {

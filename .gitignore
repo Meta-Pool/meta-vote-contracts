@@ -33,4 +33,6 @@ neardev_mpips
 
 # Mac
 .DS_Store
+node_modules
+
 

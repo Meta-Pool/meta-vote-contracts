@@ -116,7 +116,7 @@ impl MetaVoteContract {
         &mut self,
         amount: Meta,
         locking_period: Days,
-        voter_id: VoterId,
+        voter_id: &VoterId,
         voter: &mut Voter
     ) {
         assert!(
