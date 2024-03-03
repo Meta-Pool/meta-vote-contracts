@@ -846,17 +846,27 @@ impl MetaVoteContract {
     }
 
     // get all claims
-    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+    fn internal_get_claims(&self, map: &UnorderedMap<VoterId, u128>, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
         let mut results = Vec::<(AccountId, U128String)>::new();
-        let keys = self.claimable_mpdao.keys_as_vector();
+        let keys = map.keys_as_vector();
         let start = from_index as u64;
         let limit = limit as u64;
         for index in start..std::cmp::min(start + limit, keys.len()) {
             let voter_id = keys.get(index).unwrap();
-            let amount = self.claimable_mpdao.get(&voter_id).unwrap();
+            let amount = map.get(&voter_id).unwrap();
             results.push((voter_id, amount.into()));
         }
         results
+    }
+
+    // get all stNEAR claims
+    pub fn get_stnear_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+        self.internal_get_claims(&self.claimable_stnear, from_index, limit)
+    }
+
+    // get all META claims
+    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+        self.internal_get_claims(&self.claimable_mpdao, from_index, limit)
     }
 
     pub fn get_locked_balance(&self, voter_id: VoterId) -> U128String {
