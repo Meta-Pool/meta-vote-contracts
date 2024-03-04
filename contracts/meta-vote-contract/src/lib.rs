@@ -47,10 +47,11 @@ pub struct MetaVoteContract {
     pub accum_distributed_stnear_for_claims: u128, // accumulated total stNEAR distributed
     pub total_unclaimed_stnear: u128,              // currently unclaimed stNEAR
 
-    // airdrop users encrypted data
+    // airdrop users encrypted data, v0.1.5
     pub registration_cost: u128,
     pub airdrop_user_data: UnorderedMap<VoterId, String>,
 
+    // migrated users flag, v0.1.6
     pub migrated_users: LookupSet<VoterId>,
     pub new_governance_contract_id: Option<AccountId>,
 }

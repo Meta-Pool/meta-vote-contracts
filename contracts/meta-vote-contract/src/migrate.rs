@@ -25,7 +25,7 @@ pub struct OldState {
     pub accum_distributed_stnear_for_claims: u128, // accumulated total stNEAR distributed
     pub total_unclaimed_stnear: u128,              // currently unclaimed stNEAR
 
-    // airdrop users encrypted data - v0.1.5
+    // airdrop users encrypted data, v0.1.5
     pub registration_cost: u128,
     pub airdrop_user_data: UnorderedMap<VoterId, String>,
 }
