@@ -28,13 +28,15 @@ async fn main() -> anyhow::Result<()> {
     let owner = worker.dev_create_account().await?;
     let voter = worker.dev_create_account().await?;
     let proposer = worker.dev_create_account().await?;
+    
+    let stnear_contract = worker.dev_create_account().await?;
 
     ///////////////////////////////////////
     // Stage 1: Deploy relevant contracts
     ///////////////////////////////////////
 
     let metatoken_contract = create_metatoken(&owner, &worker).await?;
-    let metavote_contract = create_metavote(&owner, metatoken_contract.id(), &worker).await?;
+    let metavote_contract = create_metavote(&owner, metatoken_contract.id(), &stnear_contract.id(), &worker).await?;
     let mpip_contract = create_mpip(
         &owner,
         metatoken_contract.id(),
@@ -443,10 +445,10 @@ async fn main() -> anyhow::Result<()> {
     assert_eq!(res["against_votes"], "0");
     assert_eq!(res["abstain_votes"], "0");
 
-    println!("HERE");
-    let blocks_to_advance = 3000;
+    println!("start worker.fast_forward");
+    let blocks_to_advance = 50000;
     worker.fast_forward(blocks_to_advance).await?;
-    println!("tHERE");
+    println!("end worker.fast_forward");
 
     let res = voter
         .call(mpip_contract.id(), "get_proposal_state")
@@ -492,6 +494,7 @@ async fn create_metatoken(
 async fn create_metavote(
     owner: &Account,
     metatoken_contract: &AccountId,
+    stnear_contract: &AccountId,
     worker: &Worker<impl DevNetwork>,
 ) -> anyhow::Result<Contract> {
     let metavote_contract_wasm = std::fs::read(METAVOTE_FILEPATH)?;
@@ -506,7 +509,9 @@ async fn create_metavote(
             "min_deposit_amount": format!("{}", parse_near!("1 N")),
             "max_locking_positions": 20,
             "max_voting_positions": 40,
-            "meta_token_contract_address": metatoken_contract
+            "meta_token_contract_address": metatoken_contract,
+            "stnear_token_contract_address": stnear_contract,
+            "registration_cost":"0",
         }))
         .transact()
         .await?;

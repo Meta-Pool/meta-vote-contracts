@@ -60,7 +60,7 @@ impl MetaVoteContract {
             airdrop_user_data: old.airdrop_user_data,
             // -- NEW FIELDS
             migrated_users: LookupSet::new(StorageKey::MigratedUsers),
-            new_governance_contract_id: AccountId::new_unchecked("mpdao-token.near".into())
+            new_governance_contract_id: None
         }
     }
 }

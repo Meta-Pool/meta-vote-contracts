@@ -52,7 +52,7 @@ pub struct MetaVoteContract {
     pub airdrop_user_data: UnorderedMap<VoterId, String>,
 
     pub migrated_users: LookupSet<VoterId>,
-    pub new_governance_contract_id: AccountId,
+    pub new_governance_contract_id: Option<AccountId>,
 }
 
 #[near_bindgen]
@@ -94,7 +94,7 @@ impl MetaVoteContract {
             total_unclaimed_stnear: 0,
             registration_cost: registration_cost.0,
             airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
-            new_governance_contract_id: AccountId::new_unchecked("".into()),
+            new_governance_contract_id: None,
             migrated_users: LookupSet::new(StorageKey::MigratedUsers),
         }
     }
@@ -169,9 +169,6 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         // create/update locking position
         self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
-        //-----------------------
-        panic!("DEPRECATED");
-        //-----------------------
     }
 
     // claim stNear
@@ -702,9 +699,9 @@ impl MetaVoteContract {
         self.assert_only_owner();
         self.min_locking_period = new_period;
     }
-    pub fn set_new_governance_contract_id(&mut self, contract_id: AccountId) {
+    pub fn set_new_governance_contract_id(&mut self, contract_id_opt: Option<AccountId>) {
         self.assert_only_owner();
-        self.new_governance_contract_id = contract_id;
+        self.new_governance_contract_id = contract_id_opt;
     }
 
     // verify if the user has already migrated
@@ -726,6 +723,7 @@ impl MetaVoteContract {
     // call with 300 TGAS
     // panics if there are unlocking positions -- user must relock before migration
     pub fn migrate_to_new_governance(&mut self) {
+        assert!(&self.new_governance_contract_id.is_some(),"new_governance_contract_id not set");
         self.assert_user_not_migrated(&env::signer_account_id());
         let voter = self.internal_get_voter_or_panic(&env::signer_account_id());
         let mut lps: Vec<(U128String, u16)> = vec![];
@@ -741,7 +739,7 @@ impl MetaVoteContract {
         // prevent double call
         self.migrated_users.insert(&env::signer_account_id());
         // schedule a call to migrate in the new contract
-        interface::ext_new_gov_contract::ext(self.new_governance_contract_id.clone())
+        interface::ext_new_gov_contract::ext(self.new_governance_contract_id.as_ref().unwrap().clone())
              .with_static_gas(interface::GAS_FOR_MIGRATION)
              .migration_create_lps(env::signer_account_id(), lps)
              .then(

@@ -10,6 +10,7 @@ use utils::*;
 const E20: u128 = 100_000_000_000_000_000_000;
 
 fn new_metavote_contract() -> MetaVoteContract {
+
     MetaVoteContract::new(
         owner_account(),
         MIN_LOCKING_PERIOD,
@@ -343,7 +344,9 @@ fn generate_lock_position_context(
         timestamp_0,
     );
     testing_env!(context.clone());
+    println!("p3");
     let mut contract = new_metavote_contract();
+    println!("p4");
 
     let sender_id: AccountId = voter_account();
     let amount = U128::from(amount);
@@ -749,9 +752,11 @@ fn test_relock_partial_position_3() {
 
 #[test]
 fn test_clear_locking_position() {
+    println!("start");
     const LOCKING_PERIOD: u16 = 30;
     const AMOUNT: Balance = 2 * E24;
     let (mut contract, sender_id) = generate_lock_position_context(LOCKING_PERIOD, AMOUNT);
+    println!("p2");
     let unlock_started_timestamp = to_ts(GENESIS_TIME_IN_DAYS + 5);
     let clear_positions_timestamp = to_ts(GENESIS_TIME_IN_DAYS + 5 + 60);
 
@@ -1215,6 +1220,7 @@ fn test_claim_too_much_stnear() {
     contract.claim_stnear((81 * E24).into());
 }
 
+// CLAIM META is DEPRECATED
 #[test]
 fn test_claim_meta() {
     let (mut contract, users) = prepare_contract_with_claims();
