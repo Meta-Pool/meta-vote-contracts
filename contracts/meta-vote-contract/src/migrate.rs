@@ -59,8 +59,8 @@ impl MetaVoteContract {
             registration_cost: old.registration_cost,
             airdrop_user_data: old.airdrop_user_data,
             // -- NEW FIELDS
-            migrated_users: LookupSet::new(StorageKey::MigratedUsers),
-            new_governance_contract_id: None
+            new_governance_contract_id: None,
+            migrated_users: UnorderedMap::new(StorageKey::MigratedUsers),
         }
     }
 }

@@ -1,11 +1,11 @@
 use crate::utils::{days_to_millis, millis_to_days};
 use crate::{constants::*, locking_position::*};
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::unordered_map::UnorderedMap;
-use near_sdk::collections::{LookupSet, Vector};
-use near_sdk::json_types::{U128, U64};
 use near_sdk::{
-    env, log, near_bindgen, require, AccountId, Balance, PanicOnDefault, PromiseResult,
+    borsh::{self, BorshDeserialize, BorshSerialize},
+    collections::{unordered_map::UnorderedMap, Vector},
+    env,
+    json_types::{U128, U64},
+    log, near_bindgen, require, AccountId, Balance, PanicOnDefault, PromiseResult,
 };
 use types::*;
 use utils::{generate_hash_id, get_current_epoch_millis};
@@ -51,9 +51,9 @@ pub struct MetaVoteContract {
     pub registration_cost: u128,
     pub airdrop_user_data: UnorderedMap<VoterId, String>,
 
-    // migrated users flag, v0.1.6
-    pub migrated_users: LookupSet<VoterId>,
+    // migrated users list, v0.1.6
     pub new_governance_contract_id: Option<AccountId>,
+    pub migrated_users: UnorderedMap<VoterId, u128>, // amount of META migrated
 }
 
 #[near_bindgen]
@@ -96,7 +96,7 @@ impl MetaVoteContract {
             registration_cost: registration_cost.0,
             airdrop_user_data: UnorderedMap::new(StorageKey::AirdropData),
             new_governance_contract_id: None,
-            migrated_users: LookupSet::new(StorageKey::MigratedUsers),
+            migrated_users: UnorderedMap::new(StorageKey::MigratedUsers),
         }
     }
 
@@ -121,7 +121,8 @@ impl MetaVoteContract {
         U128::from(self.registration_cost)
     }
 
-    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool { //cspell:disable-line
+    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+        //cspell:disable-line
         // cSpell: ignore-line
         self.airdrop_user_data.get(account_id).is_some()
     }
@@ -706,17 +707,11 @@ impl MetaVoteContract {
     }
 
     // verify if the user has already migrated
-    pub fn is_user_migrated(&self, account_id: AccountId) -> bool {
-        self.migrated_users.contains(&account_id)
-    }
-
-    fn assert_user_not_migrated(&self, account_id: &AccountId){
-        if self.migrated_users.contains(&account_id){
-            panic!("user already migrated to new governance")
-        }
+    pub fn is_user_migrated(&self, account_id: &AccountId) -> bool {
+        self.migrated_users.get(account_id).is_none()
     }
     fn pred_assert_not_migrated(&self) -> AccountId {
-        let pred =env::predecessor_account_id();
+        let pred = env::predecessor_account_id();
         self.assert_user_not_migrated(&pred);
         pred
     }
@@ -724,30 +719,37 @@ impl MetaVoteContract {
     // call with 300 TGAS
     // panics if there are unlocking positions -- user must relock before migration
     pub fn migrate_to_new_governance(&mut self) {
-        assert!(&self.new_governance_contract_id.is_some(),"new_governance_contract_id not set");
+        assert!(
+            &self.new_governance_contract_id.is_some(),
+            "new_governance_contract_id not set"
+        );
         self.assert_user_not_migrated(&env::signer_account_id());
         let voter = self.internal_get_voter_or_panic(&env::signer_account_id());
         let mut lps: Vec<(U128String, u16)> = vec![];
+        let mut total_meta_to_migrate: u128 = 0;
         for lp in voter.locking_positions.iter() {
             if lp.is_unlocking() {
                 panic!("relock all you unlocking positions before migration")
-            }
-            else if lp.amount > 0 && lp.is_locked() {
-                lps.push((U128String::from(lp.amount), lp.locking_period))
+            } else if lp.amount > 0 && lp.is_locked() {
+                lps.push((U128String::from(lp.amount), lp.locking_period));
+                total_meta_to_migrate += lp.amount;
             }
         }
         assert!(lps.len() != 0, "No valid locking positions to migrate");
         // prevent double call
-        self.migrated_users.insert(&env::signer_account_id());
+        self.migrated_users
+            .insert(&env::signer_account_id(), &total_meta_to_migrate);
         // schedule a call to migrate in the new contract
-        interface::ext_new_gov_contract::ext(self.new_governance_contract_id.as_ref().unwrap().clone())
-             .with_static_gas(interface::GAS_FOR_MIGRATION)
-             .migration_create_lps(env::signer_account_id(), lps)
-             .then(
-                 Self::ext(env::current_account_id())
-                     .with_static_gas(interface::GAS_FOR_RESOLVE_MIGRATION)
-                     .after_migration(),
-             );
+        interface::ext_new_gov_contract::ext(
+            self.new_governance_contract_id.as_ref().unwrap().clone(),
+        )
+        .with_static_gas(interface::GAS_FOR_MIGRATION)
+        .migration_create_lps(env::signer_account_id(), lps)
+        .then(
+            Self::ext(env::current_account_id())
+                .with_static_gas(interface::GAS_FOR_RESOLVE_MIGRATION)
+                .after_migration(),
+        );
     }
     #[private]
     pub fn after_migration(&mut self) {
@@ -968,6 +970,21 @@ impl MetaVoteContract {
     // query total_distributed meta for claims
     pub fn get_accumulated_distributed_for_claims(&self) -> U128 {
         self.accumulated_distributed_for_claims.into()
+    }
+
+    // get tuples for all migrated users (account_id, migrated_meta)
+    pub fn get_migrated_users(&self, from_index: u32, limit: u32) -> Vec<(AccountId,U128)> {
+        let keys = self.migrated_users.keys_as_vector();
+        let keys_len = keys.len() as u64;
+        let start = from_index as u64;
+        let limit = limit as u64;
+        let mut results = Vec::<(AccountId,U128)>::new();
+        for index in start..std::cmp::min(start + limit, keys_len) {
+            let account_id = keys.get(index).unwrap();
+            let migrated_meta = self.migrated_users.get(&account_id).unwrap();
+            results.push((account_id,migrated_meta.into()));
+        }
+        results
     }
 }
 

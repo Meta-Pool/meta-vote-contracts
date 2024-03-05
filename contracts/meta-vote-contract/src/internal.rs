@@ -16,6 +16,13 @@ impl MetaVoteContract {
         );
     }
 
+    pub fn internal_user_migrated_amount(&self, account_id: &AccountId) -> u128 {
+        self.migrated_users.get(account_id).unwrap_or_default()
+    }
+    pub(crate) fn assert_user_not_migrated(&self, account_id: &AccountId){
+        assert!(self.internal_user_migrated_amount(account_id)==0, "user already migrated to new governance")
+    }
+
     /// Inner method to get or create a Voter.
     pub(crate) fn internal_get_voter(&self, voter_id: &VoterId) -> Voter {
         self.voters.get(voter_id).unwrap_or(Voter::new(voter_id))
