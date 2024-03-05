@@ -22,7 +22,7 @@ construct_uint! {
 pub struct LockingPositionJSON {
     pub index: Option<PositionIndex>,
     pub amount: U128,
-    pub locking_period: Days, // unbound_period, kept as locking_period for backwards compat
+    pub locking_period: Days, // unbond_period, kept as locking_period for backwards compat
     pub voting_power: U128,
     pub unlocking_started_at: Option<EpochMillis>,
     pub is_unlocked: bool,

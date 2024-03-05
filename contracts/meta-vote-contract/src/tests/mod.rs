@@ -14,14 +14,15 @@ const E24: u128 = 1_000_000_000_000_000_000_000_000;
 fn new_metavote_contract() -> MetaVoteContract {
     MetaVoteContract::new(
         owner_account(),
-        MIN_UNBOUND_PERIOD,
-        MAX_UNBOUND_PERIOD,
+        MIN_UNBOND_PERIOD,
+        MAX_UNBOND_PERIOD,
         U128::from(MIN_DEPOSIT_AMOUNT),
         MAX_LOCKING_POSITIONS,
         MAX_VOTING_POSITIONS,
         mpdao_token_account(),
         meta_pool_account(),
-        U128::from(6_000 * E20) // 0.6 Near
+        U128::from(6_000 * E20), // 0.6 Near
+        "prev-gov-token.testnet".into()
     )
 }
 
@@ -751,9 +752,9 @@ fn test_relock_partial_position_3() {
 
 #[test]
 fn test_clear_locking_position() {
-    const UNBOUND_PERIOD: u16 = 30;
+    const UNBOND_PERIOD: u16 = 30;
     const MPDAO_AMOUNT: Balance = 2 * E6;
-    let (mut contract, sender_id) = generate_lock_position_context(UNBOUND_PERIOD, MPDAO_AMOUNT);
+    let (mut contract, sender_id) = generate_lock_position_context(UNBOND_PERIOD, MPDAO_AMOUNT);
     let unlock_started_timestamp = to_ts(GENESIS_TIME_IN_DAYS + 5);
     let clear_positions_timestamp = to_ts(GENESIS_TIME_IN_DAYS + 5 + 60);
 
@@ -822,9 +823,9 @@ fn test_clear_locking_position() {
     expected = "Not enough free voting power to unlock! You have 0, required 20000000000000000000000000."
 )]
 fn test_unlock_position_without_voting_power() {
-    const UNBOUND_PERIOD: u16 = 120;
+    const UNBOND_PERIOD: u16 = 120;
     const MPDAO_AMOUNT: Balance = 10 * E6;
-    let (mut contract, sender_id) = generate_lock_position_context(UNBOUND_PERIOD, MPDAO_AMOUNT);
+    let (mut contract, sender_id) = generate_lock_position_context(UNBOND_PERIOD, MPDAO_AMOUNT);
 
     let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
 
@@ -838,7 +839,7 @@ fn test_unlock_position_without_voting_power() {
         .index
         .unwrap();
 
-    let vote = contract.calculate_voting_power(MpDAOAmount::from(MPDAO_AMOUNT), UNBOUND_PERIOD);
+    let vote = contract.calculate_voting_power(MpDAOAmount::from(MPDAO_AMOUNT), UNBOND_PERIOD);
     contract.vote(U128::from(vote), votable_account(), "0".to_owned());
     let voter = contract.internal_get_voter(&sender_id);
     assert_eq!(voter.voting_power, 0, "Incorrect Voting Power calculation.");
@@ -922,7 +923,7 @@ fn test_rebalance_increase_and_decrease() {
 struct User {
     numeric_id: u8,
     locked_mpdao: u128,
-    unbound_days: Days,
+    unbond_days: Days,
     contract_address: ContractAddress,
     votable_object_id: VotableObjId,
 }
@@ -937,28 +938,28 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
         User {
             numeric_id: 0,
             locked_mpdao: 10 * E6,
-            unbound_days: 30,
+            unbond_days: 30,
             contract_address: compose_account("app_1"),
             votable_object_id: "1".to_string(),
         },
         User {
             numeric_id: 1,
             locked_mpdao: 1 * E6,
-            unbound_days: 45,
+            unbond_days: 45,
             contract_address: compose_account("app_1"),
             votable_object_id: "1".to_string(),
         },
         User {
             numeric_id: 2,
             locked_mpdao: 24 * E6,
-            unbound_days: 200,
+            unbond_days: 200,
             contract_address: compose_account("app_1"),
             votable_object_id: "2".to_string(),
         },
         User {
             numeric_id: 3,
             locked_mpdao: 8 * E6,
-            unbound_days: 300,
+            unbond_days: 300,
             contract_address: compose_account("app_2"),
             votable_object_id: "1".to_string(),
         },
@@ -989,7 +990,7 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
 
         let sender_id: AccountId = user.account_id();
         let amount = U128::from(user.locked_mpdao);
-        let msg: String = user.unbound_days.to_string();
+        let msg: String = user.unbond_days.to_string();
         contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
 
         // New context: the voter is doing the call now!
@@ -997,7 +998,7 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
         testing_env!(context.clone());
 
         let voting_power =
-            contract.calculate_voting_power(u128::from(amount), user.unbound_days.clone());
+            contract.calculate_voting_power(u128::from(amount), user.unbond_days.clone());
         assert_eq!(
             u128::from(contract.get_available_voting_power(sender_id.clone())),
             voting_power,

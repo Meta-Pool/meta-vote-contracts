@@ -20,7 +20,7 @@ impl LockingPosition {
         amount: MpDAOAmount,
         locking_period: Days,
         voting_power: u128,
-        unlocking_started_at: Option<EpochMillis>
+        unlocking_started_at: Option<EpochMillis>,
     ) -> Self {
         LockingPosition {
             amount,
@@ -64,20 +64,20 @@ impl LockingPosition {
 
 #[near_bindgen]
 impl MetaVoteContract {
-    /// Voting power is proportional to unbound_period
+    /// Voting power is proportional to unbond_period
     /// i.e: 30->0.5x, 60(default)->1, 120->2, 180->3, 240->4, 300->5x –Step: 30days
-    /// formula is for multiplier: unbound_days/60
-    /// formula for voting power is: govTokenLocked * unbound_days / 60
+    /// formula is for multiplier: unbond_days/60
+    /// formula for voting power is: govTokenLocked * unbond_days / 60
     pub(crate) fn calculate_voting_power(
         &self,
         mpdao_amount: MpDAOAmount,
-        unbound_days: Days,
+        unbond_days: Days,
     ) -> u128 {
         assert!(mpdao_amount >= ONE_MPDAO); // at least 1 mpDAO, 1_000_0000
-        // voting power is u128 with 24 decimals (NEAR standard) and mpdao_amount has 6 decimals
+                                            // voting power is u128 with 24 decimals (NEAR standard) and mpdao_amount has 6 decimals
         let base_vp = mpdao_amount.checked_mul(E18).expect("vp overflow"); // convert to 24 decimals voting power
-        assert!(unbound_days < 3600); // put a limit to unbound_days
-        proportional(base_vp, unbound_days.into(), 60) // apply multiplier
+        assert!(unbond_days < 3600); // put a limit to unbond_days
+        proportional(base_vp, unbond_days.into(), 60) // apply multiplier
     }
 
     fn increase_locking_position(
@@ -85,9 +85,9 @@ impl MetaVoteContract {
         voter: &mut Voter,
         index: u64,
         mpdao_amount: MpDAOAmount,
-        unbound_days: Days,
+        unbond_days: Days,
     ) {
-        let voting_power = self.calculate_voting_power(mpdao_amount, unbound_days);
+        let voting_power = self.calculate_voting_power(mpdao_amount, unbond_days);
         let mut current_position = voter.get_position(index);
         current_position.amount += mpdao_amount;
         current_position.voting_power += voting_power;
@@ -101,16 +101,21 @@ impl MetaVoteContract {
         &mut self,
         voter: &mut Voter,
         mpdao_amount: MpDAOAmount,
-        unbound_days: Days,
-        voting_power: u128,
-        unlocking_started_at: Option<EpochMillis>
+        unbond_days: Days,
     ) {
         assert!(
             (voter.locking_positions.len() as u8) < self.max_locking_positions,
             "The max number of locking positions is {}",
             self.max_locking_positions
         );
-        let locking_position = LockingPosition::new(mpdao_amount, unbound_days, voting_power,unlocking_started_at);
+        // double-check it does not exists
+        assert!(
+            voter.find_locked_position(unbond_days).is_none(),
+            "a locking-position for {} days already exists",
+            unbond_days
+        );
+        let voting_power = self.calculate_voting_power(mpdao_amount, unbond_days);
+        let locking_position = LockingPosition::new(mpdao_amount, unbond_days, voting_power, None);
         voter.locking_positions.push(&locking_position);
         voter.voting_power += voting_power;
         self.total_voting_power += voting_power;
@@ -119,25 +124,24 @@ impl MetaVoteContract {
     pub(crate) fn deposit_locking_position(
         &mut self,
         mpdao_amount: MpDAOAmount,
-        unbound_days: Days,
+        unbond_days: Days,
         voter_id: &VoterId,
         voter: &mut Voter,
     ) {
         assert!(
-            unbound_days >= self.min_unbound_period && unbound_days <= self.max_unbound_period,
+            unbond_days >= self.min_unbond_period && unbond_days <= self.max_unbond_period,
             "Unbound period must be between {} and {} days",
-            self.min_unbound_period,
-            self.max_unbound_period
+            self.min_unbond_period,
+            self.max_unbond_period
         );
 
-        match voter.find_locked_position(unbound_days) {
+        match voter.find_locked_position(unbond_days) {
             Some(index) => {
                 // Deposit into existing locking position.
-                self.increase_locking_position(voter, index, mpdao_amount, unbound_days);
+                self.increase_locking_position(voter, index, mpdao_amount, unbond_days);
             }
             None => {
-                let voting_power = self.calculate_voting_power(mpdao_amount, unbound_days);
-                self.internal_create_locking_position(voter, mpdao_amount, unbound_days, voting_power, None);
+                self.internal_create_locking_position(voter, mpdao_amount, unbond_days);
             }
         };
         self.voters.insert(&voter_id, &voter);
@@ -147,7 +151,7 @@ impl MetaVoteContract {
         &mut self,
         voter: &mut Voter,
         mpdao_amount: MpDAOAmount,
-        unbound_days: Days,
+        unbond_days: Days,
         voting_power: u128,
     ) {
         // TODO: you can split this function into increase and create unlocking position
@@ -158,7 +162,12 @@ impl MetaVoteContract {
             "The max number of locking positions is {}",
             self.max_locking_positions
         );
-        let unlocking_position = LockingPosition::new(mpdao_amount, unbound_days, voting_power, Some(get_current_epoch_millis()));
+        let unlocking_position = LockingPosition::new(
+            mpdao_amount,
+            unbond_days,
+            voting_power,
+            Some(get_current_epoch_millis()),
+        );
         voter.locking_positions.push(&unlocking_position);
     }
 }

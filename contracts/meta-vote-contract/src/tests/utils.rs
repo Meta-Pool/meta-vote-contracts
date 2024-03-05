@@ -16,8 +16,8 @@ pub const GENESIS_TIME_IN_DAYS: u64 = 500;
 pub const YEAR: u64 = 365;
 pub const TEST_INITIAL_BALANCE: u128 = 100;
 
-pub const MIN_UNBOUND_PERIOD: Days = 30;
-pub const MAX_UNBOUND_PERIOD: Days = 300;
+pub const MIN_UNBOND_PERIOD: Days = 30;
+pub const MAX_UNBOND_PERIOD: Days = 300;
 
 pub const MIN_DEPOSIT_AMOUNT: u128 = 1 * E6; // 1 mpDao
 

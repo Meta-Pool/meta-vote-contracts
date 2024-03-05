@@ -6,8 +6,8 @@ pub struct OldState {
     pub owner_id: AccountId,
     pub voters: UnorderedMap<VoterId, Voter>,
     pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
-    pub min_unbound_period: Days,
-    pub max_unbound_period: Days,
+    pub min_unbond_period: Days,
+    pub max_unbond_period: Days,
     pub min_deposit_amount: MpDAOAmount,
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
@@ -28,6 +28,8 @@ pub struct OldState {
     // association with other blockchain addresses, users' encrypted data
     pub registration_cost: u128,
     pub associated_user_data: UnorderedMap<VoterId, String>,
+
+    pub prev_governance_contract: String,
 }
 
 #[near_bindgen]
@@ -42,8 +44,8 @@ impl MetaVoteContract {
             owner_id: old.owner_id,
             voters: old.voters,
             votes: old.votes,
-            min_unbound_period: old.min_unbound_period,
-            max_unbound_period: old.max_unbound_period,
+            min_unbond_period: old.min_unbond_period,
+            max_unbond_period: old.max_unbond_period,
             min_deposit_amount: old.min_deposit_amount,
             max_locking_positions: old.max_locking_positions,
             max_voting_positions: old.max_voting_positions,
@@ -64,6 +66,7 @@ impl MetaVoteContract {
             // association with other blockchain addresses, users' encrypted data
             registration_cost: old.registration_cost,
             associated_user_data: old.associated_user_data,
+            prev_governance_contract: old.prev_governance_contract,
         }
     }
 }

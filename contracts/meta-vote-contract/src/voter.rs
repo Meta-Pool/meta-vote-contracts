@@ -75,10 +75,10 @@ impl Voter {
         result
     }
 
-    pub(crate) fn find_locked_position(&self, locking_period: Days) -> Option<u64> {
+    pub(crate) fn find_locked_position(&self, unbond_days: Days) -> Option<u64> {
         let mut index = 0_u64;
         for locking_position in self.locking_positions.iter() {
-            if locking_position.locking_period == locking_period && locking_position.is_locked() {
+            if locking_position.locking_period == unbond_days && locking_position.is_locked() {
                 return Some(index);
             }
             index += 1;

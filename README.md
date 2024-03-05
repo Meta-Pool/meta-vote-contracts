@@ -38,7 +38,7 @@ pub type PositionIndex = u64;
 pub struct LockingPositionJSON {
     pub index: Option<PositionIndex>,
     pub amount: U128,
-    pub locking_period: Days, // unbound required days
+    pub locking_period: Days, // unbonding period in days
     pub voting_power: U128,
     pub unlocking_started_at: Option<EpochMillis>,
     pub is_unlocked: bool,
@@ -75,7 +75,7 @@ The best way to deploy Meta Vote is using the scripts for `mainnet` and `testnet
 
 ## Deposit & Locking
 
-* Use ft_transfer_call on mpDAO token NEP-141 contract, in the `msg` field set the number of days for the unbound period
+* Use ft_transfer_call on mpDAO token NEP-141 contract, in the `msg` field set the number of days for the unbonding period
 
 * to see how this contract process deposits check `fn ft_on_transfer()`
 

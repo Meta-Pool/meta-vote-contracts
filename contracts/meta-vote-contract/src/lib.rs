@@ -1,4 +1,8 @@
-use crate::{constants::*, locking_position::*, utils::{days_to_millis, millis_to_days, generate_hash_id, get_current_epoch_millis}};
+use crate::{
+    constants::*,
+    locking_position::*,
+    utils::{days_to_millis, generate_hash_id, get_current_epoch_millis, millis_to_days},
+};
 use near_sdk::{
     borsh::{self, BorshDeserialize, BorshSerialize},
     collections::{unordered_map::UnorderedMap, Vector},
@@ -26,8 +30,8 @@ pub struct MetaVoteContract {
     pub owner_id: AccountId,
     pub voters: UnorderedMap<VoterId, Voter>,
     pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
-    pub min_unbound_period: Days,
-    pub max_unbound_period: Days,
+    pub min_unbond_period: Days,
+    pub max_unbond_period: Days,
     pub min_deposit_amount: MpDAOAmount,
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
@@ -48,6 +52,9 @@ pub struct MetaVoteContract {
     // association with other blockchain addresses, users' encrypted data
     pub registration_cost: u128,
     pub associated_user_data: UnorderedMap<VoterId, String>,
+
+    // upgrade from prev governance token
+    pub prev_governance_contract: String,
 }
 
 #[near_bindgen]
@@ -55,26 +62,27 @@ impl MetaVoteContract {
     #[init]
     pub fn new(
         owner_id: AccountId,
-        min_unbound_period: Days,
-        max_unbound_period: Days,
+        min_unbond_period: Days,
+        max_unbond_period: Days,
         min_deposit_amount: U128String,
         max_locking_positions: u8,
         max_voting_positions: u8,
         mpdao_token_contract_address: ContractAddress,
         stnear_token_contract_address: ContractAddress,
         registration_cost: U128String,
+        prev_governance_contract: String,
     ) -> Self {
         require!(!env::state_exists(), "The contract is already initialized");
         require!(
-            min_unbound_period < max_unbound_period,
+            min_unbond_period < max_unbond_period,
             "Review the min and max locking period"
         );
         Self {
             owner_id,
             voters: UnorderedMap::new(StorageKey::Voters),
             votes: UnorderedMap::new(StorageKey::Votes),
-            min_unbound_period,
-            max_unbound_period,
+            min_unbond_period,
+            max_unbond_period,
             min_deposit_amount: MpDAOAmount::from(min_deposit_amount),
             max_locking_positions,
             max_voting_positions,
@@ -89,6 +97,7 @@ impl MetaVoteContract {
             total_unclaimed_stnear: 0,
             registration_cost: registration_cost.0,
             associated_user_data: UnorderedMap::new(StorageKey::AirdropData),
+            prev_governance_contract,
         }
     }
 
@@ -120,6 +129,7 @@ impl MetaVoteContract {
     }
     // Check_if_user_is_"registerd" (sic) kept for backward compat, same fn as the one above (cspell:disable-line)
     pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+        // cspell:disable-line
         // cspell:disable-line
         self.associated_user_data.get(account_id).is_some()
     }
@@ -732,56 +742,60 @@ impl MetaVoteContract {
     // * Admin *
     // *********
 
-    pub fn update_min_unbound_period(&mut self, new_min_unbound_period: Days) {
+    pub fn update_min_unbond_period(&mut self, new_min_unbond_period: Days) {
         self.assert_only_owner();
-        self.min_unbound_period = new_min_unbound_period;
+        self.min_unbond_period = new_min_unbond_period;
     }
-    pub fn update_max_unbound_period(&mut self, new_max_unbound_period: Days) {
+    pub fn update_max_unbond_period(&mut self, new_max_unbond_period: Days) {
         self.assert_only_owner();
-        self.max_unbound_period = new_max_unbound_period;
+        self.max_unbond_period = new_max_unbond_period;
+    }
+    pub fn set_prev_gov_contract(&mut self, contract_id: String) {
+        self.assert_only_owner();
+        self.prev_governance_contract = contract_id;
     }
 
-    // migration create lp & vp
-    pub fn migration_create(&mut self, data: VoterJSON) {
-        self.assert_only_owner();
-        let voter_id = AccountId::new_unchecked(data.voter_id);
+    // user-started migration of locking-positions from prev-governance-contract
+    // tuple Vec is (mpdao_amount,unbond_days)
+    // the old gov contract has a flag to block users from calling more than once
+    pub fn migration_create_lps(
+        &mut self,
+        voter_id: AccountId,
+        locking_positions: Vec<(U128String, u16)>,
+    ) {
+        require!(
+            env::predecessor_account_id().to_string() == self.prev_governance_contract,
+            "Only the old gov contract can call this function."
+        );
         let mut voter = self.internal_get_voter(&voter_id);
-        assert!(voter.locking_positions.is_empty(), "voter record not empty");
+        // heck we don't have already locking positons
+        assert!(
+            voter.locking_positions.len() == 0,
+            "User already has locking positions"
+        );
         // create locking positions
-        for lp in &data.locking_positions {
-            // migrate with old voting power calculation
-            self.internal_create_locking_position(
-                &mut voter,
-                lp.amount.0,
-                lp.locking_period,
-                lp.voting_power.0,
-                lp.unlocking_started_at,
-            );
-        }
-        // create voting positions
-        for vp in &data.vote_positions {
-            self.internal_create_voting_position(
-                &voter_id,
-                &mut voter,
-                vp.voting_power.0,
-                &vp.votable_address,
-                &vp.votable_object_id,
-            );
+        for lp in &locking_positions {
+            // migrate with new voting power calculation
+            // amount is in META w/24 decimals, convert to mpDAO w/6 decimals
+            let mpdao_amount = lp.0 .0 / 1_000_000_000_000_000_000;
+            let unbond_days = lp.1;
+            self.internal_create_locking_position(&mut voter, mpdao_amount, unbond_days);
         }
         // save voter
         self.voters.insert(&voter_id, &voter);
-        // ----
     }
 
-    // migration create lp & vp
+    // migration of associated data
     pub fn migration_set_associated_data(&mut self, data: Vec<(String, String)>) {
+        self.assert_only_owner();
         for user_data in data {
             // migrate associated user data
-            self.associated_user_data.insert(&AccountId::new_unchecked(user_data.0), &user_data.1);
+            self.associated_user_data
+                .insert(&AccountId::new_unchecked(user_data.0), &user_data.1);
         }
     }
 
-    // ONLY-FOR-MIGRATION-TESTING -- clear contract state
+    // ONLY-FOR-MIGRATION-TESTING on TESTNET-- clear contract state
     #[private]
     pub fn clean(keys: Vec<near_sdk::json_types::Base64VecU8>) {
         for key in keys.iter() {
@@ -846,7 +860,12 @@ impl MetaVoteContract {
     }
 
     // get all claims
-    fn internal_get_claims(&self, map: &UnorderedMap<VoterId, u128>, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+    fn internal_get_claims(
+        &self,
+        map: &UnorderedMap<VoterId, u128>,
+        from_index: u32,
+        limit: u32,
+    ) -> Vec<(AccountId, U128String)> {
         let mut results = Vec::<(AccountId, U128String)>::new();
         let keys = map.keys_as_vector();
         let start = from_index as u64;
@@ -864,7 +883,7 @@ impl MetaVoteContract {
         self.internal_get_claims(&self.claimable_stnear, from_index, limit)
     }
 
-    // get all META claims
+    // get all mpDAO claims
     pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
         self.internal_get_claims(&self.claimable_mpdao, from_index, limit)
     }
@@ -890,7 +909,7 @@ impl MetaVoteContract {
     }
 
     pub fn get_locking_period(&self) -> (Days, Days) {
-        (self.min_unbound_period, self.max_unbound_period)
+        (self.min_unbond_period, self.max_unbond_period)
     }
 
     // all locking positions for a voter

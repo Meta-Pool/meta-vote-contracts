@@ -246,7 +246,7 @@ async fn main() -> anyhow::Result<()> {
         .transact()
         .await?;
     if res.failures().len() > 0 {
-        println!("lock 3 mpdao unbound 120 d ERR: {:?}\n", res);
+        println!("lock 3 mpdao unbond 120 d ERR: {:?}\n", res);
     }
 
     let res = owner
@@ -544,8 +544,8 @@ async fn create_metavote(
         .call("new")
         .args_json(serde_json::json!({
             "owner_id": owner.id(),
-            "min_unbound_period": 0,
-            "max_unbound_period": 300,
+            "min_unbond_period": 0,
+            "max_unbond_period": 300,
             "min_deposit_amount": mpdao_as_u128_string(1),
             "max_locking_positions": 20,
             "max_voting_positions": 40,

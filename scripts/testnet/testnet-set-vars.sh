@@ -15,15 +15,15 @@ OWNER_ID=$METAVOTE_CONTRACT_ADDRESS
 MPDAO_TESTNET_TOKEN_ADDRESS="mpdao-token.testnet"
 STNEAR_TESTNET_TOKEN_ADDRESS="meta-v2.pool.testnet"
         # owner_id: AccountId,
-        # min_unbound_period: Days,
-        # max_unbound_period: Days,
+        # min_unbond_period: Days,
+        # max_unbond_period: Days,
         # min_deposit_amount: U128String,
         # max_locking_positions: u8,
         # max_voting_positions: u8,
         # mpdao_token_contract_address: ContractAddress,
         # stnear_token_contract_address: ContractAddress,
         # registration_cost: U128String,
-ARGS='{"owner_id":"'$OWNER_ID'","min_unbound_period":1,"max_unbound_period":300,"min_deposit_amount":"1000000",'
+ARGS='{"owner_id":"'$OWNER_ID'","min_unbond_period":1,"max_unbond_period":300,"min_deposit_amount":"1000000",'
 ARGS=$ARGS'"max_locking_positions":32,"max_voting_positions":32,'
 ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TESTNET_TOKEN_ADDRESS'",'
 ARGS=$ARGS'"registration_cost":"100000"}'
