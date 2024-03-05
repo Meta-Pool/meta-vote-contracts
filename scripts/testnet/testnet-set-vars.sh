@@ -4,6 +4,7 @@ export NEAR_ENV="testnet"
 
 METAVOTE_CONTRACT_ADDRESS=mpdao-vote.testnet
 METAVOTE_WASM="res/meta_vote_contract.wasm"
+OLD_METAVOTE_CONTRACT=metavote.testnet
 
 echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $(date) 
 
@@ -26,6 +27,7 @@ STNEAR_TESTNET_TOKEN_ADDRESS="meta-v2.pool.testnet"
 ARGS='{"owner_id":"'$OWNER_ID'","min_unbond_period":1,"max_unbond_period":300,"min_deposit_amount":"1000000",'
 ARGS=$ARGS'"max_locking_positions":32,"max_voting_positions":32,'
 ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TESTNET_TOKEN_ADDRESS'",'
+ARGS=$ARGS'"prev_governance_contract":"'$OLD_METAVOTE_CONTRACT'",'
 ARGS=$ARGS'"registration_cost":"100000"}'
 
 echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $OWNER_ID
