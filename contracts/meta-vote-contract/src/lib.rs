@@ -28,6 +28,7 @@ mod withdraw;
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct MetaVoteContract {
     pub owner_id: AccountId,
+    pub operator_id: AccountId,
     pub voters: UnorderedMap<VoterId, Voter>,
     pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
     pub min_unbond_period: Days,
@@ -62,6 +63,7 @@ impl MetaVoteContract {
     #[init]
     pub fn new(
         owner_id: AccountId,
+        operator_id: AccountId,
         min_unbond_period: Days,
         max_unbond_period: Days,
         min_deposit_amount: U128String,
@@ -79,6 +81,7 @@ impl MetaVoteContract {
         );
         Self {
             owner_id,
+            operator_id,
             voters: UnorderedMap::new(StorageKey::Voters),
             votes: UnorderedMap::new(StorageKey::Votes),
             min_unbond_period,
@@ -107,6 +110,10 @@ impl MetaVoteContract {
     pub fn set_stnear_contract(&mut self, stnear_contract: AccountId) {
         self.assert_only_owner();
         self.stnear_token_contract_address = stnear_contract;
+    }
+    pub fn set_operator_id(&mut self, operator_id: AccountId) {
+        self.assert_only_owner();
+        self.operator_id = operator_id;
     }
 
     // *******************************
@@ -793,6 +800,33 @@ impl MetaVoteContract {
             self.associated_user_data
                 .insert(&AccountId::new_unchecked(user_data.0), &user_data.1);
         }
+    }
+
+    // bot-managed mirroring of locking positions in ethereum and l2s
+    // tuple Vec is (mpdao_amount,unbond_days)
+    pub fn operator_mirror_lps(
+        &mut self,
+        external_address: String,
+        locking_positions: Vec<(U128String, u16)>,
+    ) {
+        self.assert_operator();
+        // external mirrored addresses are in the form of [address].evmp.near
+        // example for an eth based address: eth.f1552d1d7CD279A7B766F431c5FaC49A2fb6e361.evmp.near
+        // evmp.near is controlled by the dao. No external user can create a xxx.evmp.near account
+        let voter_id = AccountId::new_unchecked(format!("{}.evmp.near",external_address));
+        let mut voter = self.internal_get_voter(&voter_id);
+        // clear first
+        voter.locking_positions.clear();
+        // create locking positions
+        for lp in &locking_positions {
+            // migrate with new voting power calculation
+            // amount is in META w/24 decimals, convert to mpDAO w/6 decimals
+            let mpdao_amount = lp.0 .0;
+            let unbond_days = lp.1;
+            self.internal_create_locking_position(&mut voter, mpdao_amount, unbond_days);
+        }
+        // save voter
+        self.voters.insert(&voter_id, &voter);
     }
 
     // ONLY-FOR-MIGRATION-TESTING on TESTNET-- clear contract state

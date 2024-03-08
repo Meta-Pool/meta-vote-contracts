@@ -4,6 +4,7 @@ use near_sdk::{env, near_bindgen};
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct OldState {
     pub owner_id: AccountId,
+    pub operator_id: AccountId,
     pub voters: UnorderedMap<VoterId, Voter>,
     pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
     pub min_unbond_period: Days,
@@ -42,6 +43,7 @@ impl MetaVoteContract {
         // return the new state
         Self {
             owner_id: old.owner_id,
+            operator_id: old.operator_id,
             voters: old.voters,
             votes: old.votes,
             min_unbond_period: old.min_unbond_period,

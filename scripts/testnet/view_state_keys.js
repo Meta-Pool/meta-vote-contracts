@@ -5,7 +5,10 @@ const keyStore = new keyStores.UnencryptedFileSystemKeyStore(__dirname);
 const config = {
   keyStore,
   networkId: 'testnet',
-  nodeUrl: 'https://endpoints.omniatech.io/v1/near/testnet/public',
+  nodeUrl: 'https://endpoints.omniatech.io/v1/near/testnet/9777a075b7e64b0880a99759d423f7d1',
+  //nodeUrl: 'https://endpoints.omniatech.io/v1/near/testnet/public',
+  //nodeUrl: 'https://near-testnet.api.pagoda.co/rpc/v1',
+  //nodeUrl: 'https://api.seracle.com/saas/baas/rpc/near/testnet/public/',
   walletUrl: 'https://wallet.testnet.near.org',
   helperUrl: 'https://helper.testnet.near.org',
   explorerUrl: 'https://explorer.testnet.near.org',

@@ -7,6 +7,12 @@ impl MetaVoteContract {
             "Only the owner can call this function."
         );
     }
+    pub(crate) fn assert_operator(&self) {
+        require!(
+            self.operator_id == env::predecessor_account_id(),
+            "Only the operator can call this function."
+        );
+    }
 
     pub(crate) fn assert_min_deposit_amount(&self, amount: Balance) {
         assert!(
