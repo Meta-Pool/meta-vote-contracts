@@ -134,8 +134,9 @@ impl MetaVoteContract {
     pub fn check_if_registered_for_airdrops(&self, account_id: &AccountId) -> bool {
         self.associated_user_data.get(account_id).is_some()
     }
-    // Check_if_user_is_"registerd" (sic) kept for backward compat, same fn as the one above (cspell:disable-line)
+    // Check_if_user_is_"registerd" (sic) kept for backward compat, same fn as the one above  // cspell:disable-line
     pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+        // cspell:disable-line
         // cspell:disable-line
         // cspell:disable-line
         self.associated_user_data.get(account_id).is_some()
@@ -764,7 +765,8 @@ impl MetaVoteContract {
 
     // user-started migration of locking-positions from prev-governance-contract
     // tuple Vec is (mpdao_amount,unbond_days)
-    // the old gov contract has a flag to block users from calling more than once
+    // the old gov contract has a flag to block users from migrating
+    // the same position more than once
     pub fn migration_create_lps(
         &mut self,
         voter_id: AccountId,
@@ -775,21 +777,15 @@ impl MetaVoteContract {
             "Only the old gov contract can call this function."
         );
         let mut voter = self.internal_get_voter(&voter_id);
-        // heck we don't have already locking positons
-        assert!(
-            voter.locking_positions.len() == 0,
-            "User already has locking positions"
-        );
         // create locking positions
         for lp in &locking_positions {
             // migrate with new voting power calculation
             // amount is in META w/24 decimals, convert to mpDAO w/6 decimals
             let mpdao_amount = lp.0 .0 / 1_000_000_000_000_000_000;
             let unbond_days = lp.1;
-            self.internal_create_locking_position(&mut voter, mpdao_amount, unbond_days);
+            self.deposit_locking_position(mpdao_amount, unbond_days, &voter_id, &mut voter);
         }
-        // save voter
-        self.voters.insert(&voter_id, &voter);
+        // Note: deposit_locking_position saves voter
     }
 
     // migration of associated data
@@ -803,17 +799,17 @@ impl MetaVoteContract {
     }
 
     // bot-managed mirroring of locking positions in ethereum and l2s
-    // tuple Vec is (mpdao_amount,unbond_days)
+    // tuple Vec is (unbond_days, mpdao_amount)
     pub fn operator_mirror_lps(
         &mut self,
         external_address: String,
-        locking_positions: Vec<(U128String, u16)>,
+        locking_positions: Vec<(u16, U128String)>,
     ) {
         self.assert_operator();
         // external mirrored addresses are in the form of [address].evmp.near
         // example for an eth based address: eth.f1552d1d7CD279A7B766F431c5FaC49A2fb6e361.evmp.near
         // evmp.near is controlled by the dao. No external user can create a xxx.evmp.near account
-        let voter_id = AccountId::new_unchecked(format!("{}.evmp.near",external_address));
+        let voter_id = AccountId::new_unchecked(format!("{}.evmp.near", external_address));
         let mut voter = self.internal_get_voter(&voter_id);
         // clear first
         voter.locking_positions.clear();
@@ -821,8 +817,8 @@ impl MetaVoteContract {
         for lp in &locking_positions {
             // migrate with new voting power calculation
             // amount is in META w/24 decimals, convert to mpDAO w/6 decimals
-            let mpdao_amount = lp.0 .0;
-            let unbond_days = lp.1;
+            let unbond_days = lp.0;
+            let mpdao_amount = lp.1 .0;
             self.internal_create_locking_position(&mut voter, mpdao_amount, unbond_days);
         }
         // save voter

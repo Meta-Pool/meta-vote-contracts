@@ -14,6 +14,7 @@ const E24: u128 = 1_000_000_000_000_000_000_000_000;
 fn new_metavote_contract() -> MetaVoteContract {
     MetaVoteContract::new(
         owner_account(),
+        owner_account(),
         MIN_UNBOND_PERIOD,
         MAX_UNBOND_PERIOD,
         U128::from(MIN_DEPOSIT_AMOUNT),
