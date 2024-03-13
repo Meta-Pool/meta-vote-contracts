@@ -16,7 +16,7 @@ TOTAL_PREPAID_GAS="300000000000000"
 # 1st Deploy Contract & init
 OWNER_ID=$METAVOTE_CONTRACT_ADDRESS
 OPERATOR_ID=$BASE_METAVOTE_ADDRESS
-MPDAO_TESTNET_TOKEN_ADDRESS="mpdao-token.testnet"
+MPDAO_TOKEN_ADDRESS="mpdao-token.testnet"
 STNEAR_TESTNET_TOKEN_ADDRESS="meta-v2.pool.testnet"
         # owner_id: AccountId,
         # min_unbond_period: Days,
