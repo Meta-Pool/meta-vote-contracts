@@ -134,12 +134,9 @@ impl MetaVoteContract {
     pub fn check_if_registered_for_airdrops(&self, account_id: &AccountId) -> bool {
         self.associated_user_data.get(account_id).is_some()
     }
-    // Check_if_user_is_"registerd" (sic) kept for backward compat, same fn as the one above  // cspell:disable-line
+    // "registerd" (sic) kept sintax error for backward compat, same fn as the one above  // cspell:disable-line cspell:disable-next-line
     pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
-        // cspell:disable-line
-        // cspell:disable-line
-        // cspell:disable-line
-        self.associated_user_data.get(account_id).is_some()
+        self.check_if_registered_for_airdrops(account_id)
     }
 
     #[payable]
