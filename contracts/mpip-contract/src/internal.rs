@@ -1,10 +1,8 @@
 use crate::*;
-// use meta_tools::utils::{assert_one_promise_result, get_linear_release_proportion};
 use crate::utils::get_current_epoch_millis;
 use near_sdk::json_types::U128;
-use near_sdk::{env, near_bindgen, require, PromiseResult};
+use near_sdk::{env, require, PromiseResult};
 
-#[near_bindgen]
 impl MpipContract {
     pub(crate) fn assert_only_admin(&self) {
         require!(

@@ -4,6 +4,73 @@ use near_sdk::{near_bindgen, PromiseResult, json_types::U128};
 
 #[near_bindgen]
 impl MetaVoteContract {
+
+    // ************
+    // * Withdraw *
+    // ************
+
+    pub fn withdraw(
+        &mut self,
+        position_index_list: Vec<PositionIndex>,
+        amount_from_balance: U128String,
+    ) {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter_or_panic(&voter_id);
+        let amount_from_balance = MpDAOAmount::from(amount_from_balance);
+        assert!(
+            voter.balance >= amount_from_balance,
+            "Not enough balance. You have {} mpDAO in balance, required {}.",
+            voter.balance,
+            amount_from_balance
+        );
+        let remaining_balance = voter.balance - amount_from_balance;
+        // Clear locking positions, it can increase the voter balance.
+        if position_index_list.len() > 0 {
+            self.clear_locking_position(position_index_list);
+        }
+        // get voter again, because clear_locking_position alters the state
+        let mut voter = self.internal_get_voter_or_panic(&voter_id);
+        let total_to_withdraw = voter.balance - remaining_balance;
+        require!(total_to_withdraw > 0, "Nothing to withdraw.");
+        voter.balance -= total_to_withdraw;
+
+        if voter.is_empty() {
+            self.voters.remove(&voter_id);
+            log!("GODSPEED: {} is no longer part of Meta Vote!", &voter_id);
+        } else {
+            self.voters.insert(&voter_id, &voter);
+        }
+        self.transfer_mpdao_to_voter(voter_id, total_to_withdraw);
+    }
+
+    pub fn withdraw_all(&mut self) {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter_or_panic(&voter_id);
+
+        let position_index_list = voter.get_unlocked_position_index();
+        // Clear locking positions could increase the voter balance.
+        if position_index_list.len() > 0 {
+            self.clear_locking_position(position_index_list);
+        }
+        // get voter again because clear locking positions could increase the voter balance.
+        let mut voter = self.internal_get_voter_or_panic(&voter_id);
+        let total_to_withdraw = voter.balance;
+        require!(total_to_withdraw > 0, "Nothing to withdraw.");
+        voter.balance = 0;
+
+        if voter.is_empty() {
+            self.voters.remove(&voter_id);
+            log!("GODSPEED: {} is no longer part of Meta Vote!", &voter_id);
+        } else {
+            self.voters.insert(&voter_id, &voter);
+        }
+        self.transfer_mpdao_to_voter(voter_id, total_to_withdraw);
+    }
+
+    // *************************
+    // * Internals & callbacks *
+    // *************************
+
     pub(crate) fn transfer_mpdao_to_voter(
         &mut self,
         voter_id: VoterId,

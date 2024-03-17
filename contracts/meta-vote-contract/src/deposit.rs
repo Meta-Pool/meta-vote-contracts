@@ -1,6 +1,6 @@
 use crate::*;
 use near_sdk::json_types::U128;
-use near_sdk::{env, log, near_bindgen, PromiseOrValue, serde_json};
+use near_sdk::{env, log, near_bindgen, serde_json, PromiseOrValue};
 
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 
@@ -8,6 +8,8 @@ const E20: Balance = 100_000_000_000_000_000_000;
 
 #[near_bindgen]
 impl FungibleTokenReceiver for MetaVoteContract {
+    // receiving mpDAO or stNEAR to distribute
+    // verifies the caller is mpdao_token_contract_address or stnear_token_contract_address
     fn ft_on_transfer(
         &mut self,
         sender_id: AccountId,
@@ -88,5 +90,5 @@ impl MetaVoteContract {
             total_distributed,
             total_amount
         );
-}
+    }
 }
