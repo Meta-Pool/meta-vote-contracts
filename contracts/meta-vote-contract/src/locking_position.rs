@@ -62,7 +62,6 @@ impl LockingPosition {
     }
 }
 
-#[near_bindgen]
 impl MetaVoteContract {
     /// Voting power is proportional to unbond_period
     /// i.e: 30->0.5x, 60(default)->1, 120->2, 180->3, 240->4, 300->5x –Step: 30days

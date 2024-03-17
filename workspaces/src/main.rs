@@ -480,10 +480,10 @@ async fn main() -> anyhow::Result<()> {
     assert_eq!(res["against_votes"], "0");
     assert_eq!(res["abstain_votes"], "0");
 
-    println!("HERE");
+    println!("start worker.fast_forward");
     let blocks_to_advance = 3000;
     worker.fast_forward(blocks_to_advance).await?;
-    println!("tHERE");
+    println!("end worker.fast_forward");
 
     let res = voter
         .call(mpip_contract.id(), "get_proposal_state")
@@ -544,6 +544,7 @@ async fn create_metavote(
         .call("new")
         .args_json(serde_json::json!({
             "owner_id": owner.id(),
+            "operator_id": owner.id(),
             "min_unbond_period": 0,
             "max_unbond_period": 300,
             "min_deposit_amount": mpdao_as_u128_string(1),
@@ -552,6 +553,7 @@ async fn create_metavote(
             "mpdao_token_contract_address": mpdao_token_contract,
             "stnear_token_contract_address": stnear_contract,
             "registration_cost":"0",
+            "prev_governance_contract":mpdao_token_contract,
         }))
         .transact()
         .await?;
