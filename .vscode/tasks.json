@@ -3,13 +3,23 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"command": "cd near-workspaces-integration-test && cargo run && cd -",
+			"command": "bash scripts/integration-test.sh",
 			"problemMatcher": [
 				"$rustc",
 				"$rust-panic"
 			],
 			"group": "test",
 			"label": "integration test"
+		},
+		{
+			"type": "shell",
+			"command": "bash scripts/build.sh",
+			"problemMatcher": [
+				"$rustc",
+				"$rust-panic"
+			],
+			"group": "build",
+			"label": "build WASM contracts"
 		},
 		{
 			"type": "cargo",

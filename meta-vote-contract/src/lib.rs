@@ -4,13 +4,21 @@ use crate::{
     utils::{days_to_millis, generate_hash_id, get_current_epoch_millis, millis_to_days},
 };
 use near_sdk::{
-    borsh::{self, BorshDeserialize, BorshSerialize}, collections::{unordered_map::UnorderedMap, Vector}, env, json_types::U64, log, near_bindgen, require, store::LookupMap, AccountId, Balance, PanicOnDefault
+    borsh::{self, BorshDeserialize, BorshSerialize},
+    collections::{unordered_map::UnorderedMap, Vector},
+    env,
+    json_types::U64,
+    log, near_bindgen, require,
+    store::LookupMap,
+    AccountId, Balance, PanicOnDefault, Promise,
 };
 use types::*;
+use utils::pseudo_near_account;
 use voter::{Voter, VoterJSON};
 
 mod constants;
 mod deposit;
+mod evm_delegate;
 mod interface;
 mod internal;
 mod locking_position;
@@ -190,14 +198,12 @@ impl MetaVoteContract {
     }
 
     // claim stNear
-    pub fn claim_stnear(&mut self, amount: U128String) {
+    pub fn claim_stnear(&mut self, amount: U128String) -> Promise {
         let amount = amount.0;
         let voter_id = VoterId::from(env::predecessor_account_id());
         self.remove_claimable_stnear(&voter_id, amount);
-
-        // IMPORTANT: if user is not a voter, then the claim is not available.
-        let _voter = self.internal_get_voter_or_panic(&voter_id);
-        self.transfer_stnear_to_voter(voter_id, amount);
+        let receiver = AccountId::new_unchecked(voter_id.to_string());
+        self.transfer_stnear_to_voter(voter_id, receiver, amount)
     }
 
     // *************
@@ -509,7 +515,21 @@ impl MetaVoteContract {
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
     ) {
-        let voter_id = env::predecessor_account_id();
+        self.internal_vote(
+            &env::predecessor_account_id(),
+            voting_power,
+            contract_address,
+            votable_object_id,
+        )
+    }
+
+    fn internal_vote(
+        &mut self,
+        voter_id: &VoterId,
+        voting_power: U128String,
+        contract_address: ContractAddress,
+        votable_object_id: VotableObjId,
+    ) {
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let voting_power = u128::from(voting_power);
 
@@ -666,6 +686,15 @@ impl MetaVoteContract {
 
     pub fn unvote(&mut self, contract_address: ContractAddress, votable_object_id: VotableObjId) {
         let voter_id = env::predecessor_account_id();
+        self.internal_unvote(voter_id, contract_address, votable_object_id)
+    }
+
+    fn internal_unvote(
+        &mut self,
+        voter_id: AccountId,
+        contract_address: ContractAddress,
+        votable_object_id: VotableObjId,
+    ) {
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         self.internal_remove_voting_position(
             &voter_id,
@@ -741,14 +770,14 @@ impl MetaVoteContract {
     // tuple Vec is (unbond_days, mpdao_amount)
     pub fn operator_mirror_lps(
         &mut self,
-        external_address: String,
+        external_address: EvmAddress,
         locking_positions: Vec<(u16, U128String)>,
     ) {
         self.assert_operator();
         // external mirrored addresses are in the form of [address].evmp.near
         // example for an eth based address: eth.f1552d1d7CD279A7B766F431c5FaC49A2fb6e361.evmp.near
         // evmp.near is controlled by the dao. No external user can create a xxx.evmp.near account
-        let voter_id = AccountId::new_unchecked(format!("{}.evmp.near", external_address));
+        let voter_id = pseudo_near_account(&external_address);
         let mut voter = self.internal_get_voter(&voter_id);
         // clear first
         voter.locking_positions.clear();

@@ -4,12 +4,16 @@
 // use meta_tools::bond::BondLoaderJSON;
 use near_units::parse_near;
 // use json;
-use std::str;
+use std::str::{self, FromStr};
 // use near_sdk::json_types::{U128, U64};
 
 // use workspaces::network::Sandbox;
 use near_gas::*;
-use near_workspaces::{types::NearToken, Account, AccountId, Contract, DevNetwork, Worker};
+use near_workspaces::{
+    network::Sandbox,
+    types::{KeyType, NearToken, SecretKey},
+    Account, AccountId, Contract, DevNetwork, Worker,
+};
 
 // use meta_test_utils::now::Now;
 // use meta_test_utils::now;
@@ -26,12 +30,15 @@ fn mpdao_as_u128_string(mpdao_amount: u64) -> String {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    println!("init sandbox");
     let worker = near_workspaces::sandbox().await?;
 
     // Creating Accounts.
-    let owner = worker.dev_create_account().await?;
-    let voter = worker.dev_create_account().await?;
-    let proposer = worker.dev_create_account().await?;
+    println!("Creating Accounts");
+    let owner = create_account(&worker, "owner").await?;
+    let voter = create_account(&worker, "voter").await?;
+    let proposer = create_account(&worker, "proposer").await?;
+    let operator = create_account(&worker, "operator").await?;
 
     ///////////////////////////////////////
     // Stage 1: Deploy relevant contracts
@@ -40,6 +47,7 @@ async fn main() -> anyhow::Result<()> {
     let mpdao_token_contract = create_mpdao_token(&owner, &worker).await?;
     let metavote_contract = create_metavote(
         &owner,
+        &operator,
         mpdao_token_contract.id(),
         mpdao_token_contract.id(),
         &worker,
@@ -61,7 +69,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Voter: {}", voter.id());
     println!("Proposer: {}", proposer.id());
 
-    register_accounts(
+    register_storage_for(
         &mpdao_token_contract,
         &metavote_contract,
         &mpip_contract,
@@ -114,6 +122,7 @@ async fn main() -> anyhow::Result<()> {
         println!("Transfer mpdao 2 err: {:?}\n", res);
     }
 
+    // get_available_voting_power
     let res = owner
         .call(metavote_contract.id(), "get_available_voting_power")
         .args_json(serde_json::json!({
@@ -128,6 +137,81 @@ async fn main() -> anyhow::Result<()> {
     let res = json::parse(&res)?;
     assert_eq!(res.to_string(), "0");
 
+    // -----------------
+    // register_delegate
+    // -----------------
+    let delegate1 = create_account(&worker, "delegate-1").await?;
+    //storage_deposit(&delegate1, &mpdao_token_contract).await?;
+    let evm_address1 = "0xSomeEvmAddress1";
+    register_delegate(
+        &metavote_contract,
+        &delegate1,
+        &evm_address1.into(),
+        &operator,
+    )
+    .await?;
+
+    // delegator must have it
+    let res = get_delegations(&metavote_contract, &delegate1).await?;
+    let array = res.as_array().expect("no array");
+    assert!(array.len() == 1);
+    assert!(array[0] == evm_address1);
+
+    // get signature
+    let res = get_delegation_signature(&metavote_contract, &evm_address1.into()).await?;
+    assert!(res.eq(&serde_json::json!([
+        delegate1.id().to_string(),
+        format!("SOME-SIGNATURE-FOR-DELEGATE-TO-{}", delegate1.id()),
+    ])));
+
+    // delegator 2, same evmAddress
+    let delegate2 = create_account(&worker, "delegate-2").await?;
+    //storage_deposit(&delegate2, &mpdao_token_contract).await?;
+    // register again with another account, should remove from delegate 1
+    register_delegate(
+        &metavote_contract,
+        &delegate2,
+        &evm_address1.into(),
+        &operator,
+    )
+    .await?;
+
+    // old delegator must be empty now
+    let res = get_delegations(&metavote_contract, &delegate1).await?;
+    assert!(res.as_array().expect("no array").len() == 0);
+
+    // signature must be from new delegator
+    let res = get_delegation_signature(&metavote_contract, &evm_address1.into()).await?;
+    let expected_signature = format!("SOME-SIGNATURE-FOR-DELEGATE-TO-{}", delegate2.id());
+    let expected_json = &serde_json::json!([delegate2.id().to_string(), expected_signature]);
+    println!("expected {:?}", expected_json);
+    assert!(res.eq(expected_json));
+
+    // new delegator must have it
+    let res = get_delegations(&metavote_contract, &delegate2).await?;
+    let array = res.as_array().expect("no array");
+    assert!(array.len() == 1);
+    assert!(array[0] == evm_address1);
+
+    // add another
+    let evm_address2 = "0xSomeEvmAddress02";
+    register_delegate(
+        &metavote_contract,
+        &delegate2,
+        &evm_address2.into(),
+        &operator,
+    )
+    .await?;
+
+    // new delegator must have it
+    let res = get_delegations(&metavote_contract, &delegate2).await?;
+    let array = res.as_array().expect("no array");
+    assert!(array.len() == 2);
+    assert!(array[0] == evm_address1);
+    assert!(array[1] == evm_address2);
+
+    // --------------
+    // create_proposal
     let res = proposer
         .call(mpip_contract.id(), "create_proposal")
         .args_json(serde_json::json!({
@@ -423,7 +507,7 @@ async fn main() -> anyhow::Result<()> {
 
     let num: u128 = format!("{}", parse_near!("3 N")).parse().unwrap();
     let aga: u128 = res["against_votes"].to_string().parse().unwrap();
-    assert_eq!(aga , num, "(2) against_votes<>expected");
+    assert_eq!(aga, num, "(2) against_votes<>expected");
     assert_eq!(res["for_votes"], "0");
     assert_eq!(res["abstain_votes"], "0");
 
@@ -533,6 +617,7 @@ async fn create_mpdao_token(
 
 async fn create_metavote(
     owner: &Account,
+    operator: &Account,
     mpdao_token_contract: &AccountId,
     stnear_contract: &AccountId,
     worker: &Worker<impl DevNetwork>,
@@ -544,7 +629,7 @@ async fn create_metavote(
         .call("new")
         .args_json(serde_json::json!({
             "owner_id": owner.id(),
-            "operator_id": owner.id(),
+            "operator_id": operator.id(),
             "min_unbond_period": 0,
             "max_unbond_period": 300,
             "min_deposit_amount": mpdao_as_u128_string(1),
@@ -596,7 +681,26 @@ async fn create_mpip(
     Ok(mpip_contract)
 }
 
-async fn register_accounts(
+async fn storage_deposit(account: &Account, token_contract: &Contract) -> anyhow::Result<()> {
+    println!("storage_deposit {}", account.id());
+    let res = account
+        .call(token_contract.id(), "storage_deposit")
+        .args_json(serde_json::json!({
+            "account_id": account.id(),
+        }))
+        .gas(NearGas::from_tgas(50))
+        .deposit(NearToken::from_millinear(250))
+        .transact()
+        .await?;
+    if res.failures().len() > 0 {
+        println!("storage_deposit {}: {:?}\n", account.id(), res);
+        Err(anyhow::Error::msg("storage_deposit failure"))
+    } else {
+        Ok(())
+    }
+}
+
+async fn register_storage_for(
     metatoken_contract: &Contract,
     metavote_contract: &Contract,
     mpip_contract: &Contract,
@@ -604,77 +708,90 @@ async fn register_accounts(
     voter: &Account,
     proposer: &Account,
 ) -> anyhow::Result<()> {
-    println!("Register Accounts");
-    let res = owner
-        .call(metatoken_contract.id(), "storage_deposit")
+    storage_deposit(&owner, &metatoken_contract).await?;
+    storage_deposit(&voter, &metatoken_contract).await?;
+    storage_deposit(&metavote_contract.as_account(), &metatoken_contract).await?;
+    storage_deposit(&mpip_contract.as_account(), &metatoken_contract).await?;
+    storage_deposit(&proposer, &metatoken_contract).await
+}
+
+async fn register_delegate(
+    metavote_contract: &Contract,
+    delegate1: &Account,
+    evm_address: &String,
+    operator: &Account,
+) -> anyhow::Result<()> {
+    let res = delegate1
+        .call(metavote_contract.id(), "pre_delegate_evm_address")
         .args_json(serde_json::json!({
-            "account_id": voter.id(),
+            "evm_address": evm_address,
+            "signature": format!("SOME-SIGNATURE-FOR-DELEGATE-TO-{}",delegate1.id())
         }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_millinear(250))
+        .gas(NearGas::from_tgas(75))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     if res.failures().len() > 0 {
-        println!("storage_deposit 1: {:?}\n", res);
+        println!("pre_delegate_evm_address ERR: {:?}\n", res);
+        return Ok(());
     }
 
-    let res = owner
-        .call(metatoken_contract.id(), "storage_deposit")
+    // register_delegate
+    let res = operator
+        .call(
+            metavote_contract.id(),
+            "operator_confirm_delegated_evm_address",
+        )
         .args_json(serde_json::json!({
-            "account_id": metavote_contract.id(),
+            "evm_address": evm_address,
         }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_millinear(250))
+        .gas(NearGas::from_tgas(75))
+        .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
     if res.failures().len() > 0 {
-        println!("storage_deposit 2: {:?}\n", res);
+        println!("operator_confirm_delegated_evm_address ERR: {:?}\n", res);
+        return Err(anyhow::Error::msg("operator_confirm_delegated_evm_address"));
     }
-
-    let res = owner
-        .call(metatoken_contract.id(), "storage_deposit")
-        .args_json(serde_json::json!({
-            "account_id": mpip_contract.id(),
-        }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_millinear(250))
-        .transact()
-        .await?;
-    if res.failures().len() > 0 {
-        println!("storage_deposit 3: {:?}\n", res);
-    }
-
-    let res = owner
-        .call(metatoken_contract.id(), "storage_deposit")
-        .args_json(serde_json::json!({
-            "account_id": proposer.id(),
-        }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_millinear(250))
-        .transact()
-        .await?;
-    if res.failures().len() > 0 {
-        println!("storage_deposit 4: {:?}\n", res);
-    }
-
     Ok(())
 }
 
-// # # Generating 3 locking positions: 0, 1, 2 days
-// # NEAR_ENV=testnet near call $META_CONTRACT_ADDRESS ft_transfer_call '{"receiver_id": "'$METAVOTE_CONTRACT_ADDRESS'", "amount": "'5$YOCTO_UNITS'", "msg": "0"}' --accountId $VOTER_ID --depositYocto 1 --gas $TOTAL_PREPAID_GAS
-// # NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_all_locking_positions '{"voter_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
+async fn get_delegation_signature(
+    metavote_contract: &Contract,
+    evm_address: &String,
+) -> anyhow::Result<serde_json::Value> {
+    let res = metavote_contract
+        .view("get_delegation_signature")
+        .args_json(serde_json::json!({
+            "evm_address": evm_address,
+        }))
+        .await?;
+    let res: serde_json::Value = serde_json::from_slice(&res.result)?;
+    println!("signature for {} {:?}", evm_address, res);
+    Ok(res)
+}
 
-// # NEAR_ENV=testnet near call $META_CONTRACT_ADDRESS ft_transfer_call '{"receiver_id": "'$METAVOTE_CONTRACT_ADDRESS'", "amount": "'5$YOCTO_UNITS'", "msg": "1"}' --accountId $VOTER_ID --depositYocto 1 --gas $TOTAL_PREPAID_GAS
-// # NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_all_locking_positions '{"voter_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
+async fn get_delegations(
+    metavote_contract: &Contract,
+    account: &Account,
+) -> anyhow::Result<serde_json::Value> {
+    let res = metavote_contract
+        .view("get_delegating_evm_addresses")
+        .args_json(serde_json::json!({
+            "account_id": account.id(),
+        }))
+        .await?;
+    let res: serde_json::Value = serde_json::from_slice(&res.result)?;
+    println!("delegations for {} {:?}", account.id(), res);
+    Ok(res)
+}
 
-// # NEAR_ENV=testnet near call $META_CONTRACT_ADDRESS ft_transfer_call '{"receiver_id": "'$METAVOTE_CONTRACT_ADDRESS'", "amount": "'2$YOCTO_UNITS'", "msg": "2"}' --accountId $VOTER_ID --depositYocto 1 --gas $TOTAL_PREPAID_GAS
-// # NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_all_locking_positions '{"voter_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
+pub(crate) const DEV_ACCOUNT_SEED: &str = "testificate";
 
-// NEAR_ENV=testnet near call $META_CONTRACT_ADDRESS ft_transfer_call '{"receiver_id": "'$METAVOTE_CONTRACT_ADDRESS'", "amount": "'3$YOCTO_UNITS'", "msg": "2"}' --accountId $VOTER_ID --depositYocto 1 --gas $TOTAL_PREPAID_GAS
-// NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_all_locking_positions '{"voter_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
-
-// echo "--------------- get_available_voting_power"
-// NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_available_voting_power '{"voter_id": "'$VOTER_ID'"}' --accountId $VOTER_ID
-
-// echo "--------------- Creating a new proposal"
-// NEAR_ENV=testnet near call $MPIPS_CONTRACT_ADDRESS create_proposal '{"title": "title1", "short_description": "short_description1", "body": "body1", "data": "data1", "extra": "extra1"}' --accountId $VOTER_ID --depositYocto $TOTAL_PREPAID_GAS --gas $TOTAL_PREPAID_GAS
+pub async fn create_account(worker: &Worker<Sandbox>, name: &str) -> anyhow::Result<Account> {
+    let sk = SecretKey::from_seed(KeyType::ED25519, DEV_ACCOUNT_SEED);
+    //    let (id, sk) = self.dev_generate().await;
+    let account_id = AccountId::from_str(&format!("{}.test.near", name)).unwrap();
+    let account = worker.create_tla(account_id, sk).await?;
+    Ok(account.into_result()?)
+}
