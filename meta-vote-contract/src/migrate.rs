@@ -69,6 +69,10 @@ impl MetaVoteContract {
             registration_cost: old.registration_cost,
             associated_user_data: old.associated_user_data,
             prev_governance_contract: old.prev_governance_contract,
+
+            evm_delegates: UnorderedMap::new(StorageKey::EvmDelegates),
+            evm_delegation_signatures: LookupMap::new(StorageKey::EvmDelegationSignatures),
+            evm_pre_delegation: LookupMap::new(StorageKey::EvmPreDelegation),
         }
     }
 }

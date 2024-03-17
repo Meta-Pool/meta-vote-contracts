@@ -9,6 +9,10 @@ pub type Days = u16;
 pub type MpDAOAmount = u128;
 pub type ContractAddress = AccountId;
 pub type VotableObjId = String;
+
+pub type EvmAddress = String;
+pub type EvmSignature = String;
+
 pub type EpochMillis = u64;
 pub type PositionIndex = u64;
 

@@ -1,8 +1,9 @@
 [workspace]
 members = [
     "meta-vote-contract",
+    "mpip-contract",
     "test-meta-token",
-    "mpip-contract"
+    "near-workspaces-integration-test"
 ]
 resolver = "2"
 

@@ -4,11 +4,7 @@ use crate::{
     utils::{days_to_millis, generate_hash_id, get_current_epoch_millis, millis_to_days},
 };
 use near_sdk::{
-    borsh::{self, BorshDeserialize, BorshSerialize},
-    collections::{unordered_map::UnorderedMap, Vector},
-    env,
-    json_types::U64,
-    log, near_bindgen, require, AccountId, Balance, PanicOnDefault,
+    borsh::{self, BorshDeserialize, BorshSerialize}, collections::{unordered_map::UnorderedMap, Vector}, env, json_types::U64, log, near_bindgen, require, store::LookupMap, AccountId, Balance, PanicOnDefault
 };
 use types::*;
 use voter::{Voter, VoterJSON};
@@ -26,6 +22,7 @@ mod withdraw;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+
 pub struct MetaVoteContract {
     pub owner_id: AccountId,
     pub operator_id: AccountId,
@@ -56,6 +53,10 @@ pub struct MetaVoteContract {
 
     // upgrade from prev governance token
     pub prev_governance_contract: String,
+
+    pub evm_delegates: UnorderedMap<AccountId, Vec<EvmAddress>>,
+    pub evm_pre_delegation: LookupMap<EvmAddress, (AccountId, EvmSignature)>,
+    pub evm_delegation_signatures: LookupMap<EvmAddress, (AccountId, EvmSignature)>,
 }
 
 #[near_bindgen]
@@ -101,6 +102,9 @@ impl MetaVoteContract {
             registration_cost: registration_cost.0,
             associated_user_data: UnorderedMap::new(StorageKey::AirdropData),
             prev_governance_contract,
+            evm_delegates: UnorderedMap::new(StorageKey::EvmDelegates),
+            evm_delegation_signatures: LookupMap::new(StorageKey::EvmDelegationSignatures),
+            evm_pre_delegation: LookupMap::new(StorageKey::EvmPreDelegation),
         }
     }
 

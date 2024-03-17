@@ -3,26 +3,22 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"command": "make build",
+			"command": "cd near-workspaces-integration-test && cargo run && cd -",
 			"problemMatcher": [
 				"$rustc",
 				"$rust-panic"
 			],
-			"group": "build",
-			"label": "make build"
+			"group": "test",
+			"label": "integration test"
 		},
 		{
-			"type": "shell",
-			"command": "make test",
+			"type": "cargo",
+			"command": "test",
 			"problemMatcher": [
-				"$rustc",
-				"$rust-panic"
+				"$rustc"
 			],
-			"group": {
-				"kind": "test",
-				"isDefault": true
-			},
-			"label": "make test"
+			"group": "test",
+			"label": "rust: cargo test"
 		}
 	]
 }
