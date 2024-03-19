@@ -6,7 +6,7 @@ use near_sdk::{
     testing_env, AccountId, Balance, Gas, MockedBlockchain, PromiseResult, PublicKey, VMContext, ONE_NEAR,
 };
 
-use crate::types::*;
+use crate::{types::*, utils::proportional, E18, ONE_MPDAO};
 
 use super::E6;
 
@@ -158,3 +158,15 @@ pub fn set_context_caller(predecessor_account_id: &AccountId) {
         to_ts(GENESIS_TIME_IN_DAYS),
     ));
 }
+
+// /// Voting power is proportional to unbond_period
+// /// i.e: 30->0.5x, 60(default)->1, 120->2, 180->3, 240->4, 300->5x –Step: 30days
+// /// formula for multiplier is: unbond_days/60
+// /// formula for voting power is: govTokenLocked * unbond_days / 60
+// pub fn calculate_voting_power(mpdao_amount: MpDAOAmount, unbond_days: Days) -> u128 {
+//     assert!(mpdao_amount >= ONE_MPDAO); // at least 1 mpDAO, 1_000_0000
+//                                         // voting power is u128 with 24 decimals (NEAR standard) and mpdao_amount has 6 decimals
+//     let base_vp = mpdao_amount.checked_mul(E18).expect("vp overflow"); // convert to 24 decimals voting power
+//     assert!(unbond_days < 3600); // put a limit to unbond_days
+//     proportional(base_vp, unbond_days.into(), 60) // apply multiplier
+// }

@@ -9,5 +9,5 @@ __dir=$(dirname "$0")
 # VOTER_ID_2="0x0B438De1DCa9FBa6D14F17c1F0969ECc73C8186F.evmp.near"
 # NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_voter_info '{"voter_id":"'$VOTER_ID_2'"}'
 
-NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_voters '{"from_index":5,"limit":1}'
+NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_voters '{"from_index":0,"limit":10}'
 

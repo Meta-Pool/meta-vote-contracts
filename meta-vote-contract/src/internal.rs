@@ -60,7 +60,7 @@ impl MetaVoteContract {
         self.votes.insert(&contract_address, &votes_for_address);
     }
 
-    pub(crate) fn internal_decrease_total_votes(
+    pub(crate) fn state_internal_decrease_total_votes_for_address(
         &mut self,
         voting_power: u128,
         contract_address: &ContractAddress,

@@ -121,10 +121,9 @@ pub fn get_total_votes(
     votable_object_id: VotableObjId
 ) -> U128;
 
-pub fn get_votes_by_contract(
-    &self,
-    contract_address: ContractAddress
-) -> Vec<VotableObjectJSON>;
+// votes by app (contract)
+// returns [[votable_bj_id, vote_amount],[votable_bj_id, vote_amount]...]
+pub fn get_votes_by_app(&self, app_or_contract_address: String) -> Vec<(String, U128String)>;
 
 pub fn get_votes_by_voter(
     &self,
@@ -175,22 +174,19 @@ pub fn relock_from_balance(
     amount_from_balance: U128
 );
 
-// ******************
-// * Clear Position *
-// ******************
-
-pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>);
 
 // ************
 // * Withdraw *
 // ************
 
+#[payable]
 pub fn withdraw(
     &mut self,
     position_index_list: Vec<PositionIndex>,
     amount_from_balance: U128
 );
 
+#[payable]
 pub fn withdraw_all(&mut self);
 
 // **********
@@ -218,14 +214,19 @@ pub fn unvote(
 );
 ```
 
-## Locking and Unlocking process
+## Locking, re-locking, Unbonding process
 
-To Lock funds into the Meta Vote contract, the user must define an amount in the $mpDAO token and a number of days (between 30 and 300 days) to lock the funds.
+To Lock funds into the Meta Vote contract, the user must define an amount in the $mpDAO token and a number of days (between 30 and 300 days) as the unbonding period.
 
-![Locking and Unlocking process](media/process.png)
+![Locking and Unbonding](media/process.png)
 
 ## Consider:
 
-- To reclaim the mpDAO tokens, you will have to wait the period selected in the locking period.
+- To reclaim the mpDAO tokens, you will have start the unbonding and then wait the unbonding period.
+
+- During the unbonding period, you can not vote and you will not get paid. 
+
+- During the unbonding period, you can chose to re-lock the tokens to be able vote and get paid again. After the voting is over, you can also chose to continue the unbonding process where you left.
+
 - Implement **NEP264** for cross-contract calls: https://github.com/near/near-sdk-rs/issues/740
 - Release notes for `near-sdk = "4.0.0"`: https://github.com/near/near-sdk-rs/discussions/797

@@ -28,6 +28,46 @@ fn mpdao_as_u128_string(mpdao_amount: u64) -> String {
     format!("{}000000", mpdao_amount)
 }
 
+async fn ft_transfer(
+    nep_141_contract: &Contract,
+    source: &Account,
+    receiver: &Account,
+    amount_string: &String,
+) -> anyhow::Result<()> {
+    // send mpdao to voter
+    let res = source
+        .call(nep_141_contract.id(), "ft_transfer")
+        .args_json(serde_json::json!({
+           "receiver_id": receiver.id(),
+            "amount": amount_string
+        }))
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
+        .transact()
+        .await?;
+    if res.failures().len() > 0 {
+        panic!(
+            "Transfer {} to {} {} err: {:?}\n",
+            source.id(),
+            receiver.id(),
+            amount_string,
+            res
+        );
+    }
+    Ok(())
+}
+
+async fn ft_balance(nep_141_contract: &Contract, account: &Account) -> anyhow::Result<String> {
+    let res = nep_141_contract
+        .view("ft_balance_of")
+        .args_json(serde_json::json!({
+            "account_id": account.id()
+        }))
+        .await?;
+    let res: serde_json::Value = serde_json::from_slice(&res.result)?;
+    Ok(String::from(res.as_str().unwrap()))
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     println!("init sandbox");
@@ -44,12 +84,13 @@ async fn main() -> anyhow::Result<()> {
     // Stage 1: Deploy relevant contracts
     ///////////////////////////////////////
 
-    let mpdao_token_contract = create_mpdao_token(&owner, &worker).await?;
+    let mpdao_token_contract = create_nep141_token(&owner, &worker).await?;
+    let stnear_token_contract = create_nep141_token(&owner, &worker).await?;
     let metavote_contract = create_metavote(
         &owner,
         &operator,
         mpdao_token_contract.id(),
-        mpdao_token_contract.id(),
+        stnear_token_contract.id(),
         &worker,
     )
     .await?;
@@ -62,6 +103,8 @@ async fn main() -> anyhow::Result<()> {
     .await?;
 
     println!("mpDAO token Contract: {}", mpdao_token_contract.id());
+    println!("stNEAR token Contract: {}", stnear_token_contract.id());
+
     println!("Meta vote Contract: {}", metavote_contract.id());
     println!("MPIPs Contract: {}", mpip_contract.id());
 
@@ -79,63 +122,31 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
 
-    let res = owner
-        .call(mpdao_token_contract.id(), "ft_transfer")
-        .args_json(serde_json::json!({
-           "receiver_id": voter.id(),
-            "amount": mpdao_as_u128_string(15)
-        }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_yoctonear(1))
-        .transact()
-        .await?;
-    if res.failures().len() > 0 {
-        println!("Transfer mpdao err: {:?}\n", res);
+    // send some mpdao to voter
+    {
+        let amount = mpdao_as_u128_string(15);
+        ft_transfer(&mpdao_token_contract, &owner, &voter, &amount).await?;
+        // check balance
+        let balance = ft_balance(&mpdao_token_contract, &voter).await?;
+        println!("mpDAO balance of {}: {:?}\n", voter.id(), &balance);
+        assert_eq!(balance, amount);
     }
 
-    let res = owner
-        .call(mpdao_token_contract.id(), "ft_balance_of")
-        .args_json(serde_json::json!({
-            "account_id": voter.id()
-        }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_yoctonear(1))
-        .transact()
-        .await?;
-    let res = &res.raw_bytes().unwrap().clone();
-    let res = str::from_utf8(res).unwrap();
-    let res = json::parse(&res)?;
-    println!("mpDAO balance of {}: {:?}\n", voter.id(), res.to_string());
-    assert_eq!(res.to_string(), mpdao_as_u128_string(15));
-
-    let res = owner
-        .call(mpdao_token_contract.id(), "ft_transfer")
-        .args_json(serde_json::json!({
-           "receiver_id": proposer.id(),
-            "amount": mpdao_as_u128_string(15)
-        }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_yoctonear(1))
-        .transact()
-        .await?;
-    if res.failures().len() > 0 {
-        println!("Transfer mpdao 2 err: {:?}\n", res);
+    // send some mpdao to proposer
+    {
+        let amount = mpdao_as_u128_string(15);
+        ft_transfer(&mpdao_token_contract, &owner, &proposer, &amount).await?;
     }
 
     // get_available_voting_power
-    let res = owner
-        .call(metavote_contract.id(), "get_available_voting_power")
+    let res = metavote_contract
+        .view("get_available_voting_power")
         .args_json(serde_json::json!({
             "voter_id": voter.id()
         }))
-        .gas(NearGas::from_tgas(200))
-        .deposit(NearToken::from_yoctonear(1))
-        .transact()
         .await?;
-    let res = &res.raw_bytes().unwrap().clone();
-    let res = str::from_utf8(res).unwrap();
-    let res = json::parse(&res)?;
-    assert_eq!(res.to_string(), "0");
+    let res: serde_json::Value = serde_json::from_slice(&res.result)?;
+    assert_eq!(res.as_str().unwrap(), "0");
 
     // -----------------
     // register_delegate
@@ -212,6 +223,7 @@ async fn main() -> anyhow::Result<()> {
 
     // --------------
     // create_proposal
+    // --------------
     let res = proposer
         .call(mpip_contract.id(), "create_proposal")
         .args_json(serde_json::json!({
@@ -279,6 +291,7 @@ async fn main() -> anyhow::Result<()> {
     // Stage 2: Creating Proposals
     ///////////////////////////////////////
 
+    // voter locks mpDAO
     let locked_mpdao = 3;
     let days = 60;
     let args = serde_json::json!({
@@ -296,11 +309,12 @@ async fn main() -> anyhow::Result<()> {
     //println!("args {:?}\n {:?}\n", args, res);
     if res.failures().len() > 0 {
         println!(
-            "Transfer {} mpdao, days={} ERR: {:?}\n",
+            "for locking Transfer {} mpdao, days={} ERR: {:?}\n",
             locked_mpdao, days, res
         );
     }
 
+    // verify voting power
     let res = owner
         .call(metavote_contract.id(), "get_available_voting_power")
         .args_json(serde_json::json!({
@@ -318,6 +332,7 @@ async fn main() -> anyhow::Result<()> {
     println!("vp: {:?}\n", vp);
     assert_eq!(vp, expected_vp, "Vp <> expected_vp");
 
+    // proposer locks mpdao
     let res = proposer
         .call(mpdao_token_contract.id(), "ft_transfer_call")
         .args_json(serde_json::json!({
@@ -350,6 +365,32 @@ async fn main() -> anyhow::Result<()> {
     println!("(2) vp: {:?}\n", vp);
     assert_eq!(vp, expected_vp, "(2) vp <> expected_vp");
 
+    // voter locks 2nd position: 0 day to test withdraw
+    {
+        let locked_mpdao = 5;
+        let days = 0;
+        let args = serde_json::json!({
+            "receiver_id": metavote_contract.id(),
+            "amount": mpdao_as_u128_string(locked_mpdao),
+            "msg": format!(r#"{}"#,days)
+        });
+        let res = proposer
+            .call(mpdao_token_contract.id(), "ft_transfer_call")
+            .args_json(&args)
+            .gas(NearGas::from_tgas(200))
+            .deposit(NearToken::from_yoctonear(1))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() > 0 {
+            println!(
+                "for locking Transfer {} mpdao, days={} ERR: {:?}\n",
+                locked_mpdao, days, res
+            );
+        }
+    }
+
+    // create proposal
     let res = proposer
         .call(mpip_contract.id(), "create_proposal")
         .args_json(serde_json::json!({
@@ -542,7 +583,7 @@ async fn main() -> anyhow::Result<()> {
     // let res = str::from_utf8(res).unwrap();
     // let res = json::parse(&res)?;
     if res.failures().len() > 0 {
-        println!("vote_proposal 2 ERR: {:?}\n", res);
+        panic!("vote_proposal 2 ERR: {:?}\n", res);
     }
 
     let res = voter
@@ -564,10 +605,29 @@ async fn main() -> anyhow::Result<()> {
     assert_eq!(res["against_votes"], "0");
     assert_eq!(res["abstain_votes"], "0");
 
+    // proposer starts unlocking position 1
+    let res = proposer
+        .call(metavote_contract.id(), "unlock_position")
+        .args_json(serde_json::json!({
+            "index": 1
+        }))
+        .gas(NearGas::from_tgas(200))
+        // .deposit(NearToken::from_millinear(3))
+        .transact()
+        .await?;
+    if res.failures().len() > 0 {
+        panic!("unlock_position ERR: {:?}\n", res);
+    }
+    // let res = &res.raw_bytes().unwrap().clone();
+    // let res = str::from_utf8(res).unwrap();
+    // let res = json::parse(&res)?;
+
+    // ------------------------------------------
     println!("start worker.fast_forward");
     let blocks_to_advance = 3000;
     worker.fast_forward(blocks_to_advance).await?;
     println!("end worker.fast_forward");
+    // ------------------------------------------
 
     let res = voter
         .call(mpip_contract.id(), "get_proposal_state")
@@ -581,21 +641,40 @@ async fn main() -> anyhow::Result<()> {
     let res = &res.raw_bytes().unwrap().clone();
     let res = str::from_utf8(res).unwrap();
     let res = json::parse(&res)?;
-    println!("FINAL: {:?}\n", res);
-
+    println!("FINAL proposal state: {:?}\n", res);
     assert_eq!(res, "Accepted");
+
+    // -------------------------
+    println!("WITHDRAW ALL");
+    let balance_pre = ft_balance(&mpdao_token_contract, &proposer).await?;
+    println!("balance_pre: {}\n", balance_pre);
+    // proposer withdraws all mpdao tokens (position 1 should be unlocked)
+    let res = proposer
+        .call(metavote_contract.id(), "withdraw_all")
+        .gas(NearGas::from_tgas(200))
+        .deposit(NearToken::from_yoctonear(1))
+        .transact()
+        .await?;
+    if res.failures().len() > 0 {
+        panic!("withdraw_all ERR: {:?}\n", res);
+    }
+    let balance_post: String = ft_balance(&mpdao_token_contract, &proposer).await?;
+    println!("balance_post: {}\n", balance_post);
+    let delta = u128::from_str(&balance_post).unwrap() - u128::from_str(&balance_pre).unwrap();
+    println!("delta: {}\n", delta);
+    assert!(delta.to_string() == mpdao_as_u128_string(5));
 
     Ok(())
 }
 
-async fn create_mpdao_token(
+async fn create_nep141_token(
     owner: &Account,
     worker: &Worker<impl DevNetwork>,
 ) -> anyhow::Result<Contract> {
     let token_contract_wasm = std::fs::read(MPDAO_TEST_TOKEN_FILEPATH)?;
     let token_contract = worker.dev_deploy(&token_contract_wasm).await?;
     println!(
-        "init mpdao token contract {} {}",
+        "init token contract {} {}",
         owner.id(),
         format!("{}", "200000000000000")
     );
@@ -608,7 +687,7 @@ async fn create_mpdao_token(
         .transact()
         .await?;
     if res.failures().len() > 0 {
-        println!("mpDAO TOKEN new_default_meta result: {:#?}", res);
+        println!("token contract new_default_meta result: {:#?}", res);
         panic!("err on init")
     }
 

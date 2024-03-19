@@ -114,7 +114,7 @@ impl MetaVoteContract {
     ) {
         // verify delegation and compose the pseudo near account
         let pseudo_account = self.verify_delegate(&evm_address);
-        self.internal_unvote(&pseudo_account, contract_address, votable_object_id)
+        self.internal_unvote(&pseudo_account, &contract_address, &votable_object_id)
     }
 
     // --------

@@ -15,7 +15,7 @@ pub struct VoterJSON {
 pub struct Voter {
     pub balance: MpDAOAmount,
     pub locking_positions: Vector<LockingPosition>,
-    pub voting_power: u128, // available voting power, equals to sum(lp.voting_power)-sum(vp.voting_power)
+    pub available_voting_power: u128, // available voting power, equals to sum(lp.voting_power)-sum(vp.voting_power)
     pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
 }
 
@@ -26,7 +26,7 @@ impl Voter {
             locking_positions: Vector::new(StorageKey::LockingPosition {
                 hash_id: generate_hash_id(id),
             }),
-            voting_power: 0,
+            available_voting_power: 0,
             vote_positions: UnorderedMap::new(StorageKey::VotePosition {
                 hash_id: generate_hash_id(id),
             }),
@@ -96,7 +96,7 @@ impl Voter {
         self.locking_positions.swap_remove(index);
     }
 
-    pub(crate) fn get_votes_for_address(
+    pub(crate) fn get_vote_position_for_address(
         &self,
         voter_id: &VoterId,
         contract_address: &ContractAddress,
@@ -109,7 +109,7 @@ impl Voter {
             }))
     }
 
-    pub(crate) fn get_unlocked_position_index(&self) -> Vec<PositionIndex> {
+    pub(crate) fn get_unlocked_position_indexes(&self) -> Vec<PositionIndex> {
         let mut result = Vec::new();
         for index in 0..self.locking_positions.len() {
             let locking_position = self
@@ -146,8 +146,24 @@ impl Voter {
         VoterJSON {
             voter_id: voter_id.to_string(),
             locking_positions,
-            voting_power: self.voting_power.into(),
+            voting_power: self.available_voting_power.into(),
             vote_positions,
         }
     }
+
+    // clear SEVERAL fully unlocked positions
+    pub fn clear_fully_unlocked_positions(&mut self, position_index_list: Vec<PositionIndex>) {
+        let mut position_index_list = position_index_list;
+        position_index_list.sort();
+        position_index_list.reverse();
+        for index in position_index_list {
+            let locking_position = self.get_position(index);
+            // only if it is fully unlocked
+            if locking_position.is_unlocked() {
+                self.balance += locking_position.amount;
+                self.remove_position(index);
+            }
+        }
+    }
+
 }

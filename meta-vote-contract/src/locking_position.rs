@@ -1,4 +1,3 @@
-use crate::utils::proportional;
 use crate::*;
 use near_sdk::json_types::U128;
 
@@ -63,21 +62,6 @@ impl LockingPosition {
 }
 
 impl MetaVoteContract {
-    /// Voting power is proportional to unbond_period
-    /// i.e: 30->0.5x, 60(default)->1, 120->2, 180->3, 240->4, 300->5x –Step: 30days
-    /// formula is for multiplier: unbond_days/60
-    /// formula for voting power is: govTokenLocked * unbond_days / 60
-    pub(crate) fn calculate_voting_power(
-        &self,
-        mpdao_amount: MpDAOAmount,
-        unbond_days: Days,
-    ) -> u128 {
-        assert!(mpdao_amount >= ONE_MPDAO); // at least 1 mpDAO, 1_000_0000
-                                            // voting power is u128 with 24 decimals (NEAR standard) and mpdao_amount has 6 decimals
-        let base_vp = mpdao_amount.checked_mul(E18).expect("vp overflow"); // convert to 24 decimals voting power
-        assert!(unbond_days < 3600); // put a limit to unbond_days
-        proportional(base_vp, unbond_days.into(), 60) // apply multiplier
-    }
 
     fn increase_locking_position(
         &mut self,
@@ -86,13 +70,13 @@ impl MetaVoteContract {
         mpdao_amount: MpDAOAmount,
         unbond_days: Days,
     ) {
-        let voting_power = self.calculate_voting_power(mpdao_amount, unbond_days);
+        let voting_power = utils::calculate_voting_power(mpdao_amount, unbond_days);
         let mut current_position = voter.get_position(index);
         current_position.amount += mpdao_amount;
         current_position.voting_power += voting_power;
 
         voter.locking_positions.replace(index, &current_position);
-        voter.voting_power += voting_power;
+        voter.available_voting_power += voting_power;
         self.total_voting_power += voting_power;
     }
 
@@ -113,10 +97,10 @@ impl MetaVoteContract {
             "a locking-position for {} days already exists",
             unbond_days
         );
-        let voting_power = self.calculate_voting_power(mpdao_amount, unbond_days);
+        let voting_power = utils::calculate_voting_power(mpdao_amount, unbond_days);
         let locking_position = LockingPosition::new(mpdao_amount, unbond_days, voting_power, None);
         voter.locking_positions.push(&locking_position);
-        voter.voting_power += voting_power;
+        voter.available_voting_power += voting_power;
         self.total_voting_power += voting_power;
     }
 
