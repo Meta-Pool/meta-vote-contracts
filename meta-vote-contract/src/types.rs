@@ -1,13 +1,12 @@
 use uint::construct_uint;
-use near_sdk::AccountId;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::json_types::U128;
 
 pub type U128String = U128;
-pub type VoterId = AccountId;
+pub type VoterId = String;
 pub type Days = u16;
 pub type MpDAOAmount = u128;
-pub type ContractAddress = AccountId;
+pub type ContractAddress = String;
 pub type VotableObjId = String;
 
 pub type EvmAddress = String;
@@ -45,7 +44,7 @@ pub struct VotableObjectJSON {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct VotePositionJSON {
-    pub votable_address: AccountId,
+    pub votable_address: String,
     pub votable_object_id: String,
     pub voting_power: U128
 }

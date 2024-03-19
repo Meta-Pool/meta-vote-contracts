@@ -14,7 +14,7 @@ impl MetaVoteContract {
         position_index_list: Vec<PositionIndex>,
         amount_from_balance: U128String,
     ) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let voter = self.internal_get_voter_or_panic(&voter_id);
         let amount_from_balance = MpDAOAmount::from(amount_from_balance);
         assert!(
@@ -44,7 +44,7 @@ impl MetaVoteContract {
     }
 
     pub fn withdraw_all(&mut self) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let voter = self.internal_get_voter_or_panic(&voter_id);
 
         let position_index_list = voter.get_unlocked_position_index();
@@ -127,9 +127,9 @@ impl MetaVoteContract {
 
     /// This transfer is only to claim available stNEAR
     pub(crate) fn transfer_stnear_to_voter(
-        &mut self,
-        source: VoterId,
-        receiver: AccountId,
+        &self,
+        source: &String,
+        receiver: &String,
         amount: Balance
     ) -> Promise {
         ext_ft::ext(self.stnear_token_contract_address.clone())
@@ -143,7 +143,7 @@ impl MetaVoteContract {
             Self::ext(env::current_account_id())
                 .with_static_gas(GAS_FOR_RESOLVE_TRANSFER)
                 .after_transfer_stnear_callback(
-                    source,
+                    &source,
                     U128::from(amount)
                 )
         )
@@ -152,7 +152,7 @@ impl MetaVoteContract {
     #[private]
     pub fn after_transfer_stnear_callback(
         &mut self,
-        source: AccountId,
+        source: &String,
         amount: U128
     ) {
         let amount = amount.0;
@@ -166,7 +166,7 @@ impl MetaVoteContract {
                     "FAILED: {} stNEAR not transferred. Recovering {} state.",
                     amount, source
                 );
-                self.add_claimable_stnear(&source, amount);
+                self.add_claimable_stnear(source, amount);
             },
         };
     }

@@ -12,7 +12,7 @@ pub struct OldState {
     pub min_deposit_amount: MpDAOAmount,
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
-    pub mpdao_token_contract_address: ContractAddress, // governance tokens
+    pub mpdao_token_contract_address: AccountId, // governance tokens
     pub total_voting_power: u128,
 
     // mpdao as rewards
@@ -21,7 +21,7 @@ pub struct OldState {
     pub total_unclaimed_mpdao: u128,                    // currently unclaimed mpDAO
 
     // stNear as rewards
-    pub stnear_token_contract_address: ContractAddress,
+    pub stnear_token_contract_address: AccountId,
     pub claimable_stnear: UnorderedMap<VoterId, u128>,
     pub accum_distributed_stnear_for_claims: u128, // accumulated total stNEAR distributed
     pub total_unclaimed_stnear: u128,              // currently unclaimed stNEAR

@@ -13,7 +13,7 @@ pub trait FungibleTokenCore {
 
     fn ft_transfer(
         &mut self,
-        receiver_id: AccountId,
+        receiver_id: String,
         amount: U128,
         memo: Option<String>
     );

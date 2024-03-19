@@ -32,7 +32,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
                 Err(_) => panic!("Err parsing locking_period from msg. Must be u16"),
             };
 
-            let voter_id = VoterId::from(sender_id);
+            let voter_id = sender_id.to_string();
             assert_eq!(
                 env::predecessor_account_id(),
                 self.mpdao_token_contract_address,
@@ -66,7 +66,7 @@ impl MetaVoteContract {
             for item in distribute_info {
                 // in case of mpDAO, item.1 is integer mpDAO - mpDAO has 6 decimals
                 let amount = item.1 as u128 * 1_000_000;
-                self.add_claimable_mpdao(&AccountId::new_unchecked(item.0.clone()), amount);
+                self.add_claimable_mpdao(&item.0, amount);
                 total_distributed += amount;
             }
             self.accumulated_mpdao_distributed_for_claims += total_distributed;
@@ -77,7 +77,7 @@ impl MetaVoteContract {
                 // in case of stNEAR, item.1 is stNEAR amount * 1e4 (4 decimal places)
                 // so we multiply by 1e20 to get yocto-stNEAR
                 let amount = item.1 as u128 * E20;
-                self.add_claimable_stnear(&AccountId::new_unchecked(item.0.clone()), amount);
+                self.add_claimable_stnear(&item.0, amount);
                 total_distributed += amount;
             }
             self.accum_distributed_stnear_for_claims += total_distributed;

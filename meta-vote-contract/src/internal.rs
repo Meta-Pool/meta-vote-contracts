@@ -23,11 +23,13 @@ impl MetaVoteContract {
     }
 
     /// Inner method to get or create a Voter.
-    pub(crate) fn internal_get_voter(&self, voter_id: &VoterId) -> Voter {
-        self.voters.get(voter_id).unwrap_or(Voter::new(voter_id))
+    pub(crate) fn internal_get_voter(&self, voter_id: &String) -> Voter {
+        self.voters
+            .get(&voter_id)
+            .unwrap_or(Voter::new(&voter_id))
     }
-    pub(crate) fn internal_get_voter_or_panic(&self, voter_id: &VoterId) -> Voter {
-        match self.voters.get(voter_id) {
+    pub(crate) fn internal_get_voter_or_panic(&self, voter_id: &String) -> Voter {
+        match self.voters.get(&voter_id) {
             Some(a) => a,
             _ => panic!("invalid voter_id {}", voter_id),
         }
@@ -35,12 +37,12 @@ impl MetaVoteContract {
 
     fn internal_get_total_votes_for_address(
         &self,
-        contract_address: &ContractAddress,
+        contract_address: &String,
     ) -> UnorderedMap<VotableObjId, u128> {
         self.votes
             .get(&contract_address)
             .unwrap_or(UnorderedMap::new(StorageKey::ContractVotes {
-                hash_id: generate_hash_id(contract_address.to_string()),
+                hash_id: generate_hash_id(contract_address),
             }))
     }
 
@@ -89,10 +91,10 @@ impl MetaVoteContract {
     // ***************************
 
     fn add_claimable(
-        claimable_map: &mut UnorderedMap<VoterId, u128>,
+        claimable_map: &mut UnorderedMap<String, u128>,
         total_unclaimed: &mut u128,
-        account: &AccountId,
-        amount: u128
+        account: &String,
+        amount: u128,
     ) {
         let existing_claimable_amount = claimable_map.get(account).unwrap_or_default();
         claimable_map.insert(account, &(existing_claimable_amount + amount));
@@ -101,13 +103,13 @@ impl MetaVoteContract {
     }
 
     fn remove_claimable(
-        claimable_map: &mut UnorderedMap<VoterId, u128>,
+        claimable_map: &mut UnorderedMap<String, u128>,
         total_unclaimed: &mut u128,
-        account: &AccountId,
+        account: &String,
         amount: u128,
-        token: &str
+        token: &str,
     ) {
-        let existing_claimable_amount = claimable_map.get(account).unwrap_or_default();
+        let existing_claimable_amount = claimable_map.get(&account).unwrap_or_default();
         assert!(
             existing_claimable_amount >= amount,
             "you don't have enough claimable {}",
@@ -116,29 +118,51 @@ impl MetaVoteContract {
         let after_remove = existing_claimable_amount - amount;
         if after_remove == 0 {
             // 0 means remove
-            claimable_map.remove(account)
+            claimable_map.remove(&account)
         } else {
-            claimable_map.insert(account, &after_remove)
+            claimable_map.insert(&account, &after_remove)
         };
         // keep contract total
         *total_unclaimed -= amount;
     }
 
-    pub(crate) fn add_claimable_mpdao(&mut self, account: &AccountId, amount: u128) {
+    pub(crate) fn add_claimable_mpdao(&mut self, account: &String, amount: u128) {
         assert!(amount > 0);
-        Self::add_claimable(&mut self.claimable_mpdao, &mut self.total_unclaimed_mpdao, account, amount);
+        Self::add_claimable(
+            &mut self.claimable_mpdao,
+            &mut self.total_unclaimed_mpdao,
+            account,
+            amount,
+        );
     }
 
-    pub(crate) fn add_claimable_stnear(&mut self, account: &AccountId, amount: u128) {
+    pub(crate) fn add_claimable_stnear(&mut self, account: &String, amount: u128) {
         assert!(amount > 0);
-        Self::add_claimable(&mut self.claimable_stnear, &mut self.total_unclaimed_stnear, account, amount);
+        Self::add_claimable(
+            &mut self.claimable_stnear,
+            &mut self.total_unclaimed_stnear,
+            account,
+            amount,
+        );
     }
 
-    pub(crate) fn remove_claimable_mpdao(&mut self, account: &AccountId, amount: u128) {
-        Self::remove_claimable(&mut self.claimable_mpdao, &mut self.total_unclaimed_mpdao, account, amount, "mpDAO");
+    pub(crate) fn remove_claimable_mpdao(&mut self, account: &String, amount: u128) {
+        Self::remove_claimable(
+            &mut self.claimable_mpdao,
+            &mut self.total_unclaimed_mpdao,
+            account,
+            amount,
+            "mpDAO",
+        );
     }
 
-    pub(crate) fn remove_claimable_stnear(&mut self, account: &AccountId, amount: u128) {
-        Self::remove_claimable(&mut self.claimable_stnear, &mut self.total_unclaimed_stnear, account, amount, "stNEAR");
+    pub(crate) fn remove_claimable_stnear(&mut self, account: &String, amount: u128) {
+        Self::remove_claimable(
+            &mut self.claimable_stnear,
+            &mut self.total_unclaimed_stnear,
+            account,
+            amount,
+            "stNEAR",
+        );
     }
 }

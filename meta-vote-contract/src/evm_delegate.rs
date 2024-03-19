@@ -14,7 +14,7 @@ impl MetaVoteContract {
         assert_one_yocto();
         let account_id = env::predecessor_account_id();
         self.evm_pre_delegation
-            .insert(evm_address, (account_id, signature));
+            .insert(evm_address, (account_id.into(), signature));
     }
 
     #[payable]
@@ -68,15 +68,15 @@ impl MetaVoteContract {
         // remove the claim
         self.remove_claimable_stnear(&pseudo_account, amount.0);
         // transfer to delegate
-        self.transfer_stnear_to_voter(pseudo_account, env::predecessor_account_id(), amount.0)
+        self.transfer_stnear_to_voter(&pseudo_account, &env::predecessor_account_id().into(), amount.0)
     }
 
     // verify delegation and compose pseudo account
-    fn verify_delegate(&self, evm_address: &EvmAddress) -> AccountId {
+    fn verify_delegate(&self, evm_address: &EvmAddress) -> String {
         // get delegations for predecessor_account_id
         let delegations = self
             .evm_delegates
-            .get(&env::predecessor_account_id())
+            .get(&env::predecessor_account_id().into())
             .unwrap_or_default();
         // make sure predecessor_account_id() is the delegate
         assert!(
@@ -86,7 +86,7 @@ impl MetaVoteContract {
             &env::predecessor_account_id()
         );
         // compose the pseudo near account
-        pseudo_near_account(&evm_address)
+        utils::pseudo_near_address(&evm_address)
     }
 
     pub fn vote_delegated(
@@ -114,7 +114,7 @@ impl MetaVoteContract {
     ) {
         // verify delegation and compose the pseudo near account
         let pseudo_account = self.verify_delegate(&evm_address);
-        self.internal_unvote(pseudo_account, contract_address, votable_object_id)
+        self.internal_unvote(&pseudo_account, contract_address, votable_object_id)
     }
 
     // --------
@@ -123,12 +123,12 @@ impl MetaVoteContract {
 
     /// get delegated evm addresses for a near account
     pub fn get_delegating_evm_addresses(&self, account_id: AccountId) -> Vec<EvmAddress> {
-        self.evm_delegates.get(&account_id).unwrap_or_default()
+        self.evm_delegates.get(&account_id.into()).unwrap_or_default()
     }
 
     /// batch get all delegates
     /// get all registered near account delegates and their evm addresses
-    pub fn get_delegates(&self, from_index: u32, limit: u32) -> Vec<(AccountId, Vec<EvmAddress>)> {
+    pub fn get_delegates(&self, from_index: u32, limit: u32) -> Vec<(String, Vec<EvmAddress>)> {
         let keys = self.evm_delegates.keys_as_vector();
         let keys_len = keys.len() as u32;
         assert!(
@@ -160,7 +160,7 @@ impl MetaVoteContract {
     /// returns [near_account, delegation_signature], e.g: ["alice.near”, ”xxxxxxxxxxxxxxxx”]
     /// for external verification of the validity of delegations
     /// The message to validate against the signature is: “delegate to alice.near”
-    pub fn get_delegation_signature(&self, evm_address: String) -> &(AccountId, String) {
+    pub fn get_delegation_signature(&self, evm_address: String) -> &(String, String) {
         self.evm_delegation_signatures.get(&evm_address).unwrap()
     }
 }

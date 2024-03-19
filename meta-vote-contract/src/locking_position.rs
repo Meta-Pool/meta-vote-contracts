@@ -124,7 +124,7 @@ impl MetaVoteContract {
         &mut self,
         mpdao_amount: MpDAOAmount,
         unbond_days: Days,
-        voter_id: &VoterId,
+        voter_id: &String,
         voter: &mut Voter,
     ) {
         assert!(

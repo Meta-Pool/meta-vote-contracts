@@ -13,7 +13,6 @@ use near_sdk::{
     AccountId, Balance, PanicOnDefault, Promise,
 };
 use types::*;
-use utils::pseudo_near_account;
 use voter::{Voter, VoterJSON};
 
 mod constants;
@@ -34,37 +33,37 @@ mod withdraw;
 pub struct MetaVoteContract {
     pub owner_id: AccountId,
     pub operator_id: AccountId,
-    pub voters: UnorderedMap<VoterId, Voter>,
+    pub voters: UnorderedMap<String, Voter>,
     pub votes: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, u128>>,
     pub min_unbond_period: Days,
     pub max_unbond_period: Days,
     pub min_deposit_amount: MpDAOAmount,
     pub max_locking_positions: u8,
     pub max_voting_positions: u8,
-    pub mpdao_token_contract_address: ContractAddress, // governance tokens
+    pub mpdao_token_contract_address: AccountId, // governance tokens
     pub total_voting_power: u128,
 
     // mpdao as rewards
-    pub claimable_mpdao: UnorderedMap<VoterId, u128>,
+    pub claimable_mpdao: UnorderedMap<String, u128>,
     pub accumulated_mpdao_distributed_for_claims: u128, // accumulated total mpDAO distributed
     pub total_unclaimed_mpdao: u128,                    // currently unclaimed mpDAO
 
     // stNear as rewards
-    pub stnear_token_contract_address: ContractAddress,
-    pub claimable_stnear: UnorderedMap<VoterId, u128>,
+    pub stnear_token_contract_address: AccountId,
+    pub claimable_stnear: UnorderedMap<String, u128>,
     pub accum_distributed_stnear_for_claims: u128, // accumulated total stNEAR distributed
     pub total_unclaimed_stnear: u128,              // currently unclaimed stNEAR
 
     // association with other blockchain addresses, users' encrypted data
     pub registration_cost: u128,
-    pub associated_user_data: UnorderedMap<VoterId, String>,
+    pub associated_user_data: UnorderedMap<String, String>,
 
     // upgrade from prev governance token
     pub prev_governance_contract: String,
 
-    pub evm_delegates: UnorderedMap<AccountId, Vec<EvmAddress>>,
-    pub evm_pre_delegation: LookupMap<EvmAddress, (AccountId, EvmSignature)>,
-    pub evm_delegation_signatures: LookupMap<EvmAddress, (AccountId, EvmSignature)>,
+    pub evm_delegates: UnorderedMap<String, Vec<EvmAddress>>,
+    pub evm_pre_delegation: LookupMap<EvmAddress, (String, EvmSignature)>,
+    pub evm_delegation_signatures: LookupMap<EvmAddress, (String, EvmSignature)>,
 }
 
 #[near_bindgen]
@@ -78,8 +77,8 @@ impl MetaVoteContract {
         min_deposit_amount: U128String,
         max_locking_positions: u8,
         max_voting_positions: u8,
-        mpdao_token_contract_address: ContractAddress,
-        stnear_token_contract_address: ContractAddress,
+        mpdao_token_contract_address: AccountId,
+        stnear_token_contract_address: AccountId,
         registration_cost: U128String,
         prev_governance_contract: String,
     ) -> Self {
@@ -143,11 +142,11 @@ impl MetaVoteContract {
         U128String::from(self.registration_cost)
     }
 
-    pub fn check_if_registered_for_airdrops(&self, account_id: &AccountId) -> bool {
+    pub fn check_if_registered_for_airdrops(&self, account_id: &String) -> bool {
         self.associated_user_data.get(account_id).is_some()
     }
     // "registerd" (sic) kept sintax error for backward compat, same fn as the one above  // cspell:disable-line cspell:disable-next-line
-    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+    pub fn check_if_user_is_registerd(&self, account_id: &String) -> bool {
         self.check_if_registered_for_airdrops(account_id)
     }
 
@@ -159,11 +158,11 @@ impl MetaVoteContract {
             self.registration_cost
         );
         self.associated_user_data
-            .insert(&env::predecessor_account_id(), encrypted_data);
+            .insert(&env::predecessor_account_id().into(), encrypted_data);
     }
 
     /// Returns a single airdrop data
-    pub fn get_airdrop_account(&self, account_id: &AccountId) -> String {
+    pub fn get_airdrop_account(&self, account_id: &String) -> String {
         self.associated_user_data.get(&account_id).unwrap()
     }
 
@@ -190,7 +189,7 @@ impl MetaVoteContract {
     pub fn claim_and_lock(&mut self, amount: U128String, locking_period: u16) {
         let amount = amount.0;
         self.assert_min_deposit_amount(amount);
-        let voter_id = VoterId::from(env::predecessor_account_id());
+        let voter_id: String = env::predecessor_account_id().into();
         self.remove_claimable_mpdao(&voter_id, amount);
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         // create/update locking position
@@ -200,10 +199,10 @@ impl MetaVoteContract {
     // claim stNear
     pub fn claim_stnear(&mut self, amount: U128String) -> Promise {
         let amount = amount.0;
-        let voter_id = VoterId::from(env::predecessor_account_id());
+        let voter_id = env::predecessor_account_id().to_string();
         self.remove_claimable_stnear(&voter_id, amount);
-        let receiver = AccountId::new_unchecked(voter_id.to_string());
-        self.transfer_stnear_to_voter(voter_id, receiver, amount)
+        let receiver = voter_id.clone();
+        self.transfer_stnear_to_voter(&voter_id, &receiver, amount)
     }
 
     // *************
@@ -211,7 +210,7 @@ impl MetaVoteContract {
     // *************
 
     pub fn unlock_position(&mut self, index: PositionIndex) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id : String = env::predecessor_account_id().as_str().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -236,7 +235,7 @@ impl MetaVoteContract {
     }
 
     pub fn unlock_partial_position(&mut self, index: PositionIndex, amount: U128String) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -290,7 +289,7 @@ impl MetaVoteContract {
     // ********************************
 
     pub fn locking_position_extend_days(&mut self, index: PositionIndex, new_locking_period: Days) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -340,7 +339,7 @@ impl MetaVoteContract {
         locking_period: Days,
         amount_from_balance: U128String,
     ) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let locking_position = voter.get_position(index);
 
@@ -390,7 +389,7 @@ impl MetaVoteContract {
         locking_period: Days,
         amount_from_balance: U128String,
     ) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut locking_position = voter.get_position(index);
 
@@ -461,7 +460,7 @@ impl MetaVoteContract {
     }
 
     pub fn relock_from_balance(&mut self, locking_period: Days, amount_from_balance: U128String) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
 
         let amount = amount_from_balance.0;
@@ -489,7 +488,7 @@ impl MetaVoteContract {
     // clear SEVERAL locking positions
     pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>) {
         require!(position_index_list.len() > 0, "Index list is empty.");
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().as_str().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let mut position_index_list = position_index_list;
 
@@ -516,7 +515,7 @@ impl MetaVoteContract {
         votable_object_id: VotableObjId,
     ) {
         self.internal_vote(
-            &env::predecessor_account_id(),
+            &env::predecessor_account_id().as_str().to_string(),
             voting_power,
             contract_address,
             votable_object_id,
@@ -525,7 +524,7 @@ impl MetaVoteContract {
 
     fn internal_vote(
         &mut self,
-        voter_id: &VoterId,
+        voter_id: &String,
         voting_power: U128String,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
@@ -555,7 +554,7 @@ impl MetaVoteContract {
 
     fn internal_create_voting_position(
         &mut self,
-        voter_id: &AccountId,
+        voter_id: &String,
         voter: &mut Voter,
         voting_power: u128,
         contract_address: &ContractAddress,
@@ -593,7 +592,7 @@ impl MetaVoteContract {
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
     ) {
-        let voter_id = env::predecessor_account_id();
+        let voter_id = env::predecessor_account_id().to_string();
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         let voting_power = u128::from(voting_power);
 
@@ -660,7 +659,7 @@ impl MetaVoteContract {
 
     fn internal_remove_voting_position(
         &mut self,
-        voter_id: &AccountId,
+        voter_id: &String,
         voter: &mut Voter,
         contract_address: &ContractAddress,
         votable_object_id: &VotableObjId,
@@ -685,13 +684,13 @@ impl MetaVoteContract {
     }
 
     pub fn unvote(&mut self, contract_address: ContractAddress, votable_object_id: VotableObjId) {
-        let voter_id = env::predecessor_account_id();
-        self.internal_unvote(voter_id, contract_address, votable_object_id)
+        let voter_id = env::predecessor_account_id().as_str().to_string();
+        self.internal_unvote(&voter_id, contract_address, votable_object_id)
     }
 
     fn internal_unvote(
         &mut self,
-        voter_id: AccountId,
+        voter_id: &String,
         contract_address: ContractAddress,
         votable_object_id: VotableObjId,
     ) {
@@ -737,7 +736,7 @@ impl MetaVoteContract {
     // the same position more than once
     pub fn migration_create_lps(
         &mut self,
-        voter_id: AccountId,
+        voter_id: &String,
         locking_positions: Vec<(U128String, u16)>,
     ) {
         require!(
@@ -762,7 +761,7 @@ impl MetaVoteContract {
         for user_data in data {
             // migrate associated user data
             self.associated_user_data
-                .insert(&AccountId::new_unchecked(user_data.0), &user_data.1);
+                .insert(&user_data.0, &user_data.1);
         }
     }
 
@@ -777,7 +776,7 @@ impl MetaVoteContract {
         // external mirrored addresses are in the form of [address].evmp.near
         // example for an eth based address: eth.f1552d1d7CD279A7B766F431c5FaC49A2fb6e361.evmp.near
         // evmp.near is controlled by the dao. No external user can create a xxx.evmp.near account
-        let voter_id = pseudo_near_account(&external_address);
+        let voter_id = utils::pseudo_near_address(&external_address);
         let mut voter = self.internal_get_voter(&voter_id);
         // clear first
         voter.locking_positions.clear();
@@ -818,8 +817,8 @@ impl MetaVoteContract {
     }
 
     // get all information for a single voter: voter + locking-positions + voting-positions
-    pub fn get_voter_info(&self, voter_id: &AccountId) -> VoterJSON {
-        let voter = self.voters.get(&voter_id).unwrap();
+    pub fn get_voter_info(&self, voter_id: &String) -> VoterJSON {
+        let voter = self.voters.get(voter_id).unwrap();
         voter.to_json(voter_id)
     }
 
@@ -863,8 +862,8 @@ impl MetaVoteContract {
         map: &UnorderedMap<VoterId, u128>,
         from_index: u32,
         limit: u32,
-    ) -> Vec<(AccountId, U128String)> {
-        let mut results = Vec::<(AccountId, U128String)>::new();
+    ) -> Vec<(String, U128String)> {
+        let mut results = Vec::<(String, U128String)>::new();
         let keys = map.keys_as_vector();
         let start = from_index as u64;
         let limit = limit as u64;
@@ -877,12 +876,12 @@ impl MetaVoteContract {
     }
 
     // get all stNEAR claims
-    pub fn get_stnear_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+    pub fn get_stnear_claims(&self, from_index: u32, limit: u32) -> Vec<(String, U128String)> {
         self.internal_get_claims(&self.claimable_stnear, from_index, limit)
     }
 
     // get all mpDAO claims
-    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(AccountId, U128String)> {
+    pub fn get_claims(&self, from_index: u32, limit: u32) -> Vec<(String, U128String)> {
         self.internal_get_claims(&self.claimable_mpdao, from_index, limit)
     }
 

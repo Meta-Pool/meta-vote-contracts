@@ -68,8 +68,11 @@ pub fn voter_account_id(id: u8) -> AccountId {
     AccountId::new_unchecked(format!("voter_acc_{}.near", id))
 }
 
+pub fn compose_account_string(suffix: &str) -> String {
+    format!("account_{}.near", suffix)
+}
 pub fn compose_account(suffix: &str) -> AccountId {
-    AccountId::new_unchecked(format!("account_{}.near", suffix))
+    AccountId::new_unchecked(compose_account_string(suffix))
 }
 
 pub fn votable_account() -> AccountId {

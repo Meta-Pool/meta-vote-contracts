@@ -20,15 +20,15 @@ pub struct Voter {
 }
 
 impl Voter {
-    pub(crate) fn new(id: &VoterId) -> Self {
+    pub(crate) fn new(id: &String) -> Self {
         Self {
             balance: 0,
             locking_positions: Vector::new(StorageKey::LockingPosition {
-                hash_id: generate_hash_id(id.to_string()),
+                hash_id: generate_hash_id(id),
             }),
             voting_power: 0,
             vote_positions: UnorderedMap::new(StorageKey::VotePosition {
-                hash_id: generate_hash_id(id.to_string()),
+                hash_id: generate_hash_id(id),
             }),
         }
     }
@@ -105,7 +105,7 @@ impl Voter {
         self.vote_positions
             .get(&contract_address)
             .unwrap_or(UnorderedMap::new(StorageKey::VoterVotes {
-                hash_id: generate_hash_id(id.to_string()),
+                hash_id: generate_hash_id(&id),
             }))
     }
 
@@ -136,7 +136,7 @@ impl Voter {
             for obj in pos.keys_as_vector().iter() {
                 let value = pos.get(&obj).unwrap();
                 vote_positions.push(VotePositionJSON {
-                    votable_address: address.clone(),
+                    votable_address: address.as_str().to_string(),
                     votable_object_id: obj,
                     voting_power: value.into(),
                 });

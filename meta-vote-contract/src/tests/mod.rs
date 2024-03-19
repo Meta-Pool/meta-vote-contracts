@@ -49,7 +49,7 @@ fn test_single_deposit() {
     contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
     assert_eq!(1, contract.voters.len(), "Voter was not created!");
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(
         1,
         voter.locking_positions.len(),
@@ -84,7 +84,7 @@ fn test_multiple_deposit_same_locking_period() {
     let new_amount = U128::from(5 * E6);
     contract.ft_on_transfer(sender_id.clone(), new_amount.clone(), msg.clone());
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string().as_str().to_string());
     assert_eq!(
         1,
         voter.locking_positions.len(),
@@ -106,19 +106,19 @@ fn test_multiple_deposit_same_locking_period() {
     testing_env!(context.clone());
     assert_eq!(
         U128::from(total_vote_power),
-        contract.get_available_voting_power(sender_id.clone()),
+        contract.get_available_voting_power(sender_id.as_str().to_string()),
         "Incorrect voting power calculation!"
     );
 
     let locked_balance = u128::from(amount) + u128::from(new_amount);
     assert_eq!(
         U128::from(locked_balance),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance sum!"
     );
     assert_eq!(
         U128::from(0),
-        contract.get_balance(sender_id.clone()),
+        contract.get_balance(sender_id.as_str().to_string()),
         "Incorrect balance!"
     );
 
@@ -143,7 +143,7 @@ fn test_multiple_deposit_diff_locking_period() {
     let new_msg: String = "200".to_owned();
     contract.ft_on_transfer(sender_id.clone(), new_amount.clone(), new_msg.clone());
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string().as_str().to_string());
     assert_eq!(
         2,
         voter.locking_positions.len(),
@@ -164,19 +164,19 @@ fn test_multiple_deposit_diff_locking_period() {
     testing_env!(context.clone());
     assert_eq!(
         U128::from(total_vote_power),
-        contract.get_available_voting_power(sender_id.clone()),
+        contract.get_available_voting_power(sender_id.as_str().to_string()),
         "Incorrect voting power calculation!"
     );
 
     let locked_balance = u128::from(amount) + u128::from(new_amount);
     assert_eq!(
         U128::from(locked_balance),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance sum!"
     );
     assert_eq!(
         U128::from(0),
-        contract.get_balance(sender_id.clone()),
+        contract.get_balance(sender_id.as_str().to_string()),
         "Incorrect balance!"
     );
 
@@ -208,18 +208,18 @@ fn test_unlock_position() {
 
     assert_eq!(
         amount,
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         U128::from(0),
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string().as_str().to_string());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
@@ -232,23 +232,23 @@ fn test_unlock_position() {
     );
 
     let unlocking_started_at = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .unlocking_started_at;
     assert!(unlocking_started_at.is_some(), "Position is not unlocked!");
     assert_eq!(
         U128::from(0),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         amount,
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(voter.voting_power, 0, "Voting power was not removed!");
 }
 
@@ -277,25 +277,25 @@ fn test_unlock_partial_position() {
     let total_amount = U128::from(u128::from(amount) + u128::from(new_amount));
     assert_eq!(
         total_amount,
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         U128::from(0),
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
 
     // Partially removing the last (second) locking position.
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .last()
         .unwrap()
         .index
         .unwrap();
     let third_amount = U128::from(4 * E6);
     contract.unlock_partial_position(index, third_amount);
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(
         3,
         voter.locking_positions.len(),
@@ -303,7 +303,7 @@ fn test_unlock_partial_position() {
     );
 
     let unlocking_started_at = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .last()
         .unwrap()
         .unlocking_started_at;
@@ -312,16 +312,16 @@ fn test_unlock_partial_position() {
         U128::from(u128::from(amount) + u128::from(new_amount) - u128::from(third_amount));
     assert_eq!(
         locked_amount,
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         third_amount,
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let total_vote_power = contract
         .calculate_voting_power(MpDAOAmount::from(amount), msg.parse::<Days>().unwrap())
         + contract.calculate_voting_power(
@@ -367,13 +367,13 @@ fn generate_relock_position_context() -> (MetaVoteContract,AccountId) {
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_1);
     testing_env!(context.clone());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
         .unwrap();
     contract.unlock_position(index);
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(
         locking_position.unlocking_started_at.unwrap(),
@@ -387,12 +387,12 @@ fn generate_relock_position_context() -> (MetaVoteContract,AccountId) {
     );
     assert_eq!(
         U128::from(0),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         AMOUNT,
-        contract.get_unlocking_balance(sender_id.clone()).0,
+        contract.get_unlocking_balance(sender_id.as_str().to_string()).0,
         "Incorrect unlocking balance!"
     );
     (contract, sender_id)
@@ -429,7 +429,7 @@ fn do_locking_position_extend_days(
     new_locking_days: u16,
     amount: Balance
 ) {
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     const INDEX: u64 = 0;
     let locking_position = voter.locking_positions.get(INDEX).unwrap();
     println!("{:?}", locking_position);
@@ -443,7 +443,7 @@ fn do_locking_position_extend_days(
     contract.locking_position_extend_days(INDEX, new_locking_days);
 
     // check
-    let voter_new = contract.internal_get_voter(&sender_id);
+    let voter_new = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(INDEX).unwrap();
     println!("{:?}", locking_position);
     assert_eq!(locking_position.locking_period, new_locking_days);
@@ -494,12 +494,12 @@ fn test_relock_position_2() {
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
     testing_env!(context.clone());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
         .unwrap();
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(voter.voting_power, 0, "Voting power should be 0.");
 
@@ -507,7 +507,7 @@ fn test_relock_position_2() {
     let locking_period: Days = 89;
     contract.relock_position(0, locking_period, U128::from(0));
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(
         voter.voting_power,
@@ -516,12 +516,12 @@ fn test_relock_position_2() {
     );
     assert_eq!(
         U128::from(locking_position.amount),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         U128::from(0),
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
     assert!(
@@ -539,12 +539,12 @@ fn test_relock_position_3() {
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
     testing_env!(context.clone());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
         .unwrap();
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(voter.voting_power, 0, "Voting power should be 0.");
 
@@ -552,7 +552,7 @@ fn test_relock_position_3() {
     let locking_period: Days = 30;
     contract.relock_position(0, locking_period, U128::from(0));
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(
         voter.voting_power,
@@ -561,12 +561,12 @@ fn test_relock_position_3() {
     );
     assert_eq!(
         U128::from(locking_position.amount),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         U128::from(0),
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
     assert!(
@@ -585,12 +585,12 @@ fn test_relock_partial_position_1() {
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
     testing_env!(context.clone());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
         .unwrap();
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     contract.relock_partial_position(
         index,
@@ -609,12 +609,12 @@ fn test_relock_partial_position_2() {
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
     testing_env!(context.clone());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
         .unwrap();
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(voter.voting_power, 0, "Voting power should be 0.");
 
@@ -630,12 +630,12 @@ fn test_relock_partial_position_2() {
 
     // The Unlocking is index 0, and the Relocked is index 1.
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .last()
         .unwrap()
         .index
         .unwrap();
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(
         voter.locking_positions.len(),
@@ -649,12 +649,12 @@ fn test_relock_partial_position_2() {
     );
     assert_eq!(
         U128::from(relock_amount),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         U128::from(keep_amount),
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
     assert!(
@@ -672,12 +672,12 @@ fn test_relock_partial_position_3() {
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_0);
     testing_env!(context.clone());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
         .unwrap();
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(voter.voting_power, 0, "Voting power should be 0.");
 
@@ -692,7 +692,7 @@ fn test_relock_partial_position_3() {
     );
 
     // The Unlocking is index 0, and the Relocked is ALSO index 0.
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     let locking_position = voter.locking_positions.get(index).unwrap();
     assert_eq!(
         voter.locking_positions.len(),
@@ -707,17 +707,17 @@ fn test_relock_partial_position_3() {
     assert_eq!(voter.balance, keep_amount, "Voter balance is incorrect.");
     assert_eq!(
         U128::from(keep_amount),
-        contract.get_balance(sender_id.clone()),
+        contract.get_balance(sender_id.as_str().to_string()),
         "Incorrect free balance!"
     );
     assert_eq!(
         U128::from(relock_amount),
-        contract.get_locked_balance(sender_id.clone()),
+        contract.get_locked_balance(sender_id.as_str().to_string()),
         "Incorrect locked balance!"
     );
     assert_eq!(
         U128::from(0),
-        contract.get_unlocking_balance(sender_id.clone()),
+        contract.get_unlocking_balance(sender_id.as_str().to_string()),
         "Incorrect unlocking balance!"
     );
     assert!(
@@ -731,7 +731,7 @@ fn test_relock_partial_position_3() {
     let keep_amount_2 = keep_amount - keep_amount_1;
     contract.relock_position(index, locking_period, U128::from(keep_amount_1));
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(voter.balance, keep_amount_2, "Incorrect voter balance.");
     assert_eq!(
         voter.voting_power,
@@ -742,7 +742,7 @@ fn test_relock_partial_position_3() {
     // Relock from balance
     let locking_period: Days = 278;
     contract.relock_from_balance(locking_period, U128::from(keep_amount_2));
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(voter.balance, 0, "Incorrect voter balance.");
     assert_eq!(
         voter.locking_positions.len(),
@@ -763,7 +763,7 @@ fn test_clear_locking_position() {
     let new_msg: String = "32".to_owned();
     contract.ft_on_transfer(sender_id.clone(), new_amount.clone(), new_msg.clone());
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(
         2,
         voter.locking_positions.len(),
@@ -794,7 +794,7 @@ fn test_clear_locking_position() {
     let position_index_list: Vec<PositionIndex> = vec![0, 1];
     contract.clear_locking_position(position_index_list);
 
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(
         0,
         voter.locking_positions.len(),
@@ -807,7 +807,7 @@ fn test_clear_locking_position() {
     );
     assert_eq!(
         MpDAOAmount::from(MPDAO_AMOUNT) + MpDAOAmount::from(new_amount),
-        MpDAOAmount::from(contract.get_balance(sender_id.clone())),
+        MpDAOAmount::from(contract.get_balance(sender_id.as_str().to_string())),
         "Incorrect balance!"
     );
 
@@ -834,19 +834,19 @@ fn test_unlock_position_without_voting_power() {
     let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_1);
     testing_env!(context.clone());
     let index = contract
-        .get_all_locking_positions(sender_id.clone())
+        .get_all_locking_positions(sender_id.as_str().to_string())
         .first()
         .unwrap()
         .index
         .unwrap();
 
     let vote = contract.calculate_voting_power(MpDAOAmount::from(MPDAO_AMOUNT), UNBOND_PERIOD);
-    contract.vote(U128::from(vote), votable_account(), "0".to_owned());
-    let voter = contract.internal_get_voter(&sender_id);
+    contract.vote(U128::from(vote), votable_account().as_str().to_string(), "0".to_owned());
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(voter.voting_power, 0, "Incorrect Voting Power calculation.");
     assert_eq!(
         U128::from(vote),
-        contract.get_votes_for_object(sender_id.clone(), votable_account(), "0".to_owned()),
+        contract.get_votes_for_object(sender_id.as_str().to_string(), votable_account().as_str().to_string(), "0".to_owned()),
         "Incorrect votes for votable object"
     );
     contract.unlock_position(index);
@@ -869,7 +869,7 @@ fn test_rebalance_increase_and_decrease() {
 
     contract.vote(
         U128::from(vote),
-        contract_address.clone(),
+        contract_address.as_str().to_string(),
         votable_object_id.clone(),
     );
 
@@ -878,16 +878,16 @@ fn test_rebalance_increase_and_decrease() {
     let decreased_votes = U128::from(vote - delta_1);
     contract.rebalance(
         decreased_votes,
-        contract_address.clone(),
+        contract_address.as_str().to_string(),
         votable_object_id.clone(),
     );
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(
         voter.voting_power, delta_1,
         "Incorrect Voting Power calculation."
     );
 
-    let votes_for_address = voter.get_votes_for_address(&sender_id, &contract_address);
+    let votes_for_address = voter.get_votes_for_address(&sender_id.as_str().to_string(), &contract_address.as_str().to_string());
     let votes = votes_for_address.get(&votable_object_id).unwrap();
 
     // Increase votes.
@@ -895,17 +895,17 @@ fn test_rebalance_increase_and_decrease() {
     let additional_votes = U128::from(votes + delta_2);
     contract.rebalance(
         additional_votes,
-        contract_address.clone(),
+        contract_address.as_str().to_string(),
         votable_object_id.clone(),
     );
-    let voter = contract.internal_get_voter(&sender_id);
+    let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
     assert_eq!(
         voter.voting_power,
         delta_1 - delta_2,
         "Incorrect Voting Power calculation."
     );
 
-    let votes_for_address = voter.get_votes_for_address(&sender_id, &contract_address);
+    let votes_for_address = voter.get_votes_for_address(&sender_id.as_str().to_string(), &contract_address.as_str().to_string());
     let votes = votes_for_address.get(&votable_object_id).unwrap();
     assert_eq!(
         votes,
@@ -940,28 +940,28 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
             numeric_id: 0,
             locked_mpdao: 10 * E6,
             unbond_days: 30,
-            contract_address: compose_account("app_1"),
+            contract_address: compose_account("app_1").as_str().to_string(),
             votable_object_id: "1".to_string(),
         },
         User {
             numeric_id: 1,
             locked_mpdao: 1 * E6,
             unbond_days: 45,
-            contract_address: compose_account("app_1"),
+            contract_address: compose_account("app_1").as_str().to_string(),
             votable_object_id: "1".to_string(),
         },
         User {
             numeric_id: 2,
             locked_mpdao: 24 * E6,
             unbond_days: 200,
-            contract_address: compose_account("app_1"),
+            contract_address: compose_account("app_1").as_str().to_string(),
             votable_object_id: "2".to_string(),
         },
         User {
             numeric_id: 3,
             locked_mpdao: 8 * E6,
             unbond_days: 300,
-            contract_address: compose_account("app_2"),
+            contract_address: compose_account("app_2").as_str().to_string(),
             votable_object_id: "1".to_string(),
         },
     ];
@@ -1001,7 +1001,7 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
         let voting_power =
             contract.calculate_voting_power(u128::from(amount), user.unbond_days.clone());
         assert_eq!(
-            u128::from(contract.get_available_voting_power(sender_id.clone())),
+            u128::from(contract.get_available_voting_power(sender_id.as_str().to_string())),
             voting_power,
             "Incorrect voting power for user."
         );
@@ -1023,12 +1023,12 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
 
         assert_eq!(
             U128::from(votes_to_use),
-            contract.get_used_voting_power(sender_id.clone()),
+            contract.get_used_voting_power(sender_id.as_str().to_string()),
             "Incorrect used voting power."
         );
         assert_eq!(
             U128::from(remaining),
-            contract.get_available_voting_power(sender_id.clone()),
+            contract.get_available_voting_power(sender_id.as_str().to_string()),
             "Incorrect remaining voting power."
         );
     }
@@ -1049,17 +1049,17 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
     );
 
     assert_eq!(
-        contract.get_total_votes(compose_account("app_1"), "1".to_string()),
+        contract.get_total_votes(compose_account_string("app_1"), "1".to_string()),
         U128::from(votes_1_1),
         "Incorrect vote count for project 1, object 1."
     );
     assert_eq!(
-        contract.get_total_votes(compose_account("app_1"), "2".to_string()),
+        contract.get_total_votes(compose_account_string("app_1"), "2".to_string()),
         U128::from(votes_1_2),
         "Incorrect vote count for project 1, object 2."
     );
     assert_eq!(
-        contract.get_total_votes(compose_account("app_2"), "1".to_string()),
+        contract.get_total_votes(compose_account_string("app_2"), "1".to_string()),
         U128::from(votes_2_1),
         "Incorrect vote count for project 2, object 1."
     );
@@ -1097,7 +1097,7 @@ fn internal_distribute_100_meta_for_claims(contract: &mut MetaVoteContract, user
     );
 
     set_context_caller(&mpdao_token_account());
-    contract.ft_on_transfer(sender_id.clone(), AMOUNT.into(), msg);
+    contract.ft_on_transfer(sender_id, AMOUNT.into(), msg);
     assert_eq!(
         contract.accumulated_mpdao_distributed_for_claims,
         initial_accumulated_distributed + AMOUNT,
@@ -1128,7 +1128,7 @@ fn internal_distribute_300_stnear_for_claims(contract: &mut MetaVoteContract, us
     );
 
     set_context_caller(&meta_pool_account());
-    contract.ft_on_transfer(sender_id.clone(), AMOUNT.into(), msg);
+    contract.ft_on_transfer(sender_id, AMOUNT.into(), msg);
     assert_eq!(
         contract.accum_distributed_stnear_for_claims,
         initial_accumulated_distributed + AMOUNT,
@@ -1230,7 +1230,7 @@ fn test_claim_mpdao() {
         // let user_record_pre = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_pre);
         set_context_caller(&caller);
-        let claim_balance_pre = contract.get_claimable_mpdao(&caller).0;
+        let claim_balance_pre = contract.get_claimable_mpdao(&caller.as_str().to_string()).0;
         let claim_amount = 40 * E6;
         let duration = 165;
         contract.claim_and_lock(claim_amount.into(), duration);
@@ -1239,12 +1239,12 @@ fn test_claim_mpdao() {
             unclaimed_pre - claim_amount,
             "total_unclaimed_meta"
         );
-        let claim_balance_post = contract.get_claimable_mpdao(&caller).0;
+        let claim_balance_post = contract.get_claimable_mpdao(&caller.as_str().to_string()).0;
         assert_eq!(
             claim_balance_post,
             claim_balance_pre.saturating_sub(claim_amount)
         );
-        let user_record_post = contract.get_voter_info(&caller);
+        let user_record_post = contract.get_voter_info(&caller.as_str().to_string());
         // println!("{:?}", user_record_post);
         assert_eq!(user_record_post.locking_positions.len(), 2);
         let pos = &user_record_post.locking_positions[1];
@@ -1262,7 +1262,7 @@ fn test_claim_mpdao() {
         // let user_record_pre = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_pre);
         set_context_caller(&caller);
-        let claim_balance_pre = contract.get_claimable_meta(&caller).0;
+        let claim_balance_pre = contract.get_claimable_meta(&caller.as_str().to_string()).0;
         let claim_amount = 6 * E6;
         contract.claim_and_lock(claim_amount.into(), 30);
         assert_eq!(
@@ -1272,7 +1272,7 @@ fn test_claim_mpdao() {
         );
         // let user_record_post = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_post);
-        let claim_balance_post = contract.get_claimable_meta(&caller).0;
+        let claim_balance_post = contract.get_claimable_meta(&caller.as_str().to_string()).0;
         assert_eq!(claim_balance_post, claim_balance_pre - claim_amount);
     }
 }
@@ -1288,7 +1288,7 @@ fn test_claim_stnear() {
         // let user_record_pre = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_pre);
         set_context_caller(&caller);
-        let claim_balance_pre = contract.get_claimable_stnear(&caller).0;
+        let claim_balance_pre = contract.get_claimable_stnear(&caller.as_str().to_string()).0;
         let claim_amount = 800008 * E20;
         contract.claim_stnear(claim_amount.into());
         assert_eq!(
@@ -1296,7 +1296,7 @@ fn test_claim_stnear() {
             unclaimed_pre - claim_amount,
             "total_unclaimed_stnear"
         );
-        let claim_balance_post = contract.get_claimable_stnear(&caller).0;
+        let claim_balance_post = contract.get_claimable_stnear(&caller.as_str().to_string()).0;
         assert_eq!(
             claim_balance_post,
             claim_balance_pre.saturating_sub(claim_amount)
@@ -1310,7 +1310,7 @@ fn test_claim_stnear() {
         // let user_record_pre = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_pre);
         set_context_caller(&caller);
-        let claim_balance_pre = contract.get_claimable_stnear(&caller).0;
+        let claim_balance_pre = contract.get_claimable_stnear(&caller.as_str().to_string()).0;
         let claim_amount = 50 * E6;
         contract.claim_stnear(claim_amount.into());
         assert_eq!(
@@ -1320,7 +1320,7 @@ fn test_claim_stnear() {
         );
         // let user_record_post = contract.get_voter_info(&caller);
         // println!("{:?}", user_record_post);
-        let claim_balance_post = contract.get_claimable_stnear(&caller).0;
+        let claim_balance_post = contract.get_claimable_stnear(&caller.as_str().to_string()).0;
         assert_eq!(claim_balance_post, claim_balance_pre - claim_amount);
     }
 }
@@ -1353,7 +1353,7 @@ fn test_transfer_unlock_relock() {
     );
 
     // let res = contract.get_all_locking_positions(sender_id);
-    let res = contract.get_locking_position(1, sender_id).unwrap();
+    let res = contract.get_locking_position(1, sender_id.as_str().to_string()).unwrap();
 
     // println!("{:?}", res);
     // println!("{:?}", res.unwrap().amount);
