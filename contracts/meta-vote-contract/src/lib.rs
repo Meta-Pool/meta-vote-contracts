@@ -121,7 +121,7 @@ impl MetaVoteContract {
         U128::from(self.registration_cost)
     }
 
-    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool {
+    pub fn check_if_user_is_registerd(&self, account_id: &AccountId) -> bool { // cspell:disable-line
         //cspell:disable-line
         // cSpell: ignore-line
         self.airdrop_user_data.get(account_id).is_some()
@@ -708,7 +708,10 @@ impl MetaVoteContract {
 
     // verify if the user has already migrated
     pub fn is_user_migrated(&self, account_id: &AccountId) -> bool {
-        self.migrated_users.get(account_id).is_none()
+        self.migrated_users.get(account_id).is_some()
+    }
+    pub fn user_migrated_amount(&self, account_id: &AccountId) -> U128 {
+        self.migrated_users.get(account_id).unwrap_or_default().into()
     }
     fn pred_assert_not_migrated(&self) -> AccountId {
         let pred = env::predecessor_account_id();
@@ -739,15 +742,17 @@ impl MetaVoteContract {
         // prevent double call
         self.migrated_users
             .insert(&env::signer_account_id(), &total_meta_to_migrate);
+        // also migrate associated user data (string, encrypted)
+        let associated_user_data = self.airdrop_user_data.get(&env::signer_account_id());
         // schedule a call to migrate in the new contract
         interface::ext_new_gov_contract::ext(
             self.new_governance_contract_id.as_ref().unwrap().clone(),
         )
-        .with_static_gas(interface::GAS_FOR_MIGRATION)
-        .migration_create_lps(env::signer_account_id(), lps)
+        .with_static_gas(interface::GAS_FOR_GOVERNANCE_MIGRATION)
+        .migration_create_lps(env::signer_account_id(), lps, associated_user_data)
         .then(
             Self::ext(env::current_account_id())
-                .with_static_gas(interface::GAS_FOR_RESOLVE_MIGRATION)
+                .with_static_gas(interface::GAS_FOR_RESOLVE_GOVERNANCE_MIGRATION)
                 .after_migration(),
         );
     }

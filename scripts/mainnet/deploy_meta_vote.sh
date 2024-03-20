@@ -19,9 +19,9 @@ TOTAL_PREPAID_GAS="300000000000000"
 # echo REDEPLOY ONLY
 # near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
 
-# Deploy with MIGRATION - Note: --initFunction caller IS ALWAYS contract-account
-echo DEPLOY AND MIGRATION
-near deploy $METAVOTE_CONTRACT_ADDRESS --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {} --initGas 300000000000000
+# reDeploy with MIGRATION - Note: --initFunction caller IS ALWAYS contract-account
+echo reDEPLOY AND STATE MIGRATION
+near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM --initFunction migrate --initArgs {}
 
 # NEAR_ENV=testnet near deploy -f --wasmFile $METAVOTE_WASM --accountId metavote.testnet
 # NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId metavote.testnet

@@ -3,8 +3,8 @@ use near_sdk::{ext_contract, AccountId, Gas};
 
 use crate::TGAS;
 
-pub const GAS_FOR_MIGRATION: Gas = Gas(200 * TGAS);
-pub const GAS_FOR_RESOLVE_MIGRATION: Gas = Gas(10 * TGAS);
+pub const GAS_FOR_GOVERNANCE_MIGRATION: Gas = Gas(200 * TGAS);
+pub const GAS_FOR_RESOLVE_GOVERNANCE_MIGRATION: Gas = Gas(10 * TGAS);
 
 #[ext_contract(ext_ft)]
 pub trait FungibleTokenCore {
@@ -25,6 +25,7 @@ pub trait Migration {
         &mut self,
         voter_id: AccountId,
         locking_positions: Vec<(U128, u16)>,
+        associated_user_data: Option<String>
     ); // tuple Vec is (amount,unbound_days)
 }
 
