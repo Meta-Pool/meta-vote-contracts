@@ -12,6 +12,11 @@ impl MetaVoteContract {
     /// if confirmed by the operator, it moves to "delegated"
     pub fn pre_delegate_evm_address(&mut self, evm_address: String, signature: String) {
         assert_one_yocto();
+        // minimal checks to avoid common mistakes (e.g. send with .evmp.near)
+        assert!(
+            !evm_address.contains("."),
+            "evm_address can not contain dots"
+        );
         let account_id = env::predecessor_account_id();
         self.evm_pre_delegation
             .insert(evm_address, (account_id.into(), signature));
@@ -68,7 +73,11 @@ impl MetaVoteContract {
         // remove the claim
         self.remove_claimable_stnear(&pseudo_account, amount.0);
         // transfer to delegate
-        self.transfer_stnear_to_voter(&pseudo_account, &env::predecessor_account_id().into(), amount.0)
+        self.transfer_stnear_to_voter(
+            &pseudo_account,
+            &env::predecessor_account_id().into(),
+            amount.0,
+        )
     }
 
     // verify delegation and compose pseudo account
@@ -117,13 +126,39 @@ impl MetaVoteContract {
         self.internal_unvote(&pseudo_account, &contract_address, &votable_object_id)
     }
 
+    #[payable]
+    pub fn remove_delegated_evm_address(&mut self, evm_address: String) {
+        assert_one_yocto();
+        if let Some(existing_delegation) = self.evm_delegation_signatures.get(&evm_address) {
+            let predecessor = env::predecessor_account_id().as_str().to_string();
+            // this evm_address is delegated
+            if existing_delegation.0.eq(&predecessor) {
+                // remove from signatures
+                self.evm_delegation_signatures.remove(&evm_address);
+                // remove from delegate's vector
+                let mut delegated_addresses = self.evm_delegates.get(&predecessor).unwrap();
+                // remove this one
+                delegated_addresses.retain(|x| !x.eq(&evm_address));
+                // save
+                self.evm_delegates.insert(&predecessor, &delegated_addresses);
+    
+            } else {
+                panic!("note delegated to you");
+            }
+        } else {
+            panic!("note delegated");
+        }
+    }
+
     // --------
     // view fns
     // --------
 
     /// get delegated evm addresses for a near account
     pub fn get_delegating_evm_addresses(&self, account_id: AccountId) -> Vec<EvmAddress> {
-        self.evm_delegates.get(&account_id.into()).unwrap_or_default()
+        self.evm_delegates
+            .get(&account_id.into())
+            .unwrap_or_default()
     }
 
     /// batch get all delegates

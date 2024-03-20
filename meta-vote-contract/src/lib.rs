@@ -851,8 +851,16 @@ impl MetaVoteContract {
 
     // get all information for a single voter: voter + locking-positions + voting-positions
     pub fn get_voter_info(&self, voter_id: &String) -> VoterJSON {
-        let voter = self.voters.get(voter_id).unwrap();
-        voter.to_json(voter_id)
+        if let Some(voter) = self.voters.get(voter_id) {
+            voter.to_json(voter_id)
+        } else {
+            VoterJSON {
+                voter_id: voter_id.to_string(),
+                locking_positions: vec![],
+                voting_power: U128String::from(0),
+                vote_positions: vec![],
+            }
+        }
     }
 
     // get all information for multiple voters, by index: Vec<voter + locking-positions + voting-positions>
@@ -995,7 +1003,7 @@ impl MetaVoteContract {
         }
         results
     }
-    
+
     // votes by app (deprecated, use get_votes_by_app)
     pub fn get_votes_by_contract(
         &self,
