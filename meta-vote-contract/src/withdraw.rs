@@ -48,7 +48,7 @@ impl MetaVoteContract {
     ) {
         let amount_to_withdraw = amount_from_balance.0;
         let voter_id = env::predecessor_account_id().as_str().to_string();
-        self.internal_withdraw(&voter_id, position_index_list, Some(amount_to_withdraw));
+        self.internal_withdraw(&voter_id, position_index_list, if amount_to_withdraw==0 {None} else {Some(amount_to_withdraw)});
     }
 
     #[payable]

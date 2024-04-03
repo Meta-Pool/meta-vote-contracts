@@ -57,7 +57,7 @@ pub struct MetaVoteContract {
 
     // association with other blockchain addresses, users' encrypted data
     pub registration_cost: u128,
-    pub associated_user_data: UnorderedMap<String, String>,
+    pub associated_user_data: UnorderedMap<String, String>, // account => encrypted_data
 
     // upgrade from prev governance token
     pub prev_governance_contract: String,
@@ -741,6 +741,7 @@ impl MetaVoteContract {
         &mut self,
         voter_id: &String,
         locking_positions: Vec<(U128String, u16)>,
+        encrypted_associated_user_data: Option<String>,
     ) {
         require!(
             env::predecessor_account_id().to_string() == self.prev_governance_contract,
@@ -756,13 +757,17 @@ impl MetaVoteContract {
             self.deposit_locking_position(mpdao_amount, unbond_days, &voter_id, &mut voter);
         }
         // Note: deposit_locking_position saves voter
+        // migration of associated data
+        if let Some(associated_user_data) = encrypted_associated_user_data {
+            self.associated_user_data
+                .insert(&env::predecessor_account_id().into(), &associated_user_data);
+        }
     }
 
-    // migration of associated data
-    pub fn migration_set_associated_data(&mut self, data: Vec<(String, String)>) {
+    pub fn owner_multi_set_associated_data(&mut self, data: Vec<(String, String)>) {
         self.assert_only_owner();
         for user_data in data {
-            // migrate associated user data
+            // set associated user data
             self.associated_user_data.insert(&user_data.0, &user_data.1);
         }
     }
@@ -789,6 +794,12 @@ impl MetaVoteContract {
             .iter()
             .map(|i| calculate_voting_power(i.1 .0, i.0))
             .sum();
+        log!(
+            "MIRROR: prev_vp {} new_vp {} used_vp {}.",
+            prev_voting_power,
+            new_voting_power,
+            used_voting_power
+        );
         // while more votes than voting power, remove votes
         while used_voting_power > new_voting_power {
             let first_voted_app_key: String = voter.vote_positions.keys_as_vector().get(0).unwrap();
@@ -805,14 +816,13 @@ impl MetaVoteContract {
             );
             used_voting_power -= used_voting_power_to_remove;
         }
-        // update user available_voting_power
-        voter.available_voting_power = new_voting_power - used_voting_power;
-        // also update contract total
-        self.total_voting_power = self.total_voting_power + new_voting_power - prev_voting_power;
-
         // HANDLE LOCKING POSITIONS
         // first clear all
         voter.locking_positions.clear();
+        // when creating the voting position, power is added to available_voting_power
+        // so zero that too
+        voter.available_voting_power = 0;
+        // Note: internal_create_locking_position also adds to the contract total voting power
         // create locking positions
         for lp in &locking_positions {
             // migrate with new voting power calculation
@@ -821,6 +831,12 @@ impl MetaVoteContract {
             let mpdao_amount = lp.1 .0;
             self.internal_create_locking_position(&mut voter, mpdao_amount, unbond_days);
         }
+
+        // update user available_voting_power (to the amount added, remove the used)
+        voter.available_voting_power -= used_voting_power;
+        // also update contract total (new vp was already added, remove old only)
+        self.total_voting_power = self.total_voting_power - prev_voting_power;
+
         // save voter
         self.voters.insert(&voter_id, &voter);
     }
