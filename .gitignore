@@ -16,7 +16,6 @@ Cargo.lock
 .sw?
 .*.sw?
 *.bak
-contracts/res/*.wasm
 res/*.wasm
 
 # dev-deploy keys
