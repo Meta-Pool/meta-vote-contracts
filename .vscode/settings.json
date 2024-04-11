@@ -28,6 +28,7 @@
         "relock",
         "rlib",
         "schemars",
+        "secp",
         "serde",
         "STNEAR",
         "struct",
