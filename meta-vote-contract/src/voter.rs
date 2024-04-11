@@ -146,7 +146,7 @@ impl Voter {
 
         VoterJSON {
             voter_id: voter_id.to_string(),
-            balance_in_contract: U128String::from(self.balance),
+            balance_in_contract: self.balance.into(),
             locking_positions,
             voting_power: self.available_voting_power.into(),
             vote_positions,

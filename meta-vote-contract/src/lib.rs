@@ -4,13 +4,7 @@ use crate::{
     utils::{days_to_millis, generate_hash_id, get_current_epoch_millis, millis_to_days},
 };
 use near_sdk::{
-    borsh::{self, BorshDeserialize, BorshSerialize},
-    collections::{unordered_map::UnorderedMap, Vector},
-    env,
-    json_types::U64,
-    log, near_bindgen, require,
-    store::LookupMap,
-    AccountId, Balance, PanicOnDefault, Promise,
+    assert_one_yocto, borsh::{self, BorshDeserialize, BorshSerialize}, collections::{unordered_map::UnorderedMap, Vector}, env, json_types::U64, log, near_bindgen, require, store::LookupMap, AccountId, Balance, PanicOnDefault, Promise
 };
 use types::*;
 use utils::calculate_voting_power;
@@ -119,11 +113,15 @@ impl MetaVoteContract {
     // ***************
     // * owner config
     // ***************
+    #[payable]
     pub fn set_stnear_contract(&mut self, stnear_contract: AccountId) {
+        assert_one_yocto();
         self.assert_only_owner();
         self.stnear_token_contract_address = stnear_contract;
     }
+    #[payable]
     pub fn set_operator_id(&mut self, operator_id: AccountId) {
+        assert_one_yocto();
         self.assert_only_owner();
         self.operator_id = operator_id;
     }
@@ -140,7 +138,7 @@ impl MetaVoteContract {
 
     // for airdrops/rewards
     pub fn get_registration_cost(&self) -> U128String {
-        U128String::from(self.registration_cost)
+        self.registration_cost.into()
     }
 
     pub fn check_if_registered_for_airdrops(&self, account_id: &String) -> bool {
@@ -162,12 +160,19 @@ impl MetaVoteContract {
             .insert(&env::predecessor_account_id().into(), encrypted_data);
     }
 
-    /// Returns a single airdrop data
+    /// Returns a single airdrop data / associated user data
     pub fn get_airdrop_account(&self, account_id: &String) -> String {
         self.associated_user_data.get(&account_id).unwrap()
     }
+    pub fn operator_multi_set_airdrop_data(&mut self, data: Vec<(String, String)>) {
+        self.assert_operator();
+        for user_data in data {
+            // set associated user data
+            self.associated_user_data.insert(&user_data.0, &user_data.1);
+        }
+    }
 
-    /// Returns a list of airdrop data
+    /// Returns a list of airdrop data / associated user data
     pub fn get_airdrop_accounts(&self, from_index: u32, limit: u32) -> Vec<(String, String)> {
         let keys = self.associated_user_data.keys_as_vector();
         let voters_len = keys.len() as u64;
@@ -719,16 +724,21 @@ impl MetaVoteContract {
     // *********
     // * Admin *
     // *********
-
+    #[payable]
     pub fn update_min_unbond_period(&mut self, new_min_unbond_period: Days) {
+        assert_one_yocto();
         self.assert_only_owner();
         self.min_unbond_period = new_min_unbond_period;
     }
+    #[payable]
     pub fn update_max_unbond_period(&mut self, new_max_unbond_period: Days) {
+        assert_one_yocto();
         self.assert_only_owner();
         self.max_unbond_period = new_max_unbond_period;
     }
+    #[payable]
     pub fn set_prev_gov_contract(&mut self, contract_id: String) {
+        assert_one_yocto();
         self.assert_only_owner();
         self.prev_governance_contract = contract_id;
     }
@@ -761,14 +771,6 @@ impl MetaVoteContract {
         if let Some(associated_user_data) = encrypted_associated_user_data {
             self.associated_user_data
                 .insert(&env::predecessor_account_id().into(), &associated_user_data);
-        }
-    }
-
-    pub fn owner_multi_set_associated_data(&mut self, data: Vec<(String, String)>) {
-        self.assert_only_owner();
-        for user_data in data {
-            // set associated user data
-            self.associated_user_data.insert(&user_data.0, &user_data.1);
         }
     }
 
@@ -841,14 +843,6 @@ impl MetaVoteContract {
         self.voters.insert(&voter_id, &voter);
     }
 
-    // ONLY-FOR-MIGRATION-TESTING on TESTNET-- clear contract state
-    #[private]
-    pub fn clean(keys: Vec<near_sdk::json_types::Base64VecU8>) {
-        for key in keys.iter() {
-            env::storage_remove(&key.0);
-        }
-    }
-
     /**********************/
     /*   View functions   */
     /**********************/
@@ -862,7 +856,7 @@ impl MetaVoteContract {
     }
 
     pub fn get_total_voting_power(&self) -> U128String {
-        U128String::from(self.total_voting_power)
+        self.total_voting_power.into()
     }
 
     // get all information for a single voter: voter + locking-positions + voting-positions
@@ -873,7 +867,8 @@ impl MetaVoteContract {
             VoterJSON {
                 voter_id: voter_id.to_string(),
                 locking_positions: vec![],
-                voting_power: U128String::from(0),
+                balance_in_contract: 0.into(),
+                voting_power: 0.into(),
                 vote_positions: vec![],
             }
         }
@@ -898,11 +893,11 @@ impl MetaVoteContract {
     pub fn get_balance(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
         let balance = voter.balance + voter.sum_unlocked();
-        U128String::from(balance)
+        balance.into()
     }
 
     pub fn get_claimable_mpdao(&self, voter_id: &VoterId) -> U128String {
-        U128String::from(self.claimable_mpdao.get(&voter_id).unwrap_or_default())
+        self.claimable_mpdao.get(&voter_id).unwrap_or_default().into()
     }
     // kept to not break public interface
     pub fn get_claimable_meta(&self, voter_id: &VoterId) -> U128String {
@@ -910,7 +905,7 @@ impl MetaVoteContract {
     }
 
     pub fn get_claimable_stnear(&self, voter_id: &VoterId) -> U128String {
-        U128String::from(self.claimable_stnear.get(&voter_id).unwrap_or_default())
+        self.claimable_stnear.get(&voter_id).unwrap_or_default().into()
     }
 
     // get all claims
@@ -944,22 +939,22 @@ impl MetaVoteContract {
 
     pub fn get_locked_balance(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128String::from(voter.sum_locked())
+        voter.sum_locked().into()
     }
 
     pub fn get_unlocking_balance(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128String::from(voter.sum_unlocking())
+        voter.sum_unlocking().into()
     }
 
     pub fn get_available_voting_power(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128String::from(voter.available_voting_power)
+        voter.available_voting_power.into()
     }
 
     pub fn get_used_voting_power(&self, voter_id: VoterId) -> U128String {
         let voter = self.internal_get_voter(&voter_id);
-        U128String::from(voter.sum_used_votes())
+        voter.sum_used_votes().into()
     }
 
     pub fn get_locking_period(&self) -> (Days, Days) {
@@ -1002,7 +997,7 @@ impl MetaVoteContract {
             Some(object) => object.get(&votable_object_id).unwrap_or(0_u128),
             None => 0_u128,
         };
-        U128String::from(votes)
+        votes.into()
     }
 
     // votes by app (contract)
@@ -1015,7 +1010,7 @@ impl MetaVoteContract {
 
         let mut results = Vec::new();
         for (id, voting_power) in objects.iter() {
-            results.push((id, U128String::from(voting_power)))
+            results.push((id, voting_power.into()))
         }
         results
     }
@@ -1031,11 +1026,11 @@ impl MetaVoteContract {
             .unwrap_or(UnorderedMap::new(StorageKey::Votes));
 
         let mut results: Vec<VotableObjectJSON> = Vec::new();
-        for (id, voting_power) in objects.iter() {
+        for (id, applied_voting_power) in objects.iter() {
             results.push(VotableObjectJSON {
                 votable_contract: contract_address.to_string(),
                 id,
-                current_votes: U128String::from(voting_power),
+                current_votes: applied_voting_power.into(),
             })
         }
         results.sort_by_key(|v| v.current_votes.0);
@@ -1047,11 +1042,11 @@ impl MetaVoteContract {
         let voter = self.internal_get_voter(&voter_id);
         for contract_address in voter.vote_positions.keys_as_vector().iter() {
             let votes_for_address = voter.vote_positions.get(&contract_address).unwrap();
-            for (id, voting_power) in votes_for_address.iter() {
+            for (id, applied_voting_power) in votes_for_address.iter() {
                 results.push(VotableObjectJSON {
                     votable_contract: contract_address.to_string(),
                     id,
-                    current_votes: U128String::from(voting_power),
+                    current_votes: applied_voting_power.into(),
                 })
             }
         }
@@ -1070,7 +1065,7 @@ impl MetaVoteContract {
             Some(votes_for_address) => votes_for_address.get(&votable_object_id).unwrap_or(0_u128),
             None => 0_u128,
         };
-        U128String::from(votes)
+        votes.into()
     }
 
     // query current meta ready for distribution

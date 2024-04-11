@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
-export NEAR_ENV="mainnet"
+NETWORK=mainnet
+export NEAR_ENV=$NETWORK
 
 METAVOTE_CONTRACT_ADDRESS="mpdao-vote.near"
 METAVOTE_OWNER="meta-pool-dao.near"
-METAVOTE_WASM="res/meta_vote_contract.wasm"
+METAVOTE_WASM="meta_vote_contract.wasm"
 
 echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $(date) 
 near view meta-vote.near get_owner_id
@@ -15,7 +16,7 @@ TOTAL_PREPAID_GAS="300000000000000"
 # 1st Deploy Contract & init
 OWNER_ID=$METAVOTE_CONTRACT_ADDRESS
 MPDAO_TOKEN_ADDRESS="mpdao-token.near"
-STNEAR_TESTNET_TOKEN_ADDRESS="meta-pool.near"
+STNEAR_TOKEN_ADDRESS="meta-pool.near"
         # owner_id: AccountId,
         # min_unbond_period: Days,
         # max_unbond_period: Days,
@@ -26,17 +27,16 @@ STNEAR_TESTNET_TOKEN_ADDRESS="meta-pool.near"
         # stnear_token_contract_address: ContractAddress,
         # registration_cost: U128String,
 ARGS='{"owner_id":"'$OWNER_ID'","min_unbond_period":30,"max_unbond_period":300,"min_deposit_amount":"10000000",'
+ARGS=$ARGS'"operator_id":16,"max_voting_positions":16,'
 ARGS=$ARGS'"max_locking_positions":16,"max_voting_positions":16,'
-ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TESTNET_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TESTNET_TOKEN_ADDRESS'",'
+ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TOKEN_ADDRESS'",'
 ARGS=$ARGS'"registration_cost":"100000000000000000000000"}'
 echo $METAVOTE_CONTRACT_ADDRESS
 echo $ARGS
-NEAR_ENV=testnet near deploy $METAVOTE_CONTRACT_ADDRESS $METAVOTE_WASM  \
+NEAR_ENV=$NETWORK near deploy $METAVOTE_CONTRACT_ADDRESS res/$METAVOTE_WASM  \
     --initFunction new --initArgs $ARGS
-# Redeploy Contract
-# echo Re-DEPLOY ONLY
-# NEAR_ENV=testnet near deploy --wasmFile $METAVOTE_WASM --accountId $METAVOTE_CONTRACT_ADDRESS
 
-# Deploy with MIGRATION
-#echo DEPLOY AND MIGRATION
-#near deploy metavote.testnet --wasmFile $METAVOTE_WASM --initFunction migrate --initArgs {}
+# backup deployed wasm
+mkdir -p res/$NETWORK
+cp res/$METAVOTE_WASM res/$NETWORK/$METAVOTE_WASM.`date +%F.%T`
+date +%F.%T
