@@ -34,3 +34,6 @@ ARGS=$ARGS'"prev_governance_contract":"'$OLD_METAVOTE_CONTRACT'",'
 ARGS=$ARGS'"registration_cost":"100000","operator_id":"'$OPERATOR_ID'"}'
 
 echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $OWNER_ID
+
+KV_STORE_CONTRACT_ADDRESS=kv-store.testnet
+KV_STORE_WASM=target/wasm32-unknown-unknown/release/kv_store_contract.wasm
