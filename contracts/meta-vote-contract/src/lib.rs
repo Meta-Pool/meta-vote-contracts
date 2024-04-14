@@ -991,6 +991,15 @@ impl MetaVoteContract {
         }
         results
     }
+
+    pub fn get_migrated_users_count(&self) -> U64 {
+        self.migrated_users.len().into()
+    }
+
+    pub fn get_total_migrated_meta(&self) -> U128String {
+        self.migrated_users.values().sum::<u128>().into()
+    }
+
 }
 
 #[cfg(not(target_arch = "wasm32"))]
