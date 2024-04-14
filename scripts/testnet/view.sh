@@ -2,7 +2,7 @@
 __dir=$(dirname "$0")
 . $__dir/testnet-set-vars.sh
 
-
+NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_contract_info
 # call view function
  EVM_ACC0="0xf06B9633c6a6b255C80B4900f693797F43393ea3"
  NEAR_ENV=testnet near view $METAVOTE_CONTRACT_ADDRESS get_voter_info '{"voter_id":"'$EVM_ACC0'.evmp.near"}'
