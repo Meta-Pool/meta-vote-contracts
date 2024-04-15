@@ -130,6 +130,12 @@ impl MetaVoteContract {
         self.assert_only_owner();
         self.operator_id = operator_id;
     }
+    #[payable]
+    pub fn set_owner_id(&mut self, owner_id: AccountId) {
+        assert_one_yocto();
+        self.assert_only_owner();
+        self.owner_id = owner_id;
+    }
 
     // *******************************
     // * Register for Airdrops/Gifts *
