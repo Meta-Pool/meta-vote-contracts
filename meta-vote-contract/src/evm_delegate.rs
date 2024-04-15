@@ -22,6 +22,18 @@ impl MetaVoteContract {
             .insert(evm_address, (account_id.into(), signature));
     }
 
+    pub fn get_pre_delegate_evm_address(&self, evm_address: String) -> Option<&(String, String)> {
+        self.evm_pre_delegation
+            .get(&evm_address)
+    }
+
+    #[payable]
+    pub fn operator_remove_pre_delegate_evm_address(&mut self, evm_address: String) {
+        assert_one_yocto();
+        self.assert_operator();
+        self.evm_pre_delegation.remove(&evm_address);
+    }
+
     #[payable]
     pub fn operator_confirm_delegated_evm_address(&mut self, evm_address: String) {
         assert_one_yocto();
@@ -80,7 +92,7 @@ impl MetaVoteContract {
         )
     }
 
-    // verify delegation and compose pseudo account
+    // local fn: verify delegation and compose pseudo account
     fn verify_delegate(&self, evm_address: &EvmAddress) -> String {
         // get delegations for predecessor_account_id
         let delegations = self
@@ -140,8 +152,8 @@ impl MetaVoteContract {
                 // remove this one
                 delegated_addresses.retain(|x| !x.eq(&evm_address));
                 // save
-                self.evm_delegates.insert(&predecessor, &delegated_addresses);
-    
+                self.evm_delegates
+                    .insert(&predecessor, &delegated_addresses);
             } else {
                 panic!("note delegated to you");
             }
