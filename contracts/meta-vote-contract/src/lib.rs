@@ -731,7 +731,7 @@ impl MetaVoteContract {
         let mut lps: Vec<(U128String, u16)> = vec![];
         let mut total_meta_to_migrate: u128 = 0;
         for lp in voter.locking_positions.iter() {
-            if lp.is_unlocking() {
+            if lp.is_unlocking() && lp.amount > 0 {
                 panic!("relock all you unlocking positions before migration")
             } else if lp.amount > 0 && lp.is_locked() {
                 lps.push((U128String::from(lp.amount), lp.locking_period));

@@ -3,7 +3,7 @@ use near_sdk::{ext_contract, AccountId, Gas};
 
 use crate::TGAS;
 
-pub const GAS_FOR_GOVERNANCE_MIGRATION: Gas = Gas(200 * TGAS);
+pub const GAS_FOR_GOVERNANCE_MIGRATION: Gas = Gas(125 * TGAS); // reduced from 200 to 125, to accommodate 2FA near contract that uses (250 TGas)
 pub const GAS_FOR_RESOLVE_GOVERNANCE_MIGRATION: Gas = Gas(10 * TGAS);
 
 #[ext_contract(ext_ft)]
