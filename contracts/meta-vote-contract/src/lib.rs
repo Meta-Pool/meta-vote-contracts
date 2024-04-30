@@ -726,8 +726,8 @@ impl MetaVoteContract {
             &self.new_governance_contract_id.is_some(),
             "new_governance_contract_id not set"
         );
-        self.assert_user_not_migrated(&env::signer_account_id());
-        let voter = self.internal_get_voter_or_panic(&env::signer_account_id());
+        self.assert_user_not_migrated(&env::predecessor_account_id());
+        let voter = self.internal_get_voter_or_panic(&env::predecessor_account_id());
         let mut lps: Vec<(U128String, u16)> = vec![];
         let mut total_meta_to_migrate: u128 = 0;
         for lp in voter.locking_positions.iter() {
@@ -741,23 +741,23 @@ impl MetaVoteContract {
         assert!(lps.len() != 0, "No valid locking positions to migrate");
         // prevent double call
         self.migrated_users
-            .insert(&env::signer_account_id(), &total_meta_to_migrate);
+            .insert(&env::predecessor_account_id(), &total_meta_to_migrate);
         // also migrate associated user data (string, encrypted)
-        let associated_user_data = self.airdrop_user_data.get(&env::signer_account_id());
+        let associated_user_data = self.airdrop_user_data.get(&env::predecessor_account_id());
         // schedule a call to migrate in the new contract
         interface::ext_new_gov_contract::ext(
             self.new_governance_contract_id.as_ref().unwrap().clone(),
         )
         .with_static_gas(interface::GAS_FOR_GOVERNANCE_MIGRATION)
-        .migration_create_lps(env::signer_account_id(), lps, associated_user_data)
+        .migration_create_lps(env::predecessor_account_id(), lps, associated_user_data)
         .then(
             Self::ext(env::current_account_id())
                 .with_static_gas(interface::GAS_FOR_RESOLVE_GOVERNANCE_MIGRATION)
-                .after_migration(),
+                .after_migration(&env::predecessor_account_id()),
         );
     }
     #[private]
-    pub fn after_migration(&mut self) {
+    pub fn after_migration(&mut self, account_id: &AccountId) {
         match env::promise_result(0) {
             PromiseResult::NotReady => unreachable!(),
             PromiseResult::Successful(_) => {
@@ -765,7 +765,7 @@ impl MetaVoteContract {
             }
             PromiseResult::Failed => {
                 log!("FAILED: locked META not migrated",);
-                self.migrated_users.remove(&env::signer_account_id());
+                self.migrated_users.remove(account_id);
             }
         };
     }
