@@ -1,8 +1,4 @@
-use crate::{
-    constants::*,
-    locking_position::*,
-    utils::{days_to_millis, generate_hash_id, get_current_epoch_millis, millis_to_days},
-};
+use crate::{constants::*, locking_position::*, utils::*};
 use near_sdk::{
     assert_one_yocto,
     borsh::{self, BorshDeserialize, BorshSerialize},
@@ -12,7 +8,6 @@ use near_sdk::{
     AccountId, Balance, PanicOnDefault, Promise,
 };
 use types::*;
-use utils::calculate_voting_power;
 use voter::Voter;
 
 mod constants;
@@ -269,6 +264,7 @@ impl MetaVoteContract {
             "A locking position cannot have less than {} mpDAO",
             self.min_deposit_amount
         );
+        assert_at_least_1_mpdao(amount);
         let remove_voting_power = utils::calculate_voting_power(amount, locking_period);
         assert!(
             locking_position.voting_power >= remove_voting_power,
@@ -294,6 +290,7 @@ impl MetaVoteContract {
         // Decrease current locking position
         locking_position.voting_power -= remove_voting_power;
         locking_position.amount -= amount;
+        assert_at_least_1_mpdao(locking_position.amount);
         voter.locking_positions.replace(index, &locking_position);
 
         voter.available_voting_power -= remove_voting_power;
@@ -778,10 +775,16 @@ impl MetaVoteContract {
             self.deposit_locking_position(mpdao_amount, unbond_days, &voter_id, &mut voter);
         }
         // Note: deposit_locking_position saves voter
-        // migration of associated data
+        // migration of associated data (but does not update)
         if let Some(associated_user_data) = encrypted_associated_user_data {
-            self.associated_user_data
-                .insert(&env::predecessor_account_id().into(), &associated_user_data);
+            if self
+                .associated_user_data
+                .get(&env::predecessor_account_id().into())
+                .is_none()
+            {
+                self.associated_user_data
+                    .insert(&env::predecessor_account_id().into(), &associated_user_data);
+            }
         }
     }
 
