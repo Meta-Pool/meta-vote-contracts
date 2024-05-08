@@ -770,6 +770,19 @@ impl MetaVoteContract {
         };
     }
 
+    // removes old locking positions and migration record, so the user can lock and migrate more META tokens
+    pub fn reset_user_migration(&mut self, account_id: &AccountId){
+        self.assert_only_owner();
+        assert!(self.migrated_users.get(account_id).is_some(), "user has not migrated yet");
+        let mut voter = self.internal_get_voter_or_panic(account_id);
+        voter.voting_power = 0;
+        voter.locking_positions.clear(); // migrated META will remain in this old meta-vote contract
+        voter.vote_positions.clear();
+        // save
+        self.voters.insert(account_id, &voter);
+        self.migrated_users.remove(account_id);
+    }
+
     /**********************/
     /*   View functions   */
     /**********************/

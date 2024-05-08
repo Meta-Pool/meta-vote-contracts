@@ -13,7 +13,7 @@ pub struct VoterJSON {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Voter {
-    pub balance: Meta,
+    pub balance: Meta, // when the unbonding period ends, locking positions are cleared and balance sent here for withdraw
     pub locking_positions: Vector<LockingPosition>,
     pub voting_power: VotingPower,
     pub vote_positions: UnorderedMap<ContractAddress, UnorderedMap<VotableObjId, VotingPower>>,
