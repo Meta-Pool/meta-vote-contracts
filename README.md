@@ -2,11 +2,11 @@
 
 ![Meta Vote Logo](media/logo.png)
 
-Implementation of a general voting system using the $META token.
+Implementation of a general voting system for metapool.app DAO using the mpDAO token.
 
 ## Versions
 
-The last version of the deployed contract, in Near `mainnet`, is in the `stable` branch.
+The last version of the deployed contract, in Near `mainnet`, is in the `main` branch.
 
 Current stable version: [**v0.1.1**](https://github.com/Meta-Pool/meta-vote-contracts/releases/tag/v0.1.1)
 Check all releases in [Meta Vote Releases](https://github.com/Meta-Pool/meta-vote-contracts/releases).
@@ -38,7 +38,7 @@ pub type PositionIndex = u64;
 pub struct LockingPositionJSON {
     pub index: Option<PositionIndex>,
     pub amount: U128,
-    pub locking_period: Days,
+    pub locking_period: Days, // unbonding period in days
     pub voting_power: U128,
     pub unlocking_started_at: Option<EpochMillis>,
     pub is_unlocked: bool,
@@ -75,7 +75,7 @@ The best way to deploy Meta Vote is using the scripts for `mainnet` and `testnet
 
 ## Deposit & Locking
 
-* Use ft_transfer_call on META token NEP-141 contract, in the `msg` field set the number of days for the auto-lock
+* Use ft_transfer_call on mpDAO token NEP-141 contract, in the `msg` field set the number of days for the unbonding period
 
 * to see how this contract process deposits check `fn ft_on_transfer()`
 
@@ -121,10 +121,9 @@ pub fn get_total_votes(
     votable_object_id: VotableObjId
 ) -> U128;
 
-pub fn get_votes_by_contract(
-    &self,
-    contract_address: ContractAddress
-) -> Vec<VotableObjectJSON>;
+// votes by app (contract)
+// returns [[votable_bj_id, vote_amount],[votable_bj_id, vote_amount]...]
+pub fn get_votes_by_app(&self, app_or_contract_address: String) -> Vec<(String, U128String)>;
 
 pub fn get_votes_by_voter(
     &self,
@@ -175,22 +174,19 @@ pub fn relock_from_balance(
     amount_from_balance: U128
 );
 
-// ******************
-// * Clear Position *
-// ******************
-
-pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>);
 
 // ************
 // * Withdraw *
 // ************
 
+#[payable]
 pub fn withdraw(
     &mut self,
     position_index_list: Vec<PositionIndex>,
     amount_from_balance: U128
 );
 
+#[payable]
 pub fn withdraw_all(&mut self);
 
 // **********
@@ -218,14 +214,19 @@ pub fn unvote(
 );
 ```
 
-## Locking and Unlocking process
+## Locking, re-locking, Unbonding process
 
-To Lock funds into the Meta Vote contract, the user must define an amount in the $META token and a number of days (between 30 and 300 days) to lock the funds.
+To Lock funds into the Meta Vote contract, the user must define an amount in the $mpDAO token and a number of days (between 30 and 300 days) as the unbonding period.
 
-![Locking and Unlocking process](media/process.png)
+![Locking and Unbonding](media/process.png)
 
 ## Consider:
 
-- To reclaim the META tokens, you will have to wait the period selected in the locking period.
+- To reclaim the mpDAO tokens, you will have start the unbonding and then wait the unbonding period.
+
+- During the unbonding period, you can not vote and you will not get paid. 
+
+- During the unbonding period, you can chose to re-lock the tokens to be able vote and get paid again. After the voting is over, you can also chose to continue the unbonding process where you left.
+
 - Implement **NEP264** for cross-contract calls: https://github.com/near/near-sdk-rs/issues/740
 - Release notes for `near-sdk = "4.0.0"`: https://github.com/near/near-sdk-rs/discussions/797

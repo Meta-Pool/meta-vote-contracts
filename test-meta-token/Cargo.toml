@@ -1,0 +1,20 @@
+[package]
+name = "test-meta-token"
+version = "0.1.2"
+edition = "2018"
+authors = ["metapool.app <hello@metapoool.app>"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = "5.0.0"
+near-contract-standards = "5.0.0"
+
+[profile.release]
+codegen-units=1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true

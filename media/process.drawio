@@ -10,7 +10,7 @@
                 <mxCell id="3" value="" style="edgeStyle=none;html=1;strokeColor=#000000;" parent="1" source="4" target="6" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="&lt;font color=&quot;#000000&quot;&gt;1. Lock $META&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" parent="1" vertex="1">
+                <mxCell id="4" value="&lt;font color=&quot;#000000&quot;&gt;1. Lock $mpDAO&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="125" y="180" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="5" value="" style="edgeStyle=none;html=1;strokeColor=#000000;" parent="1" source="6" edge="1">
@@ -21,7 +21,7 @@
                 <mxCell id="6" value="&lt;font color=&quot;#000000&quot;&gt;2. Unlock&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="125" y="280" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="8" value="&lt;font color=&quot;#000000&quot; style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;After the user Lock $META, a Locking Position is created.&lt;br&gt;&lt;/font&gt;" style="text;html=1;resizable=0;autosize=1;align=center;verticalAlign=middle;points=[];fillColor=none;strokeColor=none;rounded=0;" parent="1" vertex="1">
+                <mxCell id="8" value="&lt;font color=&quot;#000000&quot; style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;After the user Lock $mpDAO, a Locking Position is created.&lt;br&gt;&lt;/font&gt;" style="text;html=1;resizable=0;autosize=1;align=center;verticalAlign=middle;points=[];fillColor=none;strokeColor=none;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="270" y="200" width="320" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="9" value="&lt;font color=&quot;#000000&quot; style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;A total or partial unlock is available for the Locking Position.&lt;br&gt;&lt;/font&gt;" style="text;html=1;resizable=0;autosize=1;align=center;verticalAlign=middle;points=[];fillColor=none;strokeColor=none;rounded=0;" parent="1" vertex="1">
@@ -57,7 +57,7 @@
                 <mxCell id="21" value="&lt;font color=&quot;#000000&quot;&gt;3. Relock&lt;br&gt;&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="290" y="360" width="120" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="22" value="&lt;font color=&quot;#000000&quot;&gt;4. Withdraw $META&lt;br&gt;&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" parent="1" vertex="1">
+                <mxCell id="22" value="&lt;font color=&quot;#000000&quot;&gt;4. Withdraw $mpDAO&lt;br&gt;&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" parent="1" vertex="1">
                     <mxGeometry x="290" y="415" width="120" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="23" value="&lt;font color=&quot;#000000&quot;&gt;5. Clear Locking Position&lt;br&gt;&lt;/font&gt;" style="whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;" parent="1" vertex="1">
