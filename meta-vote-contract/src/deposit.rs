@@ -19,31 +19,45 @@ impl FungibleTokenReceiver for MetaVoteContract {
         let amount = amount.0;
 
         // deposit for-claims, msg == "for-claims" means mpDAO to be later distributed to voters
+        // it could be stNEAR or mpDAO (checked at fn distribute_for_claims)
         if msg.len() >= 11 && &msg[..11] == "for-claims:" {
             match serde_json::from_str(&msg[11..]) {
                 Ok(info) => self.distribute_for_claims(amount, &info),
                 Err(_) => panic!("Err parsing msg for-claims"),
             };
         }
-        // else, user deposit to lock
+        // else, user deposit of mpDAO to bond for x days
         else {
-            let locking_period = match msg.parse::<Days>() {
-                Ok(days) => days,
-                Err(_) => panic!("Err parsing locking_period from msg. Must be u16"),
-            };
-
-            let voter_id = sender_id.to_string();
             assert_eq!(
                 env::predecessor_account_id(),
                 self.mpdao_token_contract_address,
-                "This contract only works with mpDAO from {}",
+                "You can only bond mpDAO-token, contract:{}",
                 self.mpdao_token_contract_address.to_string()
             );
+            let (voter_id, days) = if msg.len() >= 1 && &msg[..1] == "[" {
+                // deposit & bond for others
+                match serde_json::from_str::<(String, u16)>(&msg) {
+                    Ok(pair) => {
+                        // to increase security, limit this option to owner: meta-pool-dao.near
+                        assert_eq!(sender_id, self.owner_id, "only allowed for owner");
+                        pair
+                    }
+                    Err(_) => {
+                        panic!("Err parsing msg, expected [voter_id,days]")
+                    }
+                }
+            } else {
+                // self-deposit & bond
+                match msg.parse::<Days>() {
+                    Ok(days) => (sender_id.to_string(), days),
+                    Err(_) => panic!("Err parsing bonding_days from msg. Must be u16"),
+                }
+            };
 
             self.assert_min_deposit_amount(amount);
             log!("DEPOSIT: {} mpDAO deposited from {}", amount, &voter_id,);
             let mut voter = self.internal_get_voter(&voter_id);
-            self.deposit_locking_position(amount, locking_period, &voter_id, &mut voter);
+            self.deposit_locking_position(amount, days, &voter_id, &mut voter);
         }
         // Return unused amount
         PromiseOrValue::Value(U128::from(0))
@@ -51,7 +65,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
 }
 
 impl MetaVoteContract {
-    // distributes meta from self.meta_to_distribute between existent voters
+    // distributes stNEAR or mpDAO between existent voters
     // called from ft_on_transfer
     pub(crate) fn distribute_for_claims(
         &mut self,

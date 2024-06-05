@@ -1,19 +1,12 @@
 #!/bin/bash
-set -e
-export NEAR_ENV="mainnet"
+__dir=$(dirname "$0")
+. $__dir/mainnet-set-vars.sh
 
-METAVOTE_CONTRACT_ADDRESS="meta-vote.near"
-METAVOTE_OWNER="meta-pool-dao.near"
-METAVOTE_WASM="res/meta_vote_contract.wasm"
-
-echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $(date) 
-near view meta-vote.near get_owner_id
-
-YOCTO_UNITS="000000000000000000000000"
-TOTAL_PREPAID_GAS="300000000000000"
+REQUIRED_ARGS=1
+if [ $# -ne $REQUIRED_ARGS ]; then
+  echo "Error: Please provide exactly $REQUIRED_ARGS arguments."
+  exit 1
+fi
 
 # Call function 
-echo FIX
-near call $METAVOTE_CONTRACT_ADDRESS test \
-'{"amount":"123400000000000000000000","account": "test.near"}' \
---accountId $METAVOTE_OWNER
+echo near call ...

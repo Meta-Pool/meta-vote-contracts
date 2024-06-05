@@ -261,7 +261,10 @@ fn test_unlock_position() {
     );
 
     let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
-    assert_eq!(voter.available_voting_power, 0, "Voting power was not removed!");
+    assert_eq!(
+        voter.available_voting_power, 0,
+        "Voting power was not removed!"
+    );
 
     let expected_total_voting_power = 0;
     assert_eq!(contract.total_voting_power, expected_total_voting_power);
@@ -870,7 +873,10 @@ fn test_unlock_position_without_voting_power() {
         "0".to_owned(),
     );
     let voter = contract.internal_get_voter(&sender_id.as_str().to_string());
-    assert_eq!(voter.available_voting_power, 0, "Incorrect Voting Power calculation.");
+    assert_eq!(
+        voter.available_voting_power, 0,
+        "Incorrect Voting Power calculation."
+    );
     assert_eq!(
         U128::from(vote),
         contract.get_votes_for_object(
@@ -1035,8 +1041,7 @@ fn internal_prepare_multi_voter_contract() -> (MetaVoteContract, Vec<User>) {
         let context = get_context(&sender_id, ntoy(TEST_INITIAL_BALANCE), 0, timestamp_1);
         testing_env!(context.clone());
 
-        let voting_power =
-            calculate_voting_power(u128::from(amount), user.unbond_days.clone());
+        let voting_power = calculate_voting_power(u128::from(amount), user.unbond_days.clone());
         assert_eq!(
             u128::from(contract.get_available_voting_power(sender_id.as_str().to_string())),
             voting_power,
@@ -1117,7 +1122,7 @@ fn test_multi_voter_contract() {
 }
 
 /// For mpDAO Claims
-fn internal_distribute_100_meta_for_claims(contract: &mut MetaVoteContract, users: &Vec<User>) {
+fn internal_distribute_100_mpdao_for_claims(contract: &mut MetaVoteContract, users: &Vec<User>) {
     let sender_id: AccountId = operator_account();
     let initial_accumulated_distributed = contract.accumulated_mpdao_distributed_for_claims;
     let initial_unclaimed = contract.total_unclaimed_mpdao;
@@ -1133,6 +1138,7 @@ fn internal_distribute_100_meta_for_claims(contract: &mut MetaVoteContract, user
         .unwrap(),
     );
 
+    println!("{}", mpdao_token_account());
     set_context_caller(&mpdao_token_account());
     contract.ft_on_transfer(sender_id, AMOUNT.into(), msg);
     assert_eq!(
@@ -1181,7 +1187,7 @@ fn internal_distribute_300_stnear_for_claims(contract: &mut MetaVoteContract, us
 #[test]
 fn test_deposit_for_claims() {
     let (mut contract, users) = internal_prepare_multi_voter_contract();
-    let _ = internal_distribute_100_meta_for_claims(&mut contract, &users);
+    let _ = internal_distribute_100_mpdao_for_claims(&mut contract, &users);
     let _ = internal_distribute_300_stnear_for_claims(&mut contract, &users);
 }
 
@@ -1229,7 +1235,7 @@ fn distribute_too_much_stnear() {
 
 fn prepare_contract_with_claims() -> (MetaVoteContract, Vec<User>) {
     let (mut contract, users) = internal_prepare_multi_voter_contract();
-    internal_distribute_100_meta_for_claims(&mut contract, &users);
+    internal_distribute_100_mpdao_for_claims(&mut contract, &users);
     internal_distribute_300_stnear_for_claims(&mut contract, &users);
     (contract, users)
 }

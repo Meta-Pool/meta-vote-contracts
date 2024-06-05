@@ -3,6 +3,7 @@
 // use meta_tools::utils::proportional;
 // use meta_tools::bond::BondLoaderJSON;
 use near_units::parse_near;
+use tokio::try_join;
 // use json;
 use std::str::{self, FromStr};
 // use near_sdk::json_types::{U128, U64};
@@ -26,6 +27,9 @@ pub const E24: u128 = 1_000_000_000_000_000_000_000_000;
 
 fn mpdao_as_u128_string(mpdao_amount: u64) -> String {
     format!("{}000000", mpdao_amount)
+}
+fn micro_stnear_as_u128_string(micro_stnear: u64) -> String {
+    format!("{}000000000000000000", micro_stnear )
 }
 
 async fn ft_transfer(
@@ -77,6 +81,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Creating Accounts");
     let owner = create_account(&worker, "owner").await?;
     let voter = create_account(&worker, "voter").await?;
+    let third_user = create_account(&worker, "third").await?;
     let proposer = create_account(&worker, "proposer").await?;
     let operator = create_account(&worker, "operator").await?;
 
@@ -84,8 +89,8 @@ async fn main() -> anyhow::Result<()> {
     // Stage 1: Deploy relevant contracts
     ///////////////////////////////////////
 
-    let mpdao_token_contract = create_nep141_token(&owner, &worker).await?;
-    let stnear_token_contract = create_nep141_token(&owner, &worker).await?;
+    let mpdao_token_contract = create_nep141_token(&owner, &worker, "200000000000000").await?;
+    let stnear_token_contract = create_nep141_token(&owner, &worker, "2000000000000000000000000000").await?;
     let metavote_contract = create_metavote(
         &owner,
         &operator,
@@ -114,6 +119,7 @@ async fn main() -> anyhow::Result<()> {
 
     register_storage_for(
         &mpdao_token_contract,
+        &stnear_token_contract,
         &metavote_contract,
         &mpip_contract,
         &owner,
@@ -147,6 +153,92 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     let res: serde_json::Value = serde_json::from_slice(&res.result)?;
     assert_eq!(res.as_str().unwrap(), "0");
+
+    {
+        // lock mpDAO for others
+        let locked_mpdao = 2;
+        let days = 240;
+        let args = serde_json::json!({
+            "receiver_id": metavote_contract.id(),
+            "amount": mpdao_as_u128_string(locked_mpdao),
+            "msg": format!(r#"["{}",{}]"#,third_user.id(),days)
+        });
+        let res = owner
+            .call(mpdao_token_contract.id(), "ft_transfer_call")
+            .args_json(&args)
+            .gas(NearGas::from_tgas(200))
+            .deposit(NearToken::from_yoctonear(1))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() > 0 {
+            println!(
+                "for locking Transfer {} mpdao, days={} ERR: {:?}\n",
+                locked_mpdao, days, res
+            );
+        }
+
+        // verify voting power
+        let res = owner
+            .call(metavote_contract.id(), "get_available_voting_power")
+            .args_json(serde_json::json!({
+                "voter_id": third_user.id()
+            }))
+            .gas(NearGas::from_tgas(200))
+            .deposit(NearToken::from_yoctonear(1))
+            .transact()
+            .await?;
+        let res = &res.raw_bytes().unwrap().clone();
+        let res = str::from_utf8(res).unwrap();
+        let res = json::parse(&res)?;
+        let vp: u128 = res.to_string().parse().unwrap();
+        let expected_vp: u128 = locked_mpdao as u128 * 4 * E24;
+        println!("delegate for others vp: {:?}", vp);
+        assert_eq!(vp, expected_vp, "Vp <> expected_vp");
+    }
+
+    {
+        // send stNEAR to distribute
+        let micro_distribute_stnear = 123400;
+        let days = 240;
+        let args = serde_json::json!({
+            "receiver_id": metavote_contract.id(),
+            "amount": micro_stnear_as_u128_string(micro_distribute_stnear),
+            "msg": format!(r#"for-claims:[["{}",{}]]"#,third_user.id(),1234)
+        });
+        let res = owner
+            .call(stnear_token_contract.id(), "ft_transfer_call")
+            .args_json(&args)
+            .gas(NearGas::from_tgas(200))
+            .deposit(NearToken::from_yoctonear(1))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() > 0 {
+            println!(
+                "for-claims Transfer {} stnear, days={} ERR: {:?}\n",
+                args, days, res
+            );
+        }
+
+        // verify claims
+        let res = owner
+            .call(metavote_contract.id(), "get_claimable_stnear")
+            .args_json(serde_json::json!({
+                "voter_id": third_user.id()
+            }))
+            .gas(NearGas::from_tgas(200))
+            .deposit(NearToken::from_yoctonear(1))
+            .transact()
+            .await?;
+        let res = &res.raw_bytes().unwrap().clone();
+        let res = str::from_utf8(res).unwrap();
+        let res = json::parse(&res)?;
+        let claimable_stnear: u128 = res.to_string().parse().unwrap();
+        let expected_stnear: u128 = micro_distribute_stnear as u128 * E24 / 1000000;
+        println!("claimable_stnear: {:?}", claimable_stnear);
+        assert_eq!(claimable_stnear, expected_stnear, "Vp <> expected_vp");
+    }
 
     // -----------------
     // register_delegate
@@ -670,20 +762,21 @@ async fn main() -> anyhow::Result<()> {
 async fn create_nep141_token(
     owner: &Account,
     worker: &Worker<impl DevNetwork>,
+    amount_string: &str
 ) -> anyhow::Result<Contract> {
     let token_contract_wasm = std::fs::read(MPDAO_TEST_TOKEN_FILEPATH)?;
     let token_contract = worker.dev_deploy(&token_contract_wasm).await?;
+    let args = serde_json::json!({
+        "owner_id": owner.id(),
+        "total_supply": amount_string
+    });
     println!(
-        "init token contract {} {}",
-        owner.id(),
-        format!("{}", "200000000000000")
+        "init token contract {}",
+        args
     );
     let res = token_contract
         .call("new_default_meta")
-        .args_json(serde_json::json!({
-            "owner_id": owner.id(),
-            "total_supply": "200000000000000"
-        }))
+        .args_json(args)
         .transact()
         .await?;
     if res.failures().len() > 0 {
@@ -781,17 +874,22 @@ async fn storage_deposit(account: &Account, token_contract: &Contract) -> anyhow
 
 async fn register_storage_for(
     metatoken_contract: &Contract,
+    stnear_contract: &Contract,
     metavote_contract: &Contract,
     mpip_contract: &Contract,
     owner: &Account,
     voter: &Account,
     proposer: &Account,
 ) -> anyhow::Result<()> {
-    storage_deposit(&owner, &metatoken_contract).await?;
-    storage_deposit(&voter, &metatoken_contract).await?;
-    storage_deposit(&metavote_contract.as_account(), &metatoken_contract).await?;
-    storage_deposit(&mpip_contract.as_account(), &metatoken_contract).await?;
-    storage_deposit(&proposer, &metatoken_contract).await
+    try_join!(
+        storage_deposit(&owner, &metatoken_contract),
+        storage_deposit(&voter, &metatoken_contract),
+        storage_deposit(&metavote_contract.as_account(), &metatoken_contract),
+        storage_deposit(&metavote_contract.as_account(), &stnear_contract),
+        storage_deposit(&mpip_contract.as_account(), &metatoken_contract),
+        storage_deposit(&proposer, &metatoken_contract)
+    ).expect("err st storage_deposit");
+    Ok(())
 }
 
 async fn register_delegate(

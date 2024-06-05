@@ -8,6 +8,9 @@ members = [
 ]
 resolver = "2"
 
+[patch.crates-io]
+parity-secp256k1 = { git = 'https://github.com/paritytech/rust-secp256k1.git' }
+
 [profile.release]
 codegen-units=1
 opt-level = "z"
