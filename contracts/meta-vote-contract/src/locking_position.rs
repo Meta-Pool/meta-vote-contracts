@@ -65,12 +65,15 @@ impl LockingPosition {
 impl MetaVoteContract {
     /// Voting power is given by f(x) = A + Bx. Where A=1, B=4 and x is the locking period proportion.
     pub(crate) fn calculate_voting_power(&self, amount: Meta, locking_period: Days) -> VotingPower {
-        let multiplier = YOCTO_UNITS + proportional(
-            4 * YOCTO_UNITS,
-            (locking_period - self.min_locking_period) as u128,
-            (self.max_locking_period - self.min_locking_period) as u128
-        );
-        proportional(amount, multiplier, YOCTO_UNITS)
+        // let multiplier = YOCTO_UNITS + proportional(
+        //     4 * YOCTO_UNITS,
+        //     (locking_period - self.min_locking_period) as u128,
+        //     (self.max_locking_period - self.min_locking_period) as u128
+        // );
+        // proportional(amount, multiplier, YOCTO_UNITS)
+
+        // new, mpdao-type voting power calculation
+        proportional(amount, locking_period as u128, 60)
     }
 
     fn increase_locking_position(
