@@ -270,6 +270,11 @@ impl MpipContract {
         self.proposals.insert(&mpip_id, &proposal);
     }
 
+    pub fn update_meta_vote_contract_address(&mut self, new_meta_vote_contract_address: AccountId) {
+        self.assert_only_admin();
+        self.meta_vote_contract_address = new_meta_vote_contract_address;
+    }
+
     pub fn get_my_proposals(&self, proposer_id: AccountId) -> Vec<MpipId> {
         self.internal_get_proposer(proposer_id)
     }
