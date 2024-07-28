@@ -27,11 +27,17 @@ STNEAR_TESTNET_TOKEN_ADDRESS="meta-v2.pool.testnet"
         # mpdao_token_contract_address: ContractAddress,
         # stnear_token_contract_address: ContractAddress,
         # registration_cost: U128String,
-ARGS='{"owner_id":"'$OWNER_ID'","min_unbond_period":1,"max_unbond_period":300,"min_deposit_amount":"1000000",'
-ARGS=$ARGS'"max_locking_positions":32,"max_voting_positions":32,'
-ARGS=$ARGS'"mpdao_token_contract_address":"'$MPDAO_TOKEN_ADDRESS'","stnear_token_contract_address":"'$STNEAR_TESTNET_TOKEN_ADDRESS'",'
-ARGS=$ARGS'"prev_governance_contract":"'$OLD_METAVOTE_CONTRACT'",'
-ARGS=$ARGS'"registration_cost":"100000","operator_id":"'$OPERATOR_ID'"}'
+ARGS_INIT_META_VOTE=$(cat <<EOA
+{
+"owner_id":"$OWNER_ID","operator_id":"$OPERATOR_ID",
+"min_unbond_period":30, "max_unbond_period":300, "min_deposit_amount":"1000000",
+"max_locking_positions": 32, "max_voting_positions": 32,
+"mpdao_token_contract_address":"$MPDAO_TOKEN_ADDRESS","stnear_token_contract_address":"$STNEAR_TESTNET_TOKEN_ADDRESS",
+"prev_governance_contract":"$OLD_METAVOTE_CONTRACT",
+"registration_cost":"100000"
+}
+EOA
+)
 
 echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $OWNER_ID
 

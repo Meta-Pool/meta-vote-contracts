@@ -11,13 +11,16 @@ OPERATOR_ID="operator.$METAVOTE_CONTRACT_ADDRESS"
 MPDAO_TOKEN_ADDRESS="mpdao-token.near"
 STNEAR_TOKEN_ADDRESS="meta-pool.near"
 
-echo $NEAR_ENV $METAVOTE_CONTRACT_ADDRESS $(date) 
+MPIP_CONTRACT_ADDRESS="mpip.meta-pool-dao.near"
+MPIP_WASM="res/mpip_contract.wasm"
+
+echo $NEAR_ENV $(date) 
 
 MPDAO_DECIMALS="000000" 
 YOCTO_UNITS="000000000000000000000000"
 TOTAL_PREPAID_GAS="300000000000000"
 
-# args to init contract
+# args to init meta-vote contract
         # owner_id: AccountId,
         # min_unbond_period: Days,
         # max_unbond_period: Days,
@@ -27,7 +30,7 @@ TOTAL_PREPAID_GAS="300000000000000"
         # mpdao_token_contract_address: ContractAddress,
         # stnear_token_contract_address: ContractAddress,
         # registration_cost: U128String,
-ARGS=$(cat <<EOA
+ARGS_INIT_META_VOTE=$(cat <<EOA
 {
 "owner_id":"$OWNER_ID","operator_id":"$OPERATOR_ID",
 "min_unbond_period":30, "max_unbond_period":300, "min_deposit_amount":"1000000",
