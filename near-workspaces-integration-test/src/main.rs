@@ -5,7 +5,10 @@
 use near_units::parse_near;
 use tokio::try_join;
 // use json;
-use std::str::{self, FromStr};
+use std::{
+    str::{self, FromStr},
+    time::SystemTime,
+};
 // use near_sdk::json_types::{U128, U64};
 
 // use workspaces::network::Sandbox;
@@ -29,7 +32,7 @@ fn mpdao_as_u128_string(mpdao_amount: u64) -> String {
     format!("{}000000", mpdao_amount)
 }
 fn micro_stnear_as_u128_string(micro_stnear: u64) -> String {
-    format!("{}000000000000000000", micro_stnear )
+    format!("{}000000000000000000", micro_stnear)
 }
 
 async fn ft_transfer(
@@ -90,7 +93,8 @@ async fn main() -> anyhow::Result<()> {
     ///////////////////////////////////////
 
     let mpdao_token_contract = create_nep141_token(&owner, &worker, "200000000000000").await?;
-    let stnear_token_contract = create_nep141_token(&owner, &worker, "2000000000000000000000000000").await?;
+    let stnear_token_contract =
+        create_nep141_token(&owner, &worker, "2000000000000000000000000000").await?;
     let metavote_contract = create_metavote(
         &owner,
         &operator,
@@ -144,7 +148,7 @@ async fn main() -> anyhow::Result<()> {
         ft_transfer(&mpdao_token_contract, &owner, &proposer, &amount).await?;
     }
 
-    // get_available_voting_power
+    // get_available_voting_power, must be zero
     let res = metavote_contract
         .view("get_available_voting_power")
         .args_json(serde_json::json!({
@@ -154,6 +158,7 @@ async fn main() -> anyhow::Result<()> {
     let res: serde_json::Value = serde_json::from_slice(&res.result)?;
     assert_eq!(res.as_str().unwrap(), "0");
 
+    // -----------
     {
         // lock mpDAO for others
         let locked_mpdao = 2;
@@ -195,6 +200,129 @@ async fn main() -> anyhow::Result<()> {
         let expected_vp: u128 = locked_mpdao as u128 * 4 * E24;
         println!("delegate for others vp: {:?}", vp);
         assert_eq!(vp, expected_vp, "Vp <> expected_vp");
+    }
+
+    // -----------
+    // test lock-in votes filters
+    // -----------
+    {
+        // vote in grants #8
+        let res = third_user
+            .call(metavote_contract.id(), "vote")
+            .args_json(serde_json::json!({
+                "contract_address": "initiatives",
+                "voting_power": mpdao_as_u128_string(200),
+                "votable_object_id": "8|some grant proposal"
+            }))
+            .gas(NearGas::from_tgas(200))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() > 0 {
+            panic!("voting ERR: {:?}\n", res);
+        }
+
+        // vote in grants #7
+        let res = third_user
+            .call(metavote_contract.id(), "vote")
+            .args_json(serde_json::json!({
+                "contract_address": "initiatives",
+                "voting_power": mpdao_as_u128_string(100),
+                "votable_object_id": "7|some grant proposal"
+            }))
+            .gas(NearGas::from_tgas(200))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() > 0 {
+            panic!("voting ERR: {:?}\n", res);
+        }
+
+        // lock un-voting
+        let now = SystemTime::now();
+        let now_unix_ms = now
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+
+        let res = operator
+            .call(metavote_contract.id(), "set_lock_in_vote_filters")
+            .args_json(serde_json::json!({
+                "end_timestamp_ms": now_unix_ms + 1000*60*60,
+                "votable_numeric_id": 8,
+                "votable_address":"initiatives"
+            }))
+            .gas(NearGas::from_tgas(200))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() > 0 {
+            panic!("set_lock_in_vote_filters ERR: {:?}\n", res);
+        }
+
+        // un-vote should fail
+        let res = third_user
+            .call(metavote_contract.id(), "unvote")
+            .args_json(serde_json::json!({
+                "contract_address": "initiatives",
+                "votable_object_id": "8|some grant proposal"
+            }))
+            .gas(NearGas::from_tgas(200))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() == 0 {
+            panic!("EXPECTING unvote ERR but it was ok: {:?}\n", res);
+        }
+        let formatted_res = format!("{:?}", res);
+        let expected = "you can not remove votes here until timestamp_ms";
+        if !formatted_res.contains(expected) {
+            panic!("unvote test, expecting '{}' in {}", expected, formatted_res)
+        }
+
+        // unvote of the old grant should work
+        let res = third_user
+            .call(metavote_contract.id(), "unvote")
+            .args_json(serde_json::json!({
+                "contract_address": "initiatives",
+                "votable_object_id": "7|some grant proposal"
+            }))
+            .gas(NearGas::from_tgas(200))
+            .transact()
+            .await?;
+        if res.failures().len() > 0 {
+            panic!("unvote old grant 7 ERR: {:?}\n", res);
+        }
+
+        // set restrictions as passed
+        let res = operator
+            .call(metavote_contract.id(), "set_lock_in_vote_filters")
+            .args_json(serde_json::json!({
+                "end_timestamp_ms": now_unix_ms - 1000,
+                "votable_numeric_id": 8,
+                "votable_address":"initiatives"
+            }))
+            .gas(NearGas::from_tgas(200))
+            .transact()
+            .await?;
+        //println!("args {:?}\n {:?}\n", args, res);
+        if res.failures().len() > 0 {
+            panic!("set restrictions as passed ERR: {:?}\n", res);
+        }
+
+        // unvote now should work
+        let res = third_user
+            .call(metavote_contract.id(), "unvote")
+            .args_json(serde_json::json!({
+                "contract_address": "initiatives",
+                "votable_object_id": "8|some grant proposal"
+            }))
+            .gas(NearGas::from_tgas(200))
+            .transact()
+            .await?;
+        if res.failures().len() > 0 {
+            panic!("unvote 2 ERR: {:?}\n", res);
+        }
     }
 
     {
@@ -762,7 +890,7 @@ async fn main() -> anyhow::Result<()> {
 async fn create_nep141_token(
     owner: &Account,
     worker: &Worker<impl DevNetwork>,
-    amount_string: &str
+    amount_string: &str,
 ) -> anyhow::Result<Contract> {
     let token_contract_wasm = std::fs::read(MPDAO_TEST_TOKEN_FILEPATH)?;
     let token_contract = worker.dev_deploy(&token_contract_wasm).await?;
@@ -770,10 +898,7 @@ async fn create_nep141_token(
         "owner_id": owner.id(),
         "total_supply": amount_string
     });
-    println!(
-        "init token contract {}",
-        args
-    );
+    println!("init token contract {}", args);
     let res = token_contract
         .call("new_default_meta")
         .args_json(args)
@@ -888,7 +1013,8 @@ async fn register_storage_for(
         storage_deposit(&metavote_contract.as_account(), &stnear_contract),
         storage_deposit(&mpip_contract.as_account(), &metatoken_contract),
         storage_deposit(&proposer, &metatoken_contract)
-    ).expect("err st storage_deposit");
+    )
+    .expect("err st storage_deposit");
     Ok(())
 }
 

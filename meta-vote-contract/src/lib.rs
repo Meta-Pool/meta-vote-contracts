@@ -59,6 +59,10 @@ pub struct MetaVoteContract {
     pub evm_delegates: UnorderedMap<String, Vec<EvmAddress>>,
     pub evm_pre_delegation: LookupMap<EvmAddress, (String, EvmSignature)>,
     pub evm_delegation_signatures: LookupMap<EvmAddress, (String, EvmSignature)>,
+
+    pub lock_votes_in_end_timestamp_ms: u64,
+    pub lock_votes_in_address: Option<String>,
+    pub lock_votes_in_numeric_id: u16,
 }
 
 #[near_bindgen]
@@ -107,6 +111,9 @@ impl MetaVoteContract {
             evm_delegates: UnorderedMap::new(StorageKey::EvmDelegates),
             evm_delegation_signatures: LookupMap::new(StorageKey::EvmDelegationSignatures),
             evm_pre_delegation: LookupMap::new(StorageKey::EvmPreDelegation),
+            lock_votes_in_end_timestamp_ms: 0,
+            lock_votes_in_address: None,
+            lock_votes_in_numeric_id: 0,
         }
     }
 
@@ -718,6 +725,21 @@ impl MetaVoteContract {
         contract_address: &ContractAddress,
         votable_object_id: &VotableObjId,
     ) {
+        // verify if the votes are locked (for example last 48hs of grants voting up to 20 days after)
+        if let Some(lock_votes_in_address) = &self.lock_votes_in_address {
+            if self.lock_votes_in_end_timestamp_ms > env::block_timestamp_ms() 
+                && lock_votes_in_address == contract_address
+            {
+                let votable_object_id_filter = format!("{}|", self.lock_votes_in_numeric_id);
+                if votable_object_id.starts_with(&votable_object_id_filter) {
+                    panic!(
+                        "you can not remove votes here until timestamp_ms {}",
+                        self.lock_votes_in_end_timestamp_ms
+                    )
+                }
+            }
+        }
+
         let mut voter = self.internal_get_voter_or_panic(&voter_id);
         self.internal_remove_voting_position(
             &voter_id,
@@ -732,6 +754,25 @@ impl MetaVoteContract {
     // *********
     // * Admin *
     // *********
+    pub fn set_lock_in_vote_filters(
+        &mut self,
+        end_timestamp_ms: u64,
+        votable_numeric_id: u16,
+        votable_address: Option<String>,
+    ) {
+        self.assert_operator();
+        self.lock_votes_in_end_timestamp_ms = end_timestamp_ms;
+        self.lock_votes_in_address = votable_address;
+        self.lock_votes_in_numeric_id = votable_numeric_id;
+    }
+    pub fn get_lock_in_vote_filters(self) -> (u64, Option<String>, u16) {
+        (
+            self.lock_votes_in_end_timestamp_ms,
+            self.lock_votes_in_address,
+            self.lock_votes_in_numeric_id,
+        )
+    }
+
     #[payable]
     pub fn update_min_unbond_period(&mut self, new_min_unbond_period: Days) {
         assert_one_yocto();

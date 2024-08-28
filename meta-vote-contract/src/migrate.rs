@@ -31,6 +31,10 @@ pub struct OldState {
     pub associated_user_data: UnorderedMap<VoterId, String>,
 
     pub prev_governance_contract: String,
+
+    pub evm_delegates: UnorderedMap<String, Vec<EvmAddress>>,
+    pub evm_pre_delegation: LookupMap<EvmAddress, (String, EvmSignature)>,
+    pub evm_delegation_signatures: LookupMap<EvmAddress, (String, EvmSignature)>,
 }
 
 #[near_bindgen]
@@ -70,9 +74,13 @@ impl MetaVoteContract {
             associated_user_data: old.associated_user_data,
             prev_governance_contract: old.prev_governance_contract,
 
-            evm_delegates: UnorderedMap::new(StorageKey::EvmDelegates),
-            evm_delegation_signatures: LookupMap::new(StorageKey::EvmDelegationSignatures),
-            evm_pre_delegation: LookupMap::new(StorageKey::EvmPreDelegation),
+            evm_delegates: old.evm_delegates,
+            evm_delegation_signatures: old.evm_delegation_signatures,
+            evm_pre_delegation: old.evm_pre_delegation,
+
+            lock_votes_in_end_timestamp_ms: 0,
+            lock_votes_in_address: None,
+            lock_votes_in_numeric_id: 0,
         }
     }
 }
