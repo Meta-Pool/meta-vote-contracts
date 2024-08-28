@@ -730,8 +730,8 @@ impl MetaVoteContract {
             if self.lock_votes_in_end_timestamp_ms > env::block_timestamp_ms() 
                 && lock_votes_in_address == contract_address
             {
-                let votable_object_id_filter = format!("{}|", self.lock_votes_in_numeric_id);
-                if votable_object_id.starts_with(&votable_object_id_filter) {
+                let votable_object_id_filter = format!(" #{} ", self.lock_votes_in_numeric_id);
+                if votable_object_id.contains(&votable_object_id_filter) {
                     panic!(
                         "you can not remove votes here until timestamp_ms {}",
                         self.lock_votes_in_end_timestamp_ms

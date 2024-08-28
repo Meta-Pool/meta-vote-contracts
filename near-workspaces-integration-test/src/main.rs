@@ -206,13 +206,16 @@ async fn main() -> anyhow::Result<()> {
     // test lock-in votes filters
     // -----------
     {
+        let grants8_object_id = "1234|mpDAO Grants #8 - August 2024-asking-user.near";
+        let grants7_object_id = "187|mpDAO Grants #7 - June 2024-asking-user.near";
+
         // vote in grants #8
         let res = third_user
             .call(metavote_contract.id(), "vote")
             .args_json(serde_json::json!({
                 "contract_address": "initiatives",
                 "voting_power": mpdao_as_u128_string(200),
-                "votable_object_id": "8|some grant proposal"
+                "votable_object_id": grants8_object_id
             }))
             .gas(NearGas::from_tgas(200))
             .transact()
@@ -228,7 +231,7 @@ async fn main() -> anyhow::Result<()> {
             .args_json(serde_json::json!({
                 "contract_address": "initiatives",
                 "voting_power": mpdao_as_u128_string(100),
-                "votable_object_id": "7|some grant proposal"
+                "votable_object_id": grants7_object_id
             }))
             .gas(NearGas::from_tgas(200))
             .transact()
@@ -265,7 +268,7 @@ async fn main() -> anyhow::Result<()> {
             .call(metavote_contract.id(), "unvote")
             .args_json(serde_json::json!({
                 "contract_address": "initiatives",
-                "votable_object_id": "8|some grant proposal"
+                "votable_object_id": grants8_object_id
             }))
             .gas(NearGas::from_tgas(200))
             .transact()
@@ -285,7 +288,7 @@ async fn main() -> anyhow::Result<()> {
             .call(metavote_contract.id(), "unvote")
             .args_json(serde_json::json!({
                 "contract_address": "initiatives",
-                "votable_object_id": "7|some grant proposal"
+                "votable_object_id": grants7_object_id
             }))
             .gas(NearGas::from_tgas(200))
             .transact()
@@ -315,7 +318,7 @@ async fn main() -> anyhow::Result<()> {
             .call(metavote_contract.id(), "unvote")
             .args_json(serde_json::json!({
                 "contract_address": "initiatives",
-                "votable_object_id": "8|some grant proposal"
+                "votable_object_id": grants8_object_id
             }))
             .gas(NearGas::from_tgas(200))
             .transact()
