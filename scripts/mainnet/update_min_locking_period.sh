@@ -1,5 +1,5 @@
-if ! ([ $# -eq 1 ] && [[ $1 =~ ^[0-9]+$ ]] && [ $1 -ge 60 ] && [ $1 -le 240 ];) then 
-  echo "a single argument in the range 60..240 is needed"
+if ! ([ $# -eq 1 ] && [[ $1 =~ ^[0-9]+$ ]] && [ $1 -ge 60 ] && [ $1 -le 270 ];) then 
+  echo "a single argument in the range 60..270 is needed"
   exit 1
 fi
 
